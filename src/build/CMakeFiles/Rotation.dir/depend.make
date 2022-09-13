@@ -1,2 +1,2 @@
-# Empty dependencies file for DisplayImage.
+# Empty dependencies file for Rotation.
 # This may be replaced when dependencies are built.

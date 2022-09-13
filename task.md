@@ -9,6 +9,13 @@ libopencv-dev cmake をインストール
 画像を置く場所はmain.cppのある場所じゃなく、buildフォルダがカレントディレクトリ。  
 imgフォルダから指定するようにする。
 
+- 実行はbuild ディレクトリがlsで見えるところで、
+```
+cmake ..
+make 
+./Cmakeのプロジェクト名
+```
+
 - vscodeでopencvのが見つからないよってエラー吐く。  
 vscodeのC++設定ファイルにinclude pathを書くところがあるので、 そこにopencvのpathを追加する。
 ubuntu22.04で`sudo apt install livopencv-dev`したときは、includepathが`/usr/include/opencv4`でした。

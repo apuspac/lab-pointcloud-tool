@@ -1,3 +1,0 @@
-/home/cafe/Documents/coordinate_transform/opencv/build/CMakeFiles/DisplayImage.dir
-/home/cafe/Documents/coordinate_transform/opencv/build/CMakeFiles/edit_cache.dir
-/home/cafe/Documents/coordinate_transform/opencv/build/CMakeFiles/rebuild_cache.dir

@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/cafe/Documents/coordinate_transform/opencv
+CMAKE_SOURCE_DIR = /home/cafe/Documents/coordinate_transform/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/cafe/Documents/coordinate_transform/opencv/build
+CMAKE_BINARY_DIR = /home/cafe/Documents/coordinate_transform/src/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/cafe/Documents/coordinate_transform/opencv/build/CMakeFiles /home/cafe/Documents/coordinate_transform/opencv/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cafe/Documents/coordinate_transform/src/build/CMakeFiles /home/cafe/Documents/coordinate_transform/src/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/cafe/Documents/coordinate_transform/opencv/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cafe/Documents/coordinate_transform/src/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named DisplayImage
+# Target rules for targets named Rotation
 
 # Build rule for target.
-DisplayImage: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 DisplayImage
-.PHONY : DisplayImage
+Rotation: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Rotation
+.PHONY : Rotation
 
 # fast build rule for target.
-DisplayImage/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/DisplayImage.dir/build.make CMakeFiles/DisplayImage.dir/build
-.PHONY : DisplayImage/fast
+Rotation/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Rotation.dir/build.make CMakeFiles/Rotation.dir/build
+.PHONY : Rotation/fast
 
 main.o: main.cpp.o
 .PHONY : main.o
 
 # target to build an object file
 main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/DisplayImage.dir/build.make CMakeFiles/DisplayImage.dir/main.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Rotation.dir/build.make CMakeFiles/Rotation.dir/main.cpp.o
 .PHONY : main.cpp.o
 
 main.i: main.cpp.i
@@ -142,7 +142,7 @@ main.i: main.cpp.i
 
 # target to preprocess a source file
 main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/DisplayImage.dir/build.make CMakeFiles/DisplayImage.dir/main.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Rotation.dir/build.make CMakeFiles/Rotation.dir/main.cpp.i
 .PHONY : main.cpp.i
 
 main.s: main.cpp.s
@@ -150,7 +150,7 @@ main.s: main.cpp.s
 
 # target to generate assembly for a file
 main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/DisplayImage.dir/build.make CMakeFiles/DisplayImage.dir/main.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Rotation.dir/build.make CMakeFiles/Rotation.dir/main.cpp.s
 .PHONY : main.cpp.s
 
 # Help Target
@@ -161,7 +161,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... DisplayImage"
+	@echo "... Rotation"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

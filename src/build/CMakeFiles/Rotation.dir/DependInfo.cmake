@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/cafe/Documents/coordinate_transform/opencv/main.cpp" "CMakeFiles/DisplayImage.dir/main.cpp.o" "gcc" "CMakeFiles/DisplayImage.dir/main.cpp.o.d"
+  "/home/cafe/Documents/coordinate_transform/src/main.cpp" "CMakeFiles/Rotation.dir/main.cpp.o" "gcc" "CMakeFiles/Rotation.dir/main.cpp.o.d"
   )
 
 # Targets to which this target links.
