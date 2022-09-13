@@ -7,7 +7,7 @@
 void pointcloud_rotation()
 {
     // vector3d は double型の三次元ベクトル
-    std::vector<Eigen::Vector3d> x, x_p;
+    std::vector<Eigen::Vector3d> x, x_p, m, m_p;
 
     Eigen::Vector3d a = {1.0, 2.0, 3.0};
     x.push_back(a);
@@ -16,15 +16,25 @@ void pointcloud_rotation()
 
     Eigen::Vector3d b = {2.0, 2.0, 3.0};
     x_p.push_back(b);
+    x_p.push_back(b);
+    x_p.push_back(b);
 
     // // 単位ベクトルに変換する
-    for (const auto &ele : x)
+    for (const Eigen::Vector3d &point_to_vec : x)
     {
-        std::cout << ele << std::endl;
+        m.push_back(point_to_vec.normalized());
+        // std::cout << point_to_vec.normalized() << std::endl;
     }
-    for (const Eigen::Vector3d &ele : x_p)
+    for (const Eigen::Vector3d &point_to_vec : x_p)
     {
-        std::cout << ele.transpose() << std::endl;
+        m_p.push_back(point_to_vec.normalized());
+        // std::cout << point_to_vec.normalized() << std::endl;
+    }
+
+    for (const auto e : m)
+    {
+        std::cout << e << std::endl;
+        std::cout << std::endl;
     }
 }
 
