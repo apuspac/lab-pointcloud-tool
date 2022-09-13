@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <opencv2/opencv.hpp>
 #include <eigen3/Core>
+#include <eigen3/Eigen>
 
 void pointcloud_rotation()
 {
@@ -32,7 +33,7 @@ void pointcloud_rotation()
     }
 
     //相関行列C
-    double correlation_C = 0.0;
+    Eigen::Matrix3d correlation_C = Eigen::Matrix3d::Identity();
 
     //重み
     double weight = 1.0;
@@ -46,7 +47,7 @@ void pointcloud_rotation()
         Eigen::Vector3d tmp = *iter;
         Eigen::Vector3d tmp_p = *iter_p;
 
-        correlation_C += weight * tmp.dot(tmp_p.transpose());
+        correlation_C += weight * tmp * (tmp_p.transpose());
     }
 
     std::cout << correlation_C << std::endl;
