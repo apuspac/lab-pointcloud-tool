@@ -19,6 +19,8 @@ eigen3/Core
 -
 eigen3/SVD
 -
+eigen3/LU
+-
 
 /usr/local/include/opencv4/opencv2/calib3d.hpp
 opencv2/core.hpp
