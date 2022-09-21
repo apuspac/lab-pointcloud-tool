@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# CMakeFile
+./src/build/CMakeFiles
+./src/build/CMakeCache.txt
+./src/build/cmake_install.cmake
+./src/build/Makefile
