@@ -7,6 +7,7 @@
 #include <eigen3/LU>
 
 
+
 Eigen::Matrix3d calc_correlation_C(
     std::vector<Eigen::Vector3d> &x,
     std::vector<Eigen::Vector3d> &x_p, 
@@ -65,6 +66,14 @@ Eigen::Matrix3d calc_rotation_R(Eigen::Matrix3d correlation_C)
 
     // 回転行列Rの最大化の式
     matrix_R = matrix_V * matrix_Diag * matrix_U.transpose();
+
+    //check
+    std::cout << "check" << std::endl;
+    std::cout << matrix_R.transpose() * matrix_R << std::endl;
+    std::cout << matrix_R * matrix_R.transpose() << std::endl;
+
+    std::cout << "det" << std::endl;
+    std::cout << matrix_R.determinant() << std::endl;
     
     return matrix_R;
 }
