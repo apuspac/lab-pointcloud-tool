@@ -212,6 +212,7 @@ CMakeFiles/Rotation.dir/main.cpp.o
  /usr/include/c++/11/bits/unordered_map.h
  /usr/include/c++/11/bits/erase_if.h
  /usr/include/c++/11/pstl/execution_defs.h
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/float.h
  /usr/include/opencv4/opencv2/opencv.hpp
  /usr/include/opencv4/opencv2/opencv_modules.hpp
  /usr/include/opencv4/opencv2/core.hpp
@@ -290,7 +291,6 @@ CMakeFiles/Rotation.dir/main.cpp.o
  /usr/include/opencv4/opencv2/core/fast_math.hpp
  /usr/include/opencv4/opencv2/core/types.hpp
  /usr/include/c++/11/cfloat
- /usr/lib/gcc/x86_64-linux-gnu/11/include/float.h
  /usr/include/opencv4/opencv2/core/mat.hpp
  /usr/include/opencv4/opencv2/core/bufferpool.hpp
  /usr/include/opencv4/opencv2/core/mat.inl.hpp
@@ -544,4 +544,33 @@ CMakeFiles/Rotation.dir/main.cpp.o
  /usr/local/include/eigen3/src/Core/StlIterators.h
  /usr/local/include/eigen3/src/Core/GlobalFunctions.h
  /usr/local/include/eigen3/src/Core/util/ReenableStupidWarnings.h
+ /usr/local/include/eigen3/SVD
+ /usr/local/include/eigen3/QR
+ /usr/local/include/eigen3/Core
+ /usr/local/include/eigen3/Cholesky
+ /usr/local/include/eigen3/Jacobi
+ /usr/local/include/eigen3/src/Jacobi/Jacobi.h
+ /usr/local/include/eigen3/src/Cholesky/LLT.h
+ /usr/local/include/eigen3/src/Cholesky/LDLT.h
+ /usr/local/include/eigen3/Householder
+ /usr/local/include/eigen3/src/Householder/Householder.h
+ /usr/local/include/eigen3/src/Householder/HouseholderSequence.h
+ /usr/local/include/eigen3/src/Householder/BlockHouseholder.h
+ /usr/local/include/eigen3/src/QR/HouseholderQR.h
+ /usr/local/include/eigen3/src/QR/FullPivHouseholderQR.h
+ /usr/local/include/eigen3/src/QR/ColPivHouseholderQR.h
+ /usr/local/include/eigen3/src/QR/CompleteOrthogonalDecomposition.h
+ /usr/local/include/eigen3/src/misc/RealSvd2x2.h
+ /usr/local/include/eigen3/src/SVD/UpperBidiagonalization.h
+ /usr/local/include/eigen3/src/SVD/SVDBase.h
+ /usr/local/include/eigen3/src/SVD/JacobiSVD.h
+ /usr/local/include/eigen3/src/SVD/BDCSVD.h
+ /usr/local/include/eigen3/LU
+ /usr/local/include/eigen3/src/misc/Kernel.h
+ /usr/local/include/eigen3/src/misc/Image.h
+ /usr/local/include/eigen3/src/LU/FullPivLU.h
+ /usr/local/include/eigen3/src/LU/PartialPivLU.h
+ /usr/local/include/eigen3/src/LU/Determinant.h
+ /usr/local/include/eigen3/src/LU/InverseImpl.h
+ /usr/local/include/eigen3/src/LU/arch/InverseSize4.h
 

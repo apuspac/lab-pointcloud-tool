@@ -1,5 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/Rotation.dir/main.cpp.o"
+  "CMakeFiles/Rotation.dir/main.cpp.o.d"
   "Rotation"
   "Rotation.pdb"
 )
