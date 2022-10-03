@@ -1,4 +1,7 @@
 #include <iostream>
+#include <fstream>
+#include <string>
+
 #include <vector>
 #include <algorithm>
 #include <typeinfo>
@@ -8,6 +11,12 @@
 #include <eigen3/Core>
 #include <eigen3/SVD>
 #include <eigen3/LU>
+
+// オプション処理
+#include <unistd.h>
+
+extern char *optarg;
+extern int optind, opterr, optopt;
 
 Eigen::Matrix3d calc_correlation_C(
     std::vector<Eigen::Vector3d> &x,
@@ -114,30 +123,89 @@ void SVD_test(Eigen::Matrix3d matrix_C)
               << std::endl;
 }
 
-int main()
+void load_pointdata(std::string file_path, std::vector<Eigen::Vector3d> &point_data)
 {
-    // 仮データ準備
+    std::fstream dat_file;
+
+    dat_file.open(file_path, std::ios::in);
+
+    //文字列分割についてはここ参考に
+    // https://marycore.jp/prog/cpp/std-string-split/
+    std::string buffer;
+    std::string separator = std::string(" ");
+    auto separator_length = separator.length();
+
+    int property_num = 3;
+
+    while (std::getline(dat_file, buffer))
+    {
+        std::vector<std::string> buf_list;
+        auto offset = std::string::size_type(0);
+
+        while (1)
+        {
+            auto pos = buffer.find(separator, offset);
+            if (pos == std::string::npos)
+            {
+                buf_list.push_back(buffer.substr(offset));
+                break;
+            }
+            buf_list.push_back(buffer.substr(offset, pos - offset));
+            offset = pos + separator_length;
+        }
+
+        if (buf_list.size() == property_num)
+        {
+            if (buf_list.at(0) != "#")
+            {
+                std::vector<double> vec_data;
+                for (auto e : buf_list)
+                {
+                    vec_data.push_back(std::stod(e));
+                }
+                Eigen::Vector3d tmp = {vec_data.at(0), vec_data.at(1), vec_data.at(2)};
+                point_data.push_back(tmp);
+            }
+        }
+    }
+}
+
+void transform_coordinate()
+{
+
     std::vector<Eigen::Vector3d> x, x_p;
+    std::string file_path_1 = "./point_data/res-data.dat";
+    std::string file_path_2 = "./point_data/res-data-rotate.dat";
 
-    Eigen::Vector3d a1 = {0.0, 0.0, 3.0};
-    Eigen::Vector3d a2 = {0.0, 2.0, 3.0};
-    Eigen::Vector3d a3 = {0.0, 0.0, 0.0};
-    Eigen::Vector3d a4 = {0.0, 2.0, 0.0};
-    Eigen::Vector3d a5 = {-2.0, 0.0, 3.0};
-    Eigen::Vector3d a6 = {-2.0, 1.0, 3.0};
-    Eigen::Vector3d a7 = {1.0, 2.0, 3.0};
-    Eigen::Vector3d a8 = {2.0, 2.0, 3.0};
-    Eigen::Vector3d a9 = {3.0, 2.0, 3.0};
+    load_pointdata(file_path_1, x);
+    load_pointdata(file_path_2, x_p);
 
-    Eigen::Vector3d b1 = {0.0, 0.0, 3.0};
-    Eigen::Vector3d b2 = {0.0, 2.0, 3.0};
-    Eigen::Vector3d b3 = {0.0, 0.0, 0.0};
-    Eigen::Vector3d b4 = {0.0, 2.0, 0.0};
-    Eigen::Vector3d b5 = {-2.0, 0.0, 3.0};
-    Eigen::Vector3d b6 = {-2.0, 1.0, 3.0};
-    Eigen::Vector3d b7 = {1.0, 2.0, 3.0};
-    Eigen::Vector3d b8 = {2.0, 2.0, 3.0};
-    Eigen::Vector3d b9 = {3.0, 2.0, 3.0};
+    for (auto e : x_p)
+    {
+        std::cout << e << std::endl;
+    }
+    // 仮データ準備
+    // std::vector<Eigen::Vector3d> x, x_p;
+
+    // Eigen::Vector3d a1 = {0.0, 0.0, 3.0};
+    // Eigen::Vector3d a2 = {0.0, 2.0, 3.0};
+    // Eigen::Vector3d a3 = {0.0, 0.0, 0.0};
+    // Eigen::Vector3d a4 = {0.0, 2.0, 0.0};
+    // Eigen::Vector3d a5 = {-2.0, 0.0, 3.0};
+    // Eigen::Vector3d a6 = {-2.0, 1.0, 3.0};
+    // Eigen::Vector3d a7 = {1.0, 2.0, 3.0};
+    // Eigen::Vector3d a8 = {2.0, 2.0, 3.0};
+    // Eigen::Vector3d a9 = {3.0, 2.0, 3.0};
+
+    // Eigen::Vector3d b1 = {0.0, 0.0, 3.0};
+    // Eigen::Vector3d b2 = {0.0, 2.0, 3.0};
+    // Eigen::Vector3d b3 = {0.0, 0.0, 0.0};
+    // Eigen::Vector3d b4 = {0.0, 2.0, 0.0};
+    // Eigen::Vector3d b5 = {-2.0, 0.0, 3.0};
+    // Eigen::Vector3d b6 = {-2.0, 1.0, 3.0};
+    // Eigen::Vector3d b7 = {1.0, 2.0, 3.0};
+    // Eigen::Vector3d b8 = {2.0, 2.0, 3.0};
+    // Eigen::Vector3d b9 = {3.0, 2.0, 3.0};
 
     // Eigen::Vector3d b1 = {0.0, 0.0, 3.0};
     // Eigen::Vector3d b2 = {1.0, 0.0, 3.0};
@@ -147,25 +215,25 @@ int main()
     // Eigen::Vector3d b6 = {1.0, 2.0, 3.0};
     // Eigen::Vector3d b7 = {1.0, 2.0, 0.0};
 
-    x.push_back(a1);
-    x.push_back(a2);
-    x.push_back(a3);
-    x.push_back(a4);
-    x.push_back(a5);
-    x.push_back(a6);
-    x.push_back(a7);
-    x.push_back(a8);
-    x.push_back(a9);
+    // x.push_back(a1);
+    // x.push_back(a2);
+    // x.push_back(a3);
+    // x.push_back(a4);
+    // x.push_back(a5);
+    // x.push_back(a6);
+    // x.push_back(a7);
+    // x.push_back(a8);
+    // x.push_back(a9);
 
-    x_p.push_back(b1);
-    x_p.push_back(b2);
-    x_p.push_back(b3);
-    x_p.push_back(b4);
-    x_p.push_back(b5);
-    x_p.push_back(b6);
-    x_p.push_back(b7);
-    x_p.push_back(b8);
-    x_p.push_back(b9);
+    // x_p.push_back(b1);
+    // x_p.push_back(b2);
+    // x_p.push_back(b3);
+    // x_p.push_back(b4);
+    // x_p.push_back(b5);
+    // x_p.push_back(b6);
+    // x_p.push_back(b7);
+    // x_p.push_back(b8);
+    // x_p.push_back(b9);
 
     // 重み
     double weight = 1.0;
@@ -177,17 +245,76 @@ int main()
     std::cout << correlation_C << std::endl
               << std::endl;
 
-    SVD_test(correlation_C);
+    // SVD_test(correlation_C);
     Eigen::Matrix3d matrix_R;
     matrix_R = calc_rotation_R(correlation_C);
 
-    std::cout << "x1_prime : " << std::endl
-              << b2 << std::endl;
-    std::cout << "R * x1 : " << std::endl
-              << matrix_R * a2 << std::endl;
+    // std::cout << "x1_prime : " << std::endl
+    //           << b2 << std::endl;
+    // std::cout << "R * x1 : " << std::endl
+    //           << matrix_R * a2 << std::endl;
 
-    std::cout << DBL_MIN << std::endl
-              << DBL_MAX << std::endl;
+    // std::cout << DBL_MIN << std::endl
+    //           << DBL_MAX << std::endl;
+}
+
+int main(int argc, char *argv[])
+{
+
+    //コマンドオプション処理
+    char opt;
+    int i;
+
+    //コマンドライン引数のオプションがなくなるまで繰り返す
+    // getoputの第3引数にオプションの文字列を指定する。引数撮る場合は":"をつける
+    // a,cは引数をとらないが、 bは引数をとる。
+    while ((opt = getopt(argc, argv, "ab:c")) != -1)
+    {
+        switch (opt)
+        {
+        case 'a':
+            // break;
+
+        case 'c':
+            printf("Option [%c].\n", opt);
+            break;
+
+        case 'b':
+            printf("Option [%c] with arg [%s]", opt, optarg);
+
+            if (optarg[0] == '-')
+            {
+                printf("Option [%c] requires three arguments\n", opt);
+                return -1;
+            }
+
+            for (i = 0; i < 2; i++)
+            {
+                if (argv[optind][0] == '-')
+                {
+                    printf("error!");
+                    return -1;
+                }
+                printf("[%s]", argv[optind++]);
+            }
+            printf("\n");
+            break;
+        default:
+            printf("Unknown option '%c'\n", opt);
+            break;
+        }
+        optarg = NULL;
+    }
+    /* オプション以外の引数を表示する。 */
+    if (optind < argc)
+    {
+        while (optind < argc)
+        {
+            printf("Not Option str '%s'\n", argv[optind++]);
+        }
+    }
+
+    transform_coordinate();
 
     return 0;
 }
