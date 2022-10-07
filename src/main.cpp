@@ -80,22 +80,15 @@ Eigen::Matrix3d calc_rotation_R(Eigen::Matrix3d correlation_C)
     std::cout << matrix_R << std::endl
               << std::endl;
 
-    // check
-    if (matrix_R.transpose() * matrix_R != Eigen::Matrix3d::Identity() && matrix_R * matrix_R.transpose() != Eigen::Matrix3d::Identity())
-    {
-        std::cout << "R_top*R = R*R_top = I  error" << std::endl;
-        std::cout << matrix_R.transpose() * matrix_R << std::endl
-                  << std::endl;
-        std::cout << matrix_R * matrix_R.transpose() << std::endl
-                  << std::endl;
-    }
+    // TODO check方法をもうちょっと工夫する 許容範囲の誤差以外になったらはじくとか。
+    std::cout << "check R_top*R = R*R_top = I" << std::endl;
+    std::cout << matrix_R.transpose() * matrix_R << std::endl
+              << std::endl;
+    std::cout << matrix_R * matrix_R.transpose() << std::endl
+              << std::endl;
 
     double r_det = matrix_R.determinant();
 
-    if (r_det == 1)
-    {
-        std::cout << "detR error" << std::endl;
-    }
     std::cout << "detR = +1 check" << std::endl;
     std::cout << r_det << std::endl
               << std::endl;
@@ -123,9 +116,12 @@ void SVD_test(Eigen::Matrix3d matrix_C)
               << std::endl;
 }
 
-void load_pointdata(std::string file_path, std::vector<Eigen::Vector3d> &point_data)
+void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_data)
 {
     std::fstream dat_file;
+    std::string point_file = "./point_data/";
+
+    std::string file_path = point_file + file_name;
 
     dat_file.open(file_path, std::ios::in);
 
@@ -154,6 +150,8 @@ void load_pointdata(std::string file_path, std::vector<Eigen::Vector3d> &point_d
             offset = pos + separator_length;
         }
 
+        // xyzだけを取り出したい
+        //要素数が3つで# がついてないやつを読み込む。
         if (buf_list.size() == property_num)
         {
             if (buf_list.at(0) != "#")
@@ -170,70 +168,23 @@ void load_pointdata(std::string file_path, std::vector<Eigen::Vector3d> &point_d
     }
 }
 
-void transform_coordinate()
+void output_result(std::string file_path_1, std::string file_path_2, std::string out_path, Eigen::Matrix3d matrix)
+{
+    std::ofstream output_matrix(out_path, std::ios::app);
+
+    output_matrix << file_path_1 << " " << file_path_2 << std::endl;
+    output_matrix << matrix;
+}
+
+void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string out_path)
 {
 
     std::vector<Eigen::Vector3d> x, x_p;
-    std::string file_path_1 = "./point_data/res-data.dat";
-    std::string file_path_2 = "./point_data/res-data-rotate.dat";
+    // std::string file_path_1 = "./point_data/res-data.dat";
+    // std::string file_path_2 = "./point_data/res-data-rotate.dat";
 
     load_pointdata(file_path_1, x);
     load_pointdata(file_path_2, x_p);
-
-    for (auto e : x_p)
-    {
-        std::cout << e << std::endl;
-    }
-    // 仮データ準備
-    // std::vector<Eigen::Vector3d> x, x_p;
-
-    // Eigen::Vector3d a1 = {0.0, 0.0, 3.0};
-    // Eigen::Vector3d a2 = {0.0, 2.0, 3.0};
-    // Eigen::Vector3d a3 = {0.0, 0.0, 0.0};
-    // Eigen::Vector3d a4 = {0.0, 2.0, 0.0};
-    // Eigen::Vector3d a5 = {-2.0, 0.0, 3.0};
-    // Eigen::Vector3d a6 = {-2.0, 1.0, 3.0};
-    // Eigen::Vector3d a7 = {1.0, 2.0, 3.0};
-    // Eigen::Vector3d a8 = {2.0, 2.0, 3.0};
-    // Eigen::Vector3d a9 = {3.0, 2.0, 3.0};
-
-    // Eigen::Vector3d b1 = {0.0, 0.0, 3.0};
-    // Eigen::Vector3d b2 = {0.0, 2.0, 3.0};
-    // Eigen::Vector3d b3 = {0.0, 0.0, 0.0};
-    // Eigen::Vector3d b4 = {0.0, 2.0, 0.0};
-    // Eigen::Vector3d b5 = {-2.0, 0.0, 3.0};
-    // Eigen::Vector3d b6 = {-2.0, 1.0, 3.0};
-    // Eigen::Vector3d b7 = {1.0, 2.0, 3.0};
-    // Eigen::Vector3d b8 = {2.0, 2.0, 3.0};
-    // Eigen::Vector3d b9 = {3.0, 2.0, 3.0};
-
-    // Eigen::Vector3d b1 = {0.0, 0.0, 3.0};
-    // Eigen::Vector3d b2 = {1.0, 0.0, 3.0};
-    // Eigen::Vector3d b3 = {0.0, 0.0, 0.0};
-    // Eigen::Vector3d b4 = {1.0, 0.0, 0.0};
-    // Eigen::Vector3d b5 = {0.0, 2.0, 3.0};
-    // Eigen::Vector3d b6 = {1.0, 2.0, 3.0};
-    // Eigen::Vector3d b7 = {1.0, 2.0, 0.0};
-
-    // x.push_back(a1);
-    // x.push_back(a2);
-    // x.push_back(a3);
-    // x.push_back(a4);
-    // x.push_back(a5);
-    // x.push_back(a6);
-    // x.push_back(a7);
-    // x.push_back(a8);
-    // x.push_back(a9);
-
-    // x_p.push_back(b1);
-    // x_p.push_back(b2);
-    // x_p.push_back(b3);
-    // x_p.push_back(b4);
-    // x_p.push_back(b5);
-    // x_p.push_back(b6);
-    // x_p.push_back(b7);
-    // x_p.push_back(b8);
-    // x_p.push_back(b9);
 
     // 重み
     double weight = 1.0;
@@ -249,13 +200,7 @@ void transform_coordinate()
     Eigen::Matrix3d matrix_R;
     matrix_R = calc_rotation_R(correlation_C);
 
-    // std::cout << "x1_prime : " << std::endl
-    //           << b2 << std::endl;
-    // std::cout << "R * x1 : " << std::endl
-    //           << matrix_R * a2 << std::endl;
-
-    // std::cout << DBL_MIN << std::endl
-    //           << DBL_MAX << std::endl;
+    output_result(file_path_1, file_path_2, out_path, matrix_R);
 }
 
 int main(int argc, char *argv[])
@@ -265,38 +210,45 @@ int main(int argc, char *argv[])
     char opt;
     int i;
 
+    std::string file_path_1;
+    std::string file_path_2;
+    std::string out_path;
+
     //コマンドライン引数のオプションがなくなるまで繰り返す
     // getoputの第3引数にオプションの文字列を指定する。引数撮る場合は":"をつける
     // a,cは引数をとらないが、 bは引数をとる。
-    while ((opt = getopt(argc, argv, "ab:c")) != -1)
+
+    optind = 0;
+    while ((opt = getopt(argc, argv, "i:")) != -1)
     {
         switch (opt)
         {
-        case 'a':
-            // break;
-
-        case 'c':
-            printf("Option [%c].\n", opt);
-            break;
-
-        case 'b':
-            printf("Option [%c] with arg [%s]", opt, optarg);
+        case 'i':
 
             if (optarg[0] == '-')
             {
-                printf("Option [%c] requires three arguments\n", opt);
+                printf("Option [%c] requires two arguments\n", opt);
+                std::cout << "opt";
                 return -1;
             }
 
-            for (i = 0; i < 2; i++)
-            {
-                if (argv[optind][0] == '-')
-                {
-                    printf("error!");
-                    return -1;
-                }
-                printf("[%s]", argv[optind++]);
-            }
+            optind--;
+            file_path_1 = argv[optind++];
+            file_path_2 = argv[optind++];
+            out_path = argv[optind];
+
+            //マジでオプション処理の動きがわからない
+            // for (i = 0; i < 1; i++)
+            // {
+
+            //     if (argv[optind][0] == '-')
+            //     {
+            //         printf("error!");
+            //         return -1;
+            //     }
+            //     file_path_2 = argv[optind++];
+            // }
+
             printf("\n");
             break;
         default:
@@ -310,11 +262,17 @@ int main(int argc, char *argv[])
     {
         while (optind < argc)
         {
-            printf("Not Option str '%s'\n", argv[optind++]);
+            optind++;
+            // printf("Not Option str '%s'\n", argv[optind++]);
         }
     }
 
-    transform_coordinate();
+    std::cout << "filepath_1 :" << file_path_1 << std::endl;
+    std::cout << "filepath_2 :" << file_path_2 << std::endl
+              << std::endl;
+    // std::cout << "outpath :" << out_path << std::endl;
+
+    transform_coordinate(file_path_1, file_path_2, out_path);
 
     return 0;
 }
