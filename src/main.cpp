@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <typeinfo>
 #include <float.h>
+#include <math.h>
 
 #include <opencv2/opencv.hpp>
 #include <eigen3/Core>
@@ -168,6 +169,82 @@ void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_d
     }
 }
 
+Eigen::Vector3d equirectangular_to_sphere(double u, double v, double w, double h)
+{
+    //正距円筒から球の座標への変換
+    double phi = u * (2 * M_PI) / w;
+    double theta = v * (M_PI / h);
+    double r = 1.0;
+
+    Eigen::Vector3d p = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
+
+    return p;
+}
+
+void load_img_pointdata(std::string file_name, std::string img_name, std::vector<Eigen::Vector3d> &point_data)
+{
+    std::fstream dat_file;
+    std::string point_file = "./point_data/";
+    std::string img_file = "./img/";
+
+    //画像サイズが欲しいので 取ってくる。
+    std::strint img_file_path = img_file + img_name;
+    cv::Mat img = cv::imread(img_file_path);
+    if (img.empty())
+    {
+        cout << "couldn't read the image." << endl;
+        return 1;
+    }
+
+    std::string file_path = point_file + file_name;
+
+    dat_file.open(file_path, std::ios::in);
+
+    //文字列分割についてはここ参考に
+    // https://marycore.jp/prog/cpp/std-string-split/
+    std::string buffer;
+    std::string separator = std::string(" ");
+    auto separator_length = separator.length();
+
+    int property_num = 3;
+
+    while (std::getline(dat_file, buffer))
+    {
+        std::vector<std::string> buf_list;
+        auto offset = std::string::size_type(0);
+
+        while (1)
+        {
+            auto pos = buffer.find(separator, offset);
+            if (pos == std::string::npos)
+            {
+                buf_list.push_back(buffer.substr(offset));
+                break;
+            }
+            buf_list.push_back(buffer.substr(offset, pos - offset));
+            offset = pos + separator_length;
+        }
+
+        // xyzだけを取り出したい
+        //要素数が3つで# がついてないやつを読み込む。
+        if (buf_list.size() == property_num)
+        {
+            if (buf_list.at(0) != "#")
+            {
+                std::vector<double> vec_data;
+                for (auto e : buf_list)
+                {
+                    vec_data.push_back(std::stod(e));
+                }
+
+                Eigen::Vector3d tmp = equirectangular_to_sphere(vec_data.at(0), vec_data.at(1), img.rows, img.cols);
+                // Eigen::Vector3d tmp = {vec_data.at(0), vec_data.at(1), vec_data.at(2)};
+                point_data.push_back(tmp);
+            }
+        }
+    }
+}
+
 void output_result(std::string file_path_1, std::string file_path_2, std::string out_path, Eigen::Matrix3d matrix)
 {
     std::ofstream output_matrix(out_path, std::ios::app);
@@ -175,6 +252,30 @@ void output_result(std::string file_path_1, std::string file_path_2, std::string
     output_matrix << file_path_1 << " " << file_path_2 << std::endl;
     output_matrix << matrix;
 }
+
+// vertex# 1198
+// position [29.282000 109.281998 100.000000]
+// normal [0.000000 0.000000 0.000000]
+// color (0.000000 0.000000 0.000000 0.000000)
+// ------
+// ------
+// vertex# 1330
+// position [36.602501 136.602997 100.000000]
+// normal [0.000000 0.000000 0.000000]
+// color (0.000000 0.000000 0.000000 0.000000)
+// ------
+// ------
+// vertex# 1162
+// position [59.282001 57.320499 40.000000]
+// normal [0.000000 0.000000 0.000000]
+// color (0.000000 0.000000 0.000000 0.000000)
+// ------
+// ------
+// vertex# 1087
+// position [1.961520 116.602997 80.000000]
+// normal [0.000000 0.000000 0.000000]
+// color (0.000000 0.000000 0.000000 0.000000)
+// ------
 
 void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string out_path)
 {
@@ -271,9 +372,6 @@ int main(int argc, char *argv[])
     std::cout << "filepath_2 :" << file_path_2 << std::endl
               << std::endl;
     // std::cout << "outpath :" << out_path << std::endl;
-
-
-
 
     transform_coordinate(file_path_1, file_path_2, out_path);
 
