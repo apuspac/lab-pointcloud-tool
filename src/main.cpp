@@ -120,7 +120,7 @@ void SVD_test(Eigen::Matrix3d matrix_C)
 void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_data)
 {
     std::fstream dat_file;
-    std::string point_file = "./point_data/";
+    std::string point_file = "./point_data2/";
 
     std::string file_path = point_file + file_name;
 
@@ -169,32 +169,47 @@ void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_d
     }
 }
 
-Eigen::Vector3d equirectangular_to_sphere(double u, double v, double w, double h)
+Eigen::Vector3d equirectangular_to_sphere(double x, double y, double w, double h)
 {
     //正距円筒から球の座標への変換
-    double phi = u * (2 * M_PI) / w;
-    double theta = v * (M_PI / h);
+    // pointgetterは、 y, xで出力されるので、
+    double tmp = x;
+    x = y;
+    y = tmp;
+
+    //正規化
+    x = x / (w / 2);
+    y = y / (h / 2);
+
+    // 緯度経度計算
+    double phi = x * M_PI;
+    double theta = y * M_PI;
+
     double r = 1.0;
 
-    Eigen::Vector3d p = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
+    Eigen::Vector3d p = {abs(cos(theta)) * cos(phi), abs(cos(theta)) * sin(phi), sin(theta)};
+
+    std::cout << p.transpose() << std::endl;
 
     return p;
 }
 
-void load_img_pointdata(std::string file_name, std::string img_name, std::vector<Eigen::Vector3d> &point_data)
+int load_img_pointdata(std::string file_name, std::string img_name, std::vector<Eigen::Vector3d> &point_data)
 {
     std::fstream dat_file;
     std::string point_file = "./point_data/";
     std::string img_file = "./img/";
 
     //画像サイズが欲しいので 取ってくる。
-    std::strint img_file_path = img_file + img_name;
+    std::string img_file_path = img_file + img_name;
     cv::Mat img = cv::imread(img_file_path);
     if (img.empty())
     {
-        cout << "couldn't read the image." << endl;
+        std::cout << "couldn't read the image." << std::endl;
         return 1;
     }
+
+    std::cout << img.rows << " " << img.cols << std::endl;
 
     std::string file_path = point_file + file_name;
 
@@ -206,7 +221,7 @@ void load_img_pointdata(std::string file_name, std::string img_name, std::vector
     std::string separator = std::string(" ");
     auto separator_length = separator.length();
 
-    int property_num = 3;
+    int property_num = 2;
 
     while (std::getline(dat_file, buffer))
     {
@@ -237,47 +252,47 @@ void load_img_pointdata(std::string file_name, std::string img_name, std::vector
                     vec_data.push_back(std::stod(e));
                 }
 
-                Eigen::Vector3d tmp = equirectangular_to_sphere(vec_data.at(0), vec_data.at(1), img.rows, img.cols);
+                Eigen::Vector3d tmp = equirectangular_to_sphere(vec_data.at(0), vec_data.at(1), img.cols, img.rows);
                 // Eigen::Vector3d tmp = {vec_data.at(0), vec_data.at(1), vec_data.at(2)};
                 point_data.push_back(tmp);
             }
         }
     }
+    return 0;
 }
 
 void output_result(std::string file_path_1, std::string file_path_2, std::string out_path, Eigen::Matrix3d matrix)
 {
     std::ofstream output_matrix(out_path, std::ios::app);
 
+    output_matrix << std::endl;
     output_matrix << file_path_1 << " " << file_path_2 << std::endl;
     output_matrix << matrix;
 }
 
-// vertex# 1198
-// position [29.282000 109.281998 100.000000]
-// normal [0.000000 0.000000 0.000000]
-// color (0.000000 0.000000 0.000000 0.000000)
-// ------
-// ------
-// vertex# 1330
-// position [36.602501 136.602997 100.000000]
-// normal [0.000000 0.000000 0.000000]
-// color (0.000000 0.000000 0.000000 0.000000)
-// ------
-// ------
-// vertex# 1162
-// position [59.282001 57.320499 40.000000]
-// normal [0.000000 0.000000 0.000000]
-// color (0.000000 0.000000 0.000000 0.000000)
-// ------
-// ------
-// vertex# 1087
-// position [1.961520 116.602997 80.000000]
-// normal [0.000000 0.000000 0.000000]
-// color (0.000000 0.000000 0.000000 0.000000)
-// ------
+void simlation_value(Eigen::Vector3d n, double degree)
+{
+    //単位ベクトル
+    n = n.normalized();
 
-void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string out_path)
+    double radian = degree * (M_PI / 180);
+
+    Eigen::Matrix3d Matrix_R, Matrix_Kn, Matrix_Kn2, Matrix_I;
+
+    Matrix_Kn << 0, -n(2), n(1),
+        n(2), 0, -n(0),
+        -n(1), n(0), 0;
+
+    Matrix_I = Eigen::Matrix3d::Identity();
+    Matrix_Kn2 = Matrix_Kn * Matrix_Kn;
+
+    Matrix_R = Matrix_I + sin(radian) * Matrix_Kn + (1 - cos(radian)) * Matrix_Kn2;
+
+    std::cout << "計算してみた" << std::endl
+              << Matrix_R.transpose();
+}
+
+void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string out_path, std::string img_path)
 {
 
     std::vector<Eigen::Vector3d> x, x_p;
@@ -285,7 +300,11 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     // std::string file_path_2 = "./point_data/res-data-rotate.dat";
 
     load_pointdata(file_path_1, x);
+    // load_img_pointdata(file_path_1, img_path, x);
     load_pointdata(file_path_2, x_p);
+
+    Eigen::Vector3d a = {0.5, 0.5, 1.0};
+    simlation_value(a, 30);
 
     // 重み
     double weight = 1.0;
@@ -314,6 +333,7 @@ int main(int argc, char *argv[])
     std::string file_path_1;
     std::string file_path_2;
     std::string out_path;
+    std::string img_path;
 
     //コマンドライン引数のオプションがなくなるまで繰り返す
     // getoputの第3引数にオプションの文字列を指定する。引数撮る場合は":"をつける
@@ -336,7 +356,8 @@ int main(int argc, char *argv[])
             optind--;
             file_path_1 = argv[optind++];
             file_path_2 = argv[optind++];
-            out_path = argv[optind];
+            out_path = argv[optind++];
+            img_path = argv[optind];
 
             //マジでオプション処理の動きがわからない
             // for (i = 0; i < 1; i++)
@@ -371,9 +392,10 @@ int main(int argc, char *argv[])
     std::cout << "filepath_1 :" << file_path_1 << std::endl;
     std::cout << "filepath_2 :" << file_path_2 << std::endl
               << std::endl;
-    // std::cout << "outpath :" << out_path << std::endl;
+    std::cout << "outpath :" << out_path << std::endl;
+    std::cout << "imgpath :" << img_path << std::endl;
 
-    transform_coordinate(file_path_1, file_path_2, out_path);
+    transform_coordinate(file_path_1, file_path_2, out_path, img_path);
 
     return 0;
 }
