@@ -68,10 +68,10 @@ Eigen::Matrix3d calc_rotation_R(Eigen::Matrix3d correlation_C)
     matrix_V = SVD.matrixV();
 
     // det(V UT) 計算結果は 1か-1になるはず
-    double det_VU = (matrix_V * matrix_U.transpose()).determinant();
+    double det_VUt = (matrix_V * matrix_U.transpose()).determinant();
 
     //対角行列
-    Eigen::DiagonalMatrix<double, 3> matrix_Diag = {1.0, 1.0, det_VU};
+    Eigen::DiagonalMatrix<double, 3> matrix_Diag = {1.0, 1.0, det_VUt};
 
     // 回転行列Rの最大化の式
     matrix_R = matrix_V * matrix_Diag * matrix_U.transpose();
@@ -169,25 +169,23 @@ void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_d
     }
 }
 
-Eigen::Vector3d equirectangular_to_sphere(double x, double y, double w, double h)
+Eigen::Vector3d equirectangular_to_sphere(double u, double v, double w, double h)
 {
     //正距円筒から球の座標への変換
-    // pointgetterは、 y, xで出力されるので、
-    double tmp = x;
-    x = y;
-    y = tmp;
+    // pointgetterからは、左上が原点の U,V座標で出力
 
     //正規化
-    x = x / (w / 2);
-    y = y / (h / 2);
+    u /= w;
+    v /= h;
 
     // 緯度経度計算
-    double phi = x * M_PI;
-    double theta = y * M_PI;
+    double phi = u * 2 * M_PI;
+    double theta = v * M_PI;
 
-    double r = 1.0;
+    // double r = 1.0;
 
-    Eigen::Vector3d p = {abs(cos(theta)) * cos(phi), abs(cos(theta)) * sin(phi), sin(theta)};
+    //方向ベクトル
+    Eigen::Vector3d p = {abs(sin(theta)) * cos(phi), abs(sin(theta)) * sin(phi), cos(theta)};
 
     std::cout << p.transpose() << std::endl;
 
@@ -283,13 +281,18 @@ void simlation_value(Eigen::Vector3d n, double degree)
         n(2), 0, -n(0),
         -n(1), n(0), 0;
 
+    //こっちだと符号は一緒になるけど...
+    // Matrix_Kn << 0, n(2), -n(1),
+    //     -n(2), 0, n(0),
+    //     n(1), -n(0), 0;
+
     Matrix_I = Eigen::Matrix3d::Identity();
     Matrix_Kn2 = Matrix_Kn * Matrix_Kn;
 
     Matrix_R = Matrix_I + sin(radian) * Matrix_Kn + (1 - cos(radian)) * Matrix_Kn2;
 
-    std::cout << "計算してみた" << std::endl
-              << Matrix_R.transpose();
+    std::cout << "理論値" << std::endl
+              << Matrix_R << std::endl;
 }
 
 void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string out_path, std::string img_path)
@@ -299,22 +302,28 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     // std::string file_path_1 = "./point_data/res-data.dat";
     // std::string file_path_2 = "./point_data/res-data-rotate.dat";
 
-    load_pointdata(file_path_1, x);
     // load_img_pointdata(file_path_1, img_path, x);
+    load_pointdata(file_path_1, x);
     load_pointdata(file_path_2, x_p);
 
-    Eigen::Vector3d a = {0.5, 0.5, 1.0};
+    Eigen::Vector3d a = {0, 0, 1.0};
     simlation_value(a, 30);
 
+    Eigen::Matrix3d matrix_k;
+    matrix_k << 0, 0, 1,
+        1, 0, 1,
+        0, 0, 0;
+
+    std::cout << matrix_k(0, 2);
     // 重み
     double weight = 1.0;
     //相関行列C
     Eigen::Matrix3d correlation_C;
     correlation_C = calc_correlation_C(x, x_p, weight);
 
-    std::cout << "correlation_C : " << std::endl;
-    std::cout << correlation_C << std::endl
-              << std::endl;
+    // std::cout << "correlation_C : " << std::endl;
+    // std::cout << correlation_C << std::endl
+    //           << std::endl;
 
     // SVD_test(correlation_C);
     Eigen::Matrix3d matrix_R;
