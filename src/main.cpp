@@ -52,6 +52,11 @@ Eigen::Matrix3d calc_correlation_C(
         Eigen::Vector3d tmp = *iter;
         Eigen::Vector3d tmp_p = *iter_p;
 
+        // std::cout << "right" << std::endl
+        //           << weight * tmp_p * (tmp.transpose()) << std::endl;
+        // std::cout << "correlation_C" << std::endl
+        //           << correlation_C << std::endl;
+
         correlation_C += weight * tmp_p * (tmp.transpose());
     }
 
@@ -64,8 +69,11 @@ Eigen::Matrix3d calc_rotation_R(Eigen::Matrix3d correlation_C)
     Eigen::JacobiSVD<Eigen::Matrix3d> SVD(correlation_C, Eigen::ComputeFullU | Eigen::ComputeFullV);
     Eigen::Matrix3d matrix_V, matrix_U, matrix_R;
 
-    matrix_U = SVD.matrixU();
-    matrix_V = SVD.matrixV();
+    // https://eigen.tuxfamily.org/dox/classEigen_1_1JacobiSVD.html
+    //  ここみると、SVD結果が A = USVで出力されている。
+    //  計算は資料の方に合わせたいので、ここで反転させる。
+    matrix_V = SVD.matrixU();
+    matrix_U = SVD.matrixV();
 
     // det(V UT) 計算結果は 1か-1になるはず
     double det_VUt = (matrix_V * matrix_U.transpose()).determinant();
@@ -78,7 +86,7 @@ Eigen::Matrix3d calc_rotation_R(Eigen::Matrix3d correlation_C)
 
     //回転行列R
     std::cout << "Matrix_R" << std::endl;
-    std::cout << matrix_R << std::endl
+    std::cout << std::setprecision(15) << matrix_R << std::endl
               << std::endl;
 
     // TODO check方法をもうちょっと工夫する 許容範囲の誤差以外になったらはじくとか。
@@ -115,6 +123,8 @@ void SVD_test(Eigen::Matrix3d matrix_C)
     std::cout << "SVDでもとの行列になるか " << std::endl;
     std::cout << M2 << std::endl
               << std::endl;
+    std::cout << "matrix_C" << std::endl
+              << matrix_C << std::endl;
 }
 
 void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_data)
@@ -273,7 +283,7 @@ void simlation_value(Eigen::Vector3d n, double degree)
     //単位ベクトル
     n = n.normalized();
 
-    double radian = degree * (M_PI / 180);
+    double radian = degree * (M_PI / 180.0);
 
     Eigen::Matrix3d Matrix_R, Matrix_Kn, Matrix_Kn2, Matrix_I;
 
@@ -281,18 +291,13 @@ void simlation_value(Eigen::Vector3d n, double degree)
         n(2), 0, -n(0),
         -n(1), n(0), 0;
 
-    //こっちだと符号は一緒になるけど...
-    // Matrix_Kn << 0, n(2), -n(1),
-    //     -n(2), 0, n(0),
-    //     n(1), -n(0), 0;
-
     Matrix_I = Eigen::Matrix3d::Identity();
     Matrix_Kn2 = Matrix_Kn * Matrix_Kn;
 
     Matrix_R = Matrix_I + sin(radian) * Matrix_Kn + (1 - cos(radian)) * Matrix_Kn2;
 
-    std::cout << "理論値" << std::endl
-              << Matrix_R << std::endl;
+    std::cout << "理論値" << std::endl;
+    std::cout << std::setprecision(15) << Matrix_R << std::endl;
 }
 
 void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string out_path, std::string img_path)
@@ -303,20 +308,16 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     // std::string file_path_2 = "./point_data/res-data-rotate.dat";
 
     // load_img_pointdata(file_path_1, img_path, x);
+    std::cout << std::fixed;
     load_pointdata(file_path_1, x);
     load_pointdata(file_path_2, x_p);
 
-    Eigen::Vector3d a = {0, 0, 1.0};
+    Eigen::Vector3d a = {0.5, 0.5, 1.0};
     simlation_value(a, 30);
 
-    Eigen::Matrix3d matrix_k;
-    matrix_k << 0, 0, 1,
-        1, 0, 1,
-        0, 0, 0;
-
-    std::cout << matrix_k(0, 2);
     // 重み
-    double weight = 1.0;
+    double weight = 1;
+
     //相関行列C
     Eigen::Matrix3d correlation_C;
     correlation_C = calc_correlation_C(x, x_p, weight);
@@ -325,10 +326,10 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     // std::cout << correlation_C << std::endl
     //           << std::endl;
 
-    // SVD_test(correlation_C);
     Eigen::Matrix3d matrix_R;
     matrix_R = calc_rotation_R(correlation_C);
 
+    SVD_test(correlation_C);
     output_result(file_path_1, file_path_2, out_path, matrix_R);
 }
 
