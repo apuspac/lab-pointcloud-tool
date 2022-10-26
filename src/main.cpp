@@ -205,7 +205,7 @@ Eigen::Vector3d equirectangular_to_sphere(double u, double v, double w, double h
 int load_img_pointdata(std::string file_name, std::string img_name, std::vector<Eigen::Vector3d> &point_data)
 {
     std::fstream dat_file;
-    std::string point_file = "./point_data/";
+    std::string point_file = "./point_data2/";
     std::string img_file = "./img/";
 
     //画像サイズが欲しいので 取ってくる。
@@ -266,16 +266,8 @@ int load_img_pointdata(std::string file_name, std::string img_name, std::vector<
             }
         }
     }
+
     return 0;
-}
-
-void output_result(std::string file_path_1, std::string file_path_2, std::string out_path, Eigen::Matrix3d matrix)
-{
-    std::ofstream output_matrix(out_path, std::ios::app);
-
-    output_matrix << std::endl;
-    output_matrix << file_path_1 << " " << file_path_2 << std::endl;
-    output_matrix << matrix;
 }
 
 void simlation_value(Eigen::Vector3d n, double degree)
@@ -300,37 +292,98 @@ void simlation_value(Eigen::Vector3d n, double degree)
     std::cout << std::setprecision(15) << Matrix_R << std::endl;
 }
 
+void rorate_pointdata(std::vector<Eigen::Vector3d> &point_data, std::vector<Eigen::Vector3d> &rotate_data, Eigen::Matrix3d matrix)
+{
+    for (Eigen::Vector3d &tmp : point_data)
+    {
+        tmp = matrix * tmp;
+        rotate_data.push_back(tmp);
+    }
+}
+
+void move_pointdata(std::vector<Eigen::Vector3d> &point_data, std::vector<Eigen::Vector3d> &move_data, double height)
+{
+    for (Eigen::Vector3d &tmp : point_data)
+    {
+        tmp(0) = height + tmp(0);
+        tmp(1) = height + tmp(1);
+        tmp(2) = height + tmp(2);
+
+        move_data.push_back(tmp);
+    }
+}
+
+void output_result(std::string file_path_1, std::string file_path_2, std::string out_path, Eigen::Matrix3d matrix)
+{
+    std::ofstream output_matrix(out_path, std::ios::app);
+
+    output_matrix << std::endl;
+    output_matrix << file_path_1 << " " << file_path_2 << std::endl;
+    output_matrix << matrix;
+}
+
+void output_ply(std::vector<Eigen::Vector3d> &point_data, std::string out_path)
+{
+    std::ofstream output_ply(out_path, std::ios::app);
+
+    output_ply << "ply" << std::endl
+               << "format ascii 1.0" << std::endl
+               << "element vertex " << point_data.size() << std::endl
+               << "property float x" << std::endl
+               << "property float y" << std::endl
+               << "property float z" << std::endl
+               << "end_header" << std::endl;
+
+    for (const Eigen::Vector3d &tmp : point_data)
+    {
+        output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
+    }
+}
+
 void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string out_path, std::string img_path)
 {
 
-    std::vector<Eigen::Vector3d> x, x_p;
+    std::vector<Eigen::Vector3d> x, x_p, m_x;
     // std::string file_path_1 = "./point_data/res-data.dat";
     // std::string file_path_2 = "./point_data/res-data-rotate.dat";
 
-    // load_img_pointdata(file_path_1, img_path, x);
-    std::cout << std::fixed;
-    load_pointdata(file_path_1, x);
-    load_pointdata(file_path_2, x_p);
+    load_img_pointdata(file_path_1, img_path, x_p);
 
-    Eigen::Vector3d a = {0.5, 0.5, 1.0};
+    std::cout << std::fixed;
+    // load_pointdata(file_path_1, x);
+    load_pointdata(file_path_2, m_x);
+
+    // 3Dデータとカメラとの距離
+    double h = 0.1;
+    move_pointdata(m_x, x, h);
+
+    //理論値
+    Eigen::Vector3d a = {0, 0, 1.0};
     simlation_value(a, 30);
 
     // 重み
     double weight = 1;
+    std::cout << "x" << std::endl;
+    std::cout << x.at(2);
+
+    std::cout << "x_p" << std::endl;
+    std::cout << x_p.at(1);
 
     //相関行列C
     Eigen::Matrix3d correlation_C;
     correlation_C = calc_correlation_C(x, x_p, weight);
 
-    // std::cout << "correlation_C : " << std::endl;
-    // std::cout << correlation_C << std::endl
-    //           << std::endl;
-
+    //回転行列計算
     Eigen::Matrix3d matrix_R;
     matrix_R = calc_rotation_R(correlation_C);
 
-    SVD_test(correlation_C);
-    output_result(file_path_1, file_path_2, out_path, matrix_R);
+    // SVD_test(correlation_C);
+    // output_result(file_path_1, file_path_2, out_path, matrix_R);
+
+    std::vector<Eigen::Vector3d> R_x;
+    rorate_pointdata(x, R_x, matrix_R);
+
+    output_ply(R_x, out_path);
 }
 
 int main(int argc, char *argv[])
