@@ -130,7 +130,7 @@ void SVD_test(Eigen::Matrix3d matrix_C)
 void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_data)
 {
     std::fstream dat_file;
-    std::string point_file = "./point_data2/";
+    std::string point_file = "./testdata/";
 
     std::string file_path = point_file + file_name;
 
@@ -205,7 +205,7 @@ Eigen::Vector3d equirectangular_to_sphere(double u, double v, double w, double h
 int load_img_pointdata(std::string file_name, std::string img_name, std::vector<Eigen::Vector3d> &point_data)
 {
     std::fstream dat_file;
-    std::string point_file = "./point_data2/";
+    std::string point_file = "./testdata/";
     std::string img_file = "./img/";
 
     //画像サイズが欲しいので 取ってくる。
@@ -347,27 +347,26 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     // std::string file_path_1 = "./point_data/res-data.dat";
     // std::string file_path_2 = "./point_data/res-data-rotate.dat";
 
-    load_img_pointdata(file_path_1, img_path, x_p);
-
     std::cout << std::fixed;
+
+    //シミュレーション:load data
     // load_pointdata(file_path_1, x);
+    // load_pointdata(file_path_2, x_p);
+
+    //画像とpointdata
+    load_img_pointdata(file_path_1, img_path, x_p);
     load_pointdata(file_path_2, m_x);
 
     // 3Dデータとカメラとの距離
     double h = 0.1;
     move_pointdata(m_x, x, h);
 
-    //理論値
-    Eigen::Vector3d a = {0, 0, 1.0};
-    simlation_value(a, 30);
+    //シミュレーション: 理論値
+    // Eigen::Vector3d a = {0.5, 0.5, 1.0};
+    // simlation_value(a, 30);
 
     // 重み
     double weight = 1;
-    std::cout << "x" << std::endl;
-    std::cout << x.at(2);
-
-    std::cout << "x_p" << std::endl;
-    std::cout << x_p.at(1);
 
     //相関行列C
     Eigen::Matrix3d correlation_C;
@@ -381,7 +380,7 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     // output_result(file_path_1, file_path_2, out_path, matrix_R);
 
     std::vector<Eigen::Vector3d> R_x;
-    rorate_pointdata(x, R_x, matrix_R);
+    // rorate_pointdata(x, R_x, matrix_R);
 
     output_ply(R_x, out_path);
 }
