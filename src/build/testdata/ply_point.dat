@@ -1,11 +1,4 @@
-ply
-format ascii 1.0
-comment ViewPLUS PointType : struct vp::PointXYZI
-element vertex 13
-property float x
-property float y
-property float z
-end_header
+13
 0.617232 -2.941695 0.716626
 -0.390646 -2.951324 0.707590
 -0.640643 -3.377578 0.123054

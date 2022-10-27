@@ -54,11 +54,13 @@ Eigen::Matrix3d calc_correlation_C(
 
         // std::cout << "right" << std::endl
         //           << weight * tmp_p * (tmp.transpose()) << std::endl;
-        // std::cout << "correlation_C" << std::endl
-        //           << correlation_C << std::endl;
 
         correlation_C += weight * tmp_p * (tmp.transpose());
     }
+
+    std::cout << std::endl
+              << "correlation_C" << std::endl
+              << correlation_C << std::endl;
 
     return correlation_C;
 }
@@ -85,22 +87,23 @@ Eigen::Matrix3d calc_rotation_R(Eigen::Matrix3d correlation_C)
     matrix_R = matrix_V * matrix_Diag * matrix_U.transpose();
 
     //回転行列R
-    std::cout << "Matrix_R" << std::endl;
+    std::cout << std::endl
+              << "Matrix_R" << std::endl;
     std::cout << std::setprecision(15) << matrix_R << std::endl
               << std::endl;
 
-    // TODO check方法をもうちょっと工夫する 許容範囲の誤差以外になったらはじくとか。
-    std::cout << "check R_top*R = R*R_top = I" << std::endl;
-    std::cout << matrix_R.transpose() * matrix_R << std::endl
-              << std::endl;
-    std::cout << matrix_R * matrix_R.transpose() << std::endl
-              << std::endl;
+    // // TODO check方法をもうちょっと工夫する 許容範囲の誤差以外になったらはじくとか。
+    // std::cout << "check R_top*R = R*R_top = I" << std::endl;
+    // std::cout << matrix_R.transpose() * matrix_R << std::endl
+    //           << std::endl;
+    // std::cout << matrix_R * matrix_R.transpose() << std::endl
+    //           << std::endl;
 
-    double r_det = matrix_R.determinant();
+    // double r_det = matrix_R.determinant();
 
-    std::cout << "detR = +1 check" << std::endl;
-    std::cout << r_det << std::endl
-              << std::endl;
+    // std::cout << "detR = +1 check" << std::endl;
+    // std::cout << r_det << std::endl
+    //           << std::endl;
 
     return matrix_R;
 }
@@ -177,6 +180,13 @@ void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_d
             }
         }
     }
+
+    std::cout << std::endl
+              << "load ply_point" << std::endl;
+    for (auto e : point_data)
+    {
+        std::cout << e(0) << " " << e(1) << " " << e(2) << std::endl;
+    }
 }
 
 Eigen::Vector3d equirectangular_to_sphere(double u, double v, double w, double h)
@@ -197,8 +207,6 @@ Eigen::Vector3d equirectangular_to_sphere(double u, double v, double w, double h
     //方向ベクトル
     Eigen::Vector3d p = {abs(sin(theta)) * cos(phi), abs(sin(theta)) * sin(phi), cos(theta)};
 
-    std::cout << p.transpose() << std::endl;
-
     return p;
 }
 
@@ -217,6 +225,8 @@ int load_img_pointdata(std::string file_name, std::string img_name, std::vector<
         return 1;
     }
 
+    std::cout << std::endl
+              << "img_size:height width" << std::endl;
     std::cout << img.rows << " " << img.cols << std::endl;
 
     std::string file_path = point_file + file_name;
@@ -229,7 +239,11 @@ int load_img_pointdata(std::string file_name, std::string img_name, std::vector<
     std::string separator = std::string(" ");
     auto separator_length = separator.length();
 
+    // image_point_dataは2つ
     int property_num = 2;
+
+    std::cout << std::endl
+              << "img_point_data" << std::endl;
 
     while (std::getline(dat_file, buffer))
     {
@@ -249,7 +263,7 @@ int load_img_pointdata(std::string file_name, std::string img_name, std::vector<
         }
 
         // xyzだけを取り出したい
-        //要素数が3つで# がついてないやつを読み込む。
+        //要素数が2つで# がついてないやつを読み込む。
         if (buf_list.size() == property_num)
         {
             if (buf_list.at(0) != "#")
@@ -260,6 +274,8 @@ int load_img_pointdata(std::string file_name, std::string img_name, std::vector<
                     vec_data.push_back(std::stod(e));
                 }
 
+                std::cout << vec_data.at(0) << " " << vec_data.at(1) << std::endl;
+
                 Eigen::Vector3d tmp = equirectangular_to_sphere(vec_data.at(0), vec_data.at(1), img.cols, img.rows);
                 // Eigen::Vector3d tmp = {vec_data.at(0), vec_data.at(1), vec_data.at(2)};
                 point_data.push_back(tmp);
@@ -267,10 +283,17 @@ int load_img_pointdata(std::string file_name, std::string img_name, std::vector<
         }
     }
 
+    std::cout << std::endl
+              << "方向ベクトル変換後" << std::endl;
+    for (auto e : point_data)
+    {
+        std::cout << e(0) << " " << e(1) << " " << e(2) << std::endl;
+    }
+
     return 0;
 }
 
-void simlation_value(Eigen::Vector3d n, double degree)
+Eigen::Matrix3d simlation_value(Eigen::Vector3d n, double degree)
 {
     //単位ベクトル
     n = n.normalized();
@@ -290,6 +313,8 @@ void simlation_value(Eigen::Vector3d n, double degree)
 
     std::cout << "理論値" << std::endl;
     std::cout << std::setprecision(15) << Matrix_R << std::endl;
+
+    return Matrix_R;
 }
 
 void rorate_pointdata(std::vector<Eigen::Vector3d> &point_data, std::vector<Eigen::Vector3d> &rotate_data, Eigen::Matrix3d matrix)
@@ -358,12 +383,13 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     load_pointdata(file_path_2, m_x);
 
     // 3Dデータとカメラとの距離
-    double h = 0.1;
+    double h = 0.0;
     move_pointdata(m_x, x, h);
 
     //シミュレーション: 理論値
-    // Eigen::Vector3d a = {0.5, 0.5, 1.0};
-    // simlation_value(a, 30);
+    Eigen::Matrix3d Rironchi_matrix_R;
+    Eigen::Vector3d a = {0, 0, 1.0};
+    Rironchi_matrix_R = simlation_value(a, 30);
 
     // 重み
     double weight = 1;
@@ -379,10 +405,12 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     // SVD_test(correlation_C);
     // output_result(file_path_1, file_path_2, out_path, matrix_R);
 
-    std::vector<Eigen::Vector3d> R_x;
-    // rorate_pointdata(x, R_x, matrix_R);
+    std::vector<Eigen::Vector3d> i_x, R_x;
+    rorate_pointdata(x, R_x, Rironchi_matrix_R);
+    rorate_pointdata(x_p, i_x, Rironchi_matrix_R);
 
-    output_ply(R_x, out_path);
+    output_ply(R_x, out_path + "Rx.ply");
+    output_ply(i_x, out_path + "ix.ply");
 }
 
 int main(int argc, char *argv[])
