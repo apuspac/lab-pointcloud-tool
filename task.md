@@ -21,7 +21,7 @@ vscodeのC++設定ファイルにinclude pathを書くところがあるので�
 ubuntu22.04で`sudo apt install livopencv-dev`したときは、includepathが`/usr/include/opencv4`でした。
 
 - eigenインストール  
-EigenからDLしてきて /usr/local/include/eigen3にコピーする。
+EigenからDLしてきて 展開した中のEigenファイルを/usr/local/include/eigen3にコピーする。
 
 - firstプログラムを動かしてみる。
 動かせた。コンパイルもヘッダー指定がもとからされているのか 何も指定しなくても動いた。
@@ -29,6 +29,38 @@ EigenからDLしてきて /usr/local/include/eigen3にコピーする。
 - Cmake使うときEigenの指定がfind_packageで必要かと思ったが、そももそも指定しなくてもコンパイルできてたのでいらなかった。  
 そのままでコンパイルできなかった場合はよくわからない。
 
+- point_getter
+java がインストールされてなかったら
+```
+sudo apt update
+java -version
+
+インストールされてなかったら
+sudo apt install default-jre
+```
+
+プログラム自体は、pointgetterのディレクトリで
+```
+java -jar pointgetter.jar
+```
+で
+
+```
+5
+249 114
+247 200
+122 175
+315 174
+28 30
+
+
+
+※ 先頭行    ：座標の数
+```
+で出力される。
+このとき
+**y xで出力されるので注意**。
+マージでこれで2時間ぐらい時間くったわ
 ## 回転行列Rを計算する
 - 3点での処理でコアになる計算部分をつくる。  
 logはissueの#3から見れる。

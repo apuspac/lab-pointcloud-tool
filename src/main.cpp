@@ -1,13 +1,23 @@
 #include <iostream>
+#include <fstream>
+#include <string>
+
 #include <vector>
 #include <algorithm>
 #include <typeinfo>
 #include <float.h>
+#include <math.h>
 
 #include <opencv2/opencv.hpp>
 #include <eigen3/Core>
 #include <eigen3/SVD>
 #include <eigen3/LU>
+
+// オプション処理
+#include <unistd.h>
+
+extern char *optarg;
+extern int optind, opterr, optopt;
 
 Eigen::Matrix3d calc_correlation_C(
     std::vector<Eigen::Vector3d> &x,
@@ -42,8 +52,15 @@ Eigen::Matrix3d calc_correlation_C(
         Eigen::Vector3d tmp = *iter;
         Eigen::Vector3d tmp_p = *iter_p;
 
+        // std::cout << "right" << std::endl
+        //           << weight * tmp_p * (tmp.transpose()) << std::endl;
+
         correlation_C += weight * tmp_p * (tmp.transpose());
     }
+
+    std::cout << std::endl
+              << "correlation_C" << std::endl
+              << correlation_C << std::endl;
 
     return correlation_C;
 }
@@ -54,42 +71,39 @@ Eigen::Matrix3d calc_rotation_R(Eigen::Matrix3d correlation_C)
     Eigen::JacobiSVD<Eigen::Matrix3d> SVD(correlation_C, Eigen::ComputeFullU | Eigen::ComputeFullV);
     Eigen::Matrix3d matrix_V, matrix_U, matrix_R;
 
-    matrix_U = SVD.matrixU();
-    matrix_V = SVD.matrixV();
+    // https://eigen.tuxfamily.org/dox/classEigen_1_1JacobiSVD.html
+    //  ここみると、SVD結果が A = USVで出力されている。
+    //  計算は資料の方に合わせたいので、ここで反転させる。
+    matrix_V = SVD.matrixU();
+    matrix_U = SVD.matrixV();
 
     // det(V UT) 計算結果は 1か-1になるはず
-    double det_VU = (matrix_V * matrix_U.transpose()).determinant();
+    double det_VUt = (matrix_V * matrix_U.transpose()).determinant();
 
     //対角行列
-    Eigen::DiagonalMatrix<double, 3> matrix_Diag = {1.0, 1.0, det_VU};
+    Eigen::DiagonalMatrix<double, 3> matrix_Diag = {1.0, 1.0, det_VUt};
 
     // 回転行列Rの最大化の式
     matrix_R = matrix_V * matrix_Diag * matrix_U.transpose();
 
     //回転行列R
-    std::cout << "Matrix_R" << std::endl;
-    std::cout << matrix_R << std::endl
+    std::cout << std::endl
+              << "Matrix_R" << std::endl;
+    std::cout << std::setprecision(15) << matrix_R << std::endl
               << std::endl;
 
-    // check
-    if (matrix_R.transpose() * matrix_R != Eigen::Matrix3d::Identity() && matrix_R * matrix_R.transpose() != Eigen::Matrix3d::Identity())
-    {
-        std::cout << "R_top*R = R*R_top = I  error" << std::endl;
-        std::cout << matrix_R.transpose() * matrix_R << std::endl
-                  << std::endl;
-        std::cout << matrix_R * matrix_R.transpose() << std::endl
-                  << std::endl;
-    }
+    // // TODO check方法をもうちょっと工夫する 許容範囲の誤差以外になったらはじくとか。
+    // std::cout << "check R_top*R = R*R_top = I" << std::endl;
+    // std::cout << matrix_R.transpose() * matrix_R << std::endl
+    //           << std::endl;
+    // std::cout << matrix_R * matrix_R.transpose() << std::endl
+    //           << std::endl;
 
-    double r_det = matrix_R.determinant();
+    // double r_det = matrix_R.determinant();
 
-    if (r_det == 1)
-    {
-        std::cout << "detR error" << std::endl;
-    }
-    std::cout << "detR = +1 check" << std::endl;
-    std::cout << r_det << std::endl
-              << std::endl;
+    // std::cout << "detR = +1 check" << std::endl;
+    // std::cout << r_det << std::endl
+    //           << std::endl;
 
     return matrix_R;
 }
@@ -112,82 +126,366 @@ void SVD_test(Eigen::Matrix3d matrix_C)
     std::cout << "SVDでもとの行列になるか " << std::endl;
     std::cout << M2 << std::endl
               << std::endl;
+    std::cout << "matrix_C" << std::endl
+              << matrix_C << std::endl;
 }
 
-int main()
+void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_data)
 {
-    // 仮データ準備
-    std::vector<Eigen::Vector3d> x, x_p;
+    std::fstream dat_file;
+    std::string point_file = "./testdata/";
 
-    Eigen::Vector3d a1 = {0.0, 0.0, 3.0};
-    Eigen::Vector3d a2 = {0.0, 2.0, 3.0};
-    Eigen::Vector3d a3 = {0.0, 0.0, 0.0};
-    Eigen::Vector3d a4 = {0.0, 2.0, 0.0};
-    Eigen::Vector3d a5 = {-2.0, 0.0, 3.0};
-    Eigen::Vector3d a6 = {-2.0, 1.0, 3.0};
-    Eigen::Vector3d a7 = {1.0, 2.0, 3.0};
-    Eigen::Vector3d a8 = {2.0, 2.0, 3.0};
-    Eigen::Vector3d a9 = {3.0, 2.0, 3.0};
+    std::string file_path = point_file + file_name;
 
-    Eigen::Vector3d b1 = {0.0, 0.0, 3.0};
-    Eigen::Vector3d b2 = {0.0, 2.0, 3.0};
-    Eigen::Vector3d b3 = {0.0, 0.0, 0.0};
-    Eigen::Vector3d b4 = {0.0, 2.0, 0.0};
-    Eigen::Vector3d b5 = {-2.0, 0.0, 3.0};
-    Eigen::Vector3d b6 = {-2.0, 1.0, 3.0};
-    Eigen::Vector3d b7 = {1.0, 2.0, 3.0};
-    Eigen::Vector3d b8 = {2.0, 2.0, 3.0};
-    Eigen::Vector3d b9 = {3.0, 2.0, 3.0};
+    dat_file.open(file_path, std::ios::in);
 
-    // Eigen::Vector3d b1 = {0.0, 0.0, 3.0};
-    // Eigen::Vector3d b2 = {1.0, 0.0, 3.0};
-    // Eigen::Vector3d b3 = {0.0, 0.0, 0.0};
-    // Eigen::Vector3d b4 = {1.0, 0.0, 0.0};
-    // Eigen::Vector3d b5 = {0.0, 2.0, 3.0};
-    // Eigen::Vector3d b6 = {1.0, 2.0, 3.0};
-    // Eigen::Vector3d b7 = {1.0, 2.0, 0.0};
+    //文字列分割についてはここ参考に
+    // https://marycore.jp/prog/cpp/std-string-split/
+    std::string buffer;
+    std::string separator = std::string(" ");
+    auto separator_length = separator.length();
 
-    x.push_back(a1);
-    x.push_back(a2);
-    x.push_back(a3);
-    x.push_back(a4);
-    x.push_back(a5);
-    x.push_back(a6);
-    x.push_back(a7);
-    x.push_back(a8);
-    x.push_back(a9);
+    int property_num = 3;
 
-    x_p.push_back(b1);
-    x_p.push_back(b2);
-    x_p.push_back(b3);
-    x_p.push_back(b4);
-    x_p.push_back(b5);
-    x_p.push_back(b6);
-    x_p.push_back(b7);
-    x_p.push_back(b8);
-    x_p.push_back(b9);
+    while (std::getline(dat_file, buffer))
+    {
+        std::vector<std::string> buf_list;
+        auto offset = std::string::size_type(0);
+
+        while (1)
+        {
+            auto pos = buffer.find(separator, offset);
+            if (pos == std::string::npos)
+            {
+                buf_list.push_back(buffer.substr(offset));
+                break;
+            }
+            buf_list.push_back(buffer.substr(offset, pos - offset));
+            offset = pos + separator_length;
+        }
+
+        // xyzだけを取り出したい
+        //要素数が3つで# がついてないやつを読み込む。
+        if (buf_list.size() == property_num)
+        {
+            if (buf_list.at(0) != "#")
+            {
+                std::vector<double> vec_data;
+                for (auto e : buf_list)
+                {
+                    vec_data.push_back(std::stod(e));
+                }
+                Eigen::Vector3d tmp = {vec_data.at(0), vec_data.at(1), vec_data.at(2)};
+                point_data.push_back(tmp);
+            }
+        }
+    }
+
+    std::cout << std::endl
+              << "load ply_point" << std::endl;
+    for (auto e : point_data)
+    {
+        std::cout << e(0) << " " << e(1) << " " << e(2) << std::endl;
+    }
+}
+
+Eigen::Vector3d equirectangular_to_sphere(double u, double v, double w, double h)
+{
+    //正距円筒から球の座標への変換
+    // pointgetterからは、左上が原点の U,V座標で出力
+
+    //正規化
+    u /= w;
+    v /= h;
+
+    // 緯度経度計算
+    double phi = u * 2 * M_PI;
+    double theta = v * M_PI;
+
+    // double r = 1.0;
+
+    //方向ベクトル
+    Eigen::Vector3d p = {abs(sin(theta)) * cos(phi), abs(sin(theta)) * sin(phi), cos(theta)};
+
+    return p;
+}
+
+int load_img_pointdata(std::string file_name, std::string img_name, std::vector<Eigen::Vector3d> &point_data)
+{
+    std::fstream dat_file;
+    std::string point_file = "./testdata/";
+    std::string img_file = "./img/";
+
+    //画像サイズが欲しいので 取ってくる。
+    std::string img_file_path = img_file + img_name;
+    cv::Mat img = cv::imread(img_file_path);
+    if (img.empty())
+    {
+        std::cout << "couldn't read the image." << std::endl;
+        return 1;
+    }
+
+    std::cout << std::endl
+              << "img_size:height width" << std::endl;
+    std::cout << img.rows << " " << img.cols << std::endl;
+
+    std::string file_path = point_file + file_name;
+
+    dat_file.open(file_path, std::ios::in);
+
+    //文字列分割についてはここ参考に
+    // https://marycore.jp/prog/cpp/std-string-split/
+    std::string buffer;
+    std::string separator = std::string(" ");
+    auto separator_length = separator.length();
+
+    // image_point_dataは2つ
+    int property_num = 2;
+
+    std::cout << std::endl
+              << "img_point_data" << std::endl;
+
+    while (std::getline(dat_file, buffer))
+    {
+        std::vector<std::string> buf_list;
+        auto offset = std::string::size_type(0);
+
+        while (1)
+        {
+            auto pos = buffer.find(separator, offset);
+            if (pos == std::string::npos)
+            {
+                buf_list.push_back(buffer.substr(offset));
+                break;
+            }
+            buf_list.push_back(buffer.substr(offset, pos - offset));
+            offset = pos + separator_length;
+        }
+
+        // xyzだけを取り出したい
+        //要素数が2つで# がついてないやつを読み込む。
+        if (buf_list.size() == property_num)
+        {
+            if (buf_list.at(0) != "#")
+            {
+                std::vector<double> vec_data;
+                for (auto e : buf_list)
+                {
+                    vec_data.push_back(std::stod(e));
+                }
+
+                std::cout << vec_data.at(0) << " " << vec_data.at(1) << std::endl;
+
+                Eigen::Vector3d tmp = equirectangular_to_sphere(vec_data.at(0), vec_data.at(1), img.cols, img.rows);
+                // Eigen::Vector3d tmp = {vec_data.at(0), vec_data.at(1), vec_data.at(2)};
+                point_data.push_back(tmp);
+            }
+        }
+    }
+
+    std::cout << std::endl
+              << "方向ベクトル変換後" << std::endl;
+    for (auto e : point_data)
+    {
+        std::cout << e(0) << " " << e(1) << " " << e(2) << std::endl;
+    }
+
+    return 0;
+}
+
+Eigen::Matrix3d simlation_value(Eigen::Vector3d n, double degree)
+{
+    //単位ベクトル
+    n = n.normalized();
+
+    double radian = degree * (M_PI / 180.0);
+
+    Eigen::Matrix3d Matrix_R, Matrix_Kn, Matrix_Kn2, Matrix_I;
+
+    Matrix_Kn << 0, -n(2), n(1),
+        n(2), 0, -n(0),
+        -n(1), n(0), 0;
+
+    Matrix_I = Eigen::Matrix3d::Identity();
+    Matrix_Kn2 = Matrix_Kn * Matrix_Kn;
+
+    Matrix_R = Matrix_I + sin(radian) * Matrix_Kn + (1 - cos(radian)) * Matrix_Kn2;
+
+    std::cout << "理論値" << std::endl;
+    std::cout << std::setprecision(15) << Matrix_R << std::endl;
+
+    return Matrix_R;
+}
+
+void rorate_pointdata(std::vector<Eigen::Vector3d> &point_data, std::vector<Eigen::Vector3d> &rotate_data, Eigen::Matrix3d matrix)
+{
+    for (Eigen::Vector3d &tmp : point_data)
+    {
+        tmp = matrix * tmp;
+        rotate_data.push_back(tmp);
+    }
+}
+
+void move_pointdata(std::vector<Eigen::Vector3d> &point_data, std::vector<Eigen::Vector3d> &move_data, double height)
+{
+    for (Eigen::Vector3d &tmp : point_data)
+    {
+        tmp(0) = height + tmp(0);
+        tmp(1) = height + tmp(1);
+        tmp(2) = height + tmp(2);
+
+        move_data.push_back(tmp);
+    }
+}
+
+void output_result(std::string file_path_1, std::string file_path_2, std::string out_path, Eigen::Matrix3d matrix)
+{
+    std::ofstream output_matrix(out_path, std::ios::app);
+
+    output_matrix << std::endl;
+    output_matrix << file_path_1 << " " << file_path_2 << std::endl;
+    output_matrix << matrix;
+}
+
+void output_ply(std::vector<Eigen::Vector3d> &point_data, std::string out_path)
+{
+    std::ofstream output_ply(out_path, std::ios::app);
+
+    output_ply << "ply" << std::endl
+               << "format ascii 1.0" << std::endl
+               << "element vertex " << point_data.size() << std::endl
+               << "property float x" << std::endl
+               << "property float y" << std::endl
+               << "property float z" << std::endl
+               << "end_header" << std::endl;
+
+    for (const Eigen::Vector3d &tmp : point_data)
+    {
+        output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
+    }
+}
+
+void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string out_path, std::string img_path)
+{
+
+    std::vector<Eigen::Vector3d> x, x_p, m_x;
+    // std::string file_path_1 = "./point_data/res-data.dat";
+    // std::string file_path_2 = "./point_data/res-data-rotate.dat";
+
+    std::cout << std::fixed;
+
+    //シミュレーション:load data
+    // load_pointdata(file_path_1, x);
+    // load_pointdata(file_path_2, x_p);
+
+    //画像とpointdata
+    load_img_pointdata(file_path_1, img_path, x_p);
+    load_pointdata(file_path_2, m_x);
+
+    // 3Dデータとカメラとの距離
+    double h = 0.0;
+    move_pointdata(m_x, x, h);
+
+    //シミュレーション: 理論値
+    Eigen::Matrix3d Rironchi_matrix_R;
+    Eigen::Vector3d a = {0, 0, 1.0};
+    Rironchi_matrix_R = simlation_value(a, 30);
 
     // 重み
-    double weight = 1.0;
+    double weight = 1;
+
     //相関行列C
     Eigen::Matrix3d correlation_C;
     correlation_C = calc_correlation_C(x, x_p, weight);
 
-    std::cout << "correlation_C : " << std::endl;
-    std::cout << correlation_C << std::endl
-              << std::endl;
-
-    SVD_test(correlation_C);
+    //回転行列計算
     Eigen::Matrix3d matrix_R;
     matrix_R = calc_rotation_R(correlation_C);
 
-    std::cout << "x1_prime : " << std::endl
-              << b2 << std::endl;
-    std::cout << "R * x1 : " << std::endl
-              << matrix_R * a2 << std::endl;
+    // SVD_test(correlation_C);
+    // output_result(file_path_1, file_path_2, out_path, matrix_R);
 
-    std::cout << DBL_MIN << std::endl
-              << DBL_MAX << std::endl;
+    std::vector<Eigen::Vector3d> i_x, R_x;
+    rorate_pointdata(x, R_x, Rironchi_matrix_R);
+    rorate_pointdata(x_p, i_x, Rironchi_matrix_R);
+
+    output_ply(R_x, out_path + "Rx.ply");
+    output_ply(i_x, out_path + "ix.ply");
+}
+
+int main(int argc, char *argv[])
+{
+
+    //コマンドオプション処理
+    char opt;
+    int i;
+
+    std::string file_path_1;
+    std::string file_path_2;
+    std::string out_path;
+    std::string img_path;
+
+    //コマンドライン引数のオプションがなくなるまで繰り返す
+    // getoputの第3引数にオプションの文字列を指定する。引数撮る場合は":"をつける
+    // a,cは引数をとらないが、 bは引数をとる。
+
+    optind = 0;
+    while ((opt = getopt(argc, argv, "i:")) != -1)
+    {
+        switch (opt)
+        {
+        case 'i':
+
+            if (optarg[0] == '-')
+            {
+                printf("Option [%c] requires two arguments\n", opt);
+                std::cout << "opt";
+                return -1;
+            }
+
+            optind--;
+            file_path_1 = argv[optind++];
+            file_path_2 = argv[optind++];
+            out_path = argv[optind++];
+            img_path = argv[optind];
+
+            //マジでオプション処理の動きがわからない
+            // for (i = 0; i < 1; i++)
+            // {
+
+            //     if (argv[optind][0] == '-')
+            //     {
+            //         printf("error!");
+            //         return -1;
+            //     }
+            //     file_path_2 = argv[optind++];
+            // }
+
+            printf("\n");
+            break;
+        default:
+            printf("Unknown option '%c'\n", opt);
+            break;
+        }
+        optarg = NULL;
+    }
+    /* オプション以外の引数を表示する。 */
+    if (optind < argc)
+    {
+        while (optind < argc)
+        {
+            optind++;
+            // printf("Not Option str '%s'\n", argv[optind++]);
+        }
+    }
+
+    std::cout << "filepath_1 :" << file_path_1 << std::endl;
+    std::cout << "filepath_2 :" << file_path_2 << std::endl
+              << std::endl;
+    std::cout << "outpath :" << out_path << std::endl;
+    std::cout << "imgpath :" << img_path << std::endl;
+
+    transform_coordinate(file_path_1, file_path_2, out_path, img_path);
 
     return 0;
 }
