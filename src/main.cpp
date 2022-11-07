@@ -39,11 +39,11 @@ Eigen::Matrix3d calc_correlation_C(
         // std::cout << point_to_vec.normalized() << std::endl;
     }
 
-    //相関行列C
+    // 相関行列C
     Eigen::Matrix3d correlation_C = Eigen::Matrix3d::Identity();
 
-    //相関行列Cを求める
-    // a,bの数が一緒であることが前提
+    // 相関行列Cを求める
+    //  a,bの数が一緒であることが前提
     for (auto iter = std::begin(m), iter_p = std::begin(m_p), last = std::end(m);
          iter != last; ++iter, ++iter_p)
     {
@@ -80,13 +80,13 @@ Eigen::Matrix3d calc_rotation_R(Eigen::Matrix3d correlation_C)
     // det(V UT) 計算結果は 1か-1になるはず
     double det_VUt = (matrix_V * matrix_U.transpose()).determinant();
 
-    //対角行列
+    // 対角行列
     Eigen::DiagonalMatrix<double, 3> matrix_Diag = {1.0, 1.0, det_VUt};
 
     // 回転行列Rの最大化の式
     matrix_R = matrix_V * matrix_Diag * matrix_U.transpose();
 
-    //回転行列R
+    // 回転行列R
     std::cout << std::endl
               << "Matrix_R" << std::endl;
     std::cout << std::setprecision(15) << matrix_R << std::endl
@@ -139,8 +139,8 @@ void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_d
 
     dat_file.open(file_path, std::ios::in);
 
-    //文字列分割についてはここ参考に
-    // https://marycore.jp/prog/cpp/std-string-split/
+    // 文字列分割についてはここ参考に
+    //  https://marycore.jp/prog/cpp/std-string-split/
     std::string buffer;
     std::string separator = std::string(" ");
     auto separator_length = separator.length();
@@ -165,7 +165,7 @@ void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_d
         }
 
         // xyzだけを取り出したい
-        //要素数が3つで# がついてないやつを読み込む。
+        // 要素数が3つで# がついてないやつを読み込む。
         if (buf_list.size() == property_num)
         {
             if (buf_list.at(0) != "#")
@@ -191,10 +191,10 @@ void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_d
 
 Eigen::Vector3d equirectangular_to_sphere(double u, double v, double w, double h)
 {
-    //正距円筒から球の座標への変換
-    // pointgetterからは、左上が原点の U,V座標で出力
+    // 正距円筒から球の座標への変換
+    //  pointgetterからは、左上が原点の U,V座標で出力
 
-    //正規化
+    // 正規化
     u /= w;
     v /= h;
 
@@ -204,8 +204,8 @@ Eigen::Vector3d equirectangular_to_sphere(double u, double v, double w, double h
 
     // double r = 1.0;
 
-    //方向ベクトル
-    Eigen::Vector3d p = {abs(sin(theta)) * cos(phi), abs(sin(theta)) * sin(phi), cos(theta)};
+    // 方向ベクトル
+    Eigen::Vector3d p = {abs(sin(theta)) * sin(phi), abs(sin(theta)) * cos(phi), cos(theta)};
 
     return p;
 }
@@ -216,7 +216,7 @@ int load_img_pointdata(std::string file_name, std::string img_name, std::vector<
     std::string point_file = "./testdata/";
     std::string img_file = "./img/";
 
-    //画像サイズが欲しいので 取ってくる。
+    // 画像サイズが欲しいので 取ってくる。
     std::string img_file_path = img_file + img_name;
     cv::Mat img = cv::imread(img_file_path);
     if (img.empty())
@@ -233,8 +233,8 @@ int load_img_pointdata(std::string file_name, std::string img_name, std::vector<
 
     dat_file.open(file_path, std::ios::in);
 
-    //文字列分割についてはここ参考に
-    // https://marycore.jp/prog/cpp/std-string-split/
+    // 文字列分割についてはここ参考に
+    //  https://marycore.jp/prog/cpp/std-string-split/
     std::string buffer;
     std::string separator = std::string(" ");
     auto separator_length = separator.length();
@@ -263,7 +263,7 @@ int load_img_pointdata(std::string file_name, std::string img_name, std::vector<
         }
 
         // xyzだけを取り出したい
-        //要素数が2つで# がついてないやつを読み込む。
+        // 要素数が2つで# がついてないやつを読み込む。
         if (buf_list.size() == property_num)
         {
             if (buf_list.at(0) != "#")
@@ -295,7 +295,7 @@ int load_img_pointdata(std::string file_name, std::string img_name, std::vector<
 
 Eigen::Matrix3d simlation_value(Eigen::Vector3d n, double degree)
 {
-    //単位ベクトル
+    // 単位ベクトル
     n = n.normalized();
 
     double radian = degree * (M_PI / 180.0);
@@ -374,11 +374,11 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
 
     std::cout << std::fixed;
 
-    //シミュレーション:load data
-    // load_pointdata(file_path_1, x);
-    // load_pointdata(file_path_2, x_p);
+    // シミュレーション:load data
+    //  load_pointdata(file_path_1, x);
+    //  load_pointdata(file_path_2, x_p);
 
-    //画像とpointdata
+    // 画像とpointdata
     load_img_pointdata(file_path_1, img_path, x_p);
     load_pointdata(file_path_2, m_x);
 
@@ -386,7 +386,7 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     double h = 0.0;
     move_pointdata(m_x, x, h);
 
-    //シミュレーション: 理論値
+    // シミュレーション: 理論値
     Eigen::Matrix3d Rironchi_matrix_R;
     Eigen::Vector3d a = {0, 0, 1.0};
     Rironchi_matrix_R = simlation_value(a, 30);
@@ -394,29 +394,29 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     // 重み
     double weight = 1;
 
-    //相関行列C
+    // 相関行列C
     Eigen::Matrix3d correlation_C;
     correlation_C = calc_correlation_C(x, x_p, weight);
 
-    //回転行列計算
+    // 回転行列計算
     Eigen::Matrix3d matrix_R;
     matrix_R = calc_rotation_R(correlation_C);
 
     // SVD_test(correlation_C);
     // output_result(file_path_1, file_path_2, out_path, matrix_R);
 
-    std::vector<Eigen::Vector3d> i_x, R_x;
-    rorate_pointdata(x, R_x, Rironchi_matrix_R);
-    rorate_pointdata(x_p, i_x, Rironchi_matrix_R);
+    // std::vector<Eigen::Vector3d> i_x, R_x;
+    // rorate_pointdata(x, R_x, Rironchi_matrix_R);
+    // rorate_pointdata(x_p, i_x, Rironchi_matrix_R);
 
-    output_ply(R_x, out_path + "Rx.ply");
-    output_ply(i_x, out_path + "ix.ply");
+    // output_ply(R_x, out_path + "Rx.ply");
+    // output_ply(i_x, out_path + "ix.ply");
 }
 
 int main(int argc, char *argv[])
 {
 
-    //コマンドオプション処理
+    // コマンドオプション処理
     char opt;
     int i;
 
@@ -425,9 +425,9 @@ int main(int argc, char *argv[])
     std::string out_path;
     std::string img_path;
 
-    //コマンドライン引数のオプションがなくなるまで繰り返す
-    // getoputの第3引数にオプションの文字列を指定する。引数撮る場合は":"をつける
-    // a,cは引数をとらないが、 bは引数をとる。
+    // コマンドライン引数のオプションがなくなるまで繰り返す
+    //  getoputの第3引数にオプションの文字列を指定する。引数撮る場合は":"をつける
+    //  a,cは引数をとらないが、 bは引数をとる。
 
     optind = 0;
     while ((opt = getopt(argc, argv, "i:")) != -1)
@@ -449,9 +449,9 @@ int main(int argc, char *argv[])
             out_path = argv[optind++];
             img_path = argv[optind];
 
-            //マジでオプション処理の動きがわからない
-            // for (i = 0; i < 1; i++)
-            // {
+            // マジでオプション処理の動きがわからない
+            //  for (i = 0; i < 1; i++)
+            //  {
 
             //     if (argv[optind][0] == '-')
             //     {
