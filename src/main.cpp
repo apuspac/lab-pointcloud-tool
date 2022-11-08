@@ -330,8 +330,8 @@ void move_pointdata(std::vector<Eigen::Vector3d> &point_data, std::vector<Eigen:
 {
     for (Eigen::Vector3d &tmp : point_data)
     {
-        tmp(0) = height + tmp(0);
-        tmp(1) = height + tmp(1);
+        // tmp(0) = height + tmp(0);
+        // tmp(1) = height + tmp(1);
         tmp(2) = height + tmp(2);
 
         move_data.push_back(tmp);
@@ -371,7 +371,8 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
 {
 
     std::vector<Eigen::Vector3d> x, x_prime, select_ply_point, plyfile_point;
-    std::string dir_path = "./kyoiku-2/";
+    // std::string dir_path = "./kyoiku-2/";
+    std::string dir_path = out_path;
 
     std::cout << std::fixed;
 
@@ -385,7 +386,7 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     load_pointdata(file_path_3, dir_path, 4, plyfile_point);
 
     // 3Dデータとカメラとの距離(zのみを想定)
-    double h = 0.0;
+    double h = -1.0;
     move_pointdata(select_ply_point, x, h);
 
     // シミュレーション: 理論値
@@ -405,7 +406,7 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     rotation_matrix_R = calc_rotation_R(correlation_C);
 
     output_ply(x_prime, out_path + "check-img.ply");
-    output_ply(select_ply_point, out_path + "check-ply.ply");
+    output_ply(x, out_path + "check-ply.ply");
 
     std::vector<Eigen::Vector3d> rotated_plyfile_point, R_x;
     rorate_pointdata(plyfile_point, rotated_plyfile_point, rotation_matrix_R);
