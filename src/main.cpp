@@ -130,12 +130,13 @@ void SVD_test(Eigen::Matrix3d matrix_C)
               << matrix_C << std::endl;
 }
 
-void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_data)
+void load_pointdata(std::string file_name, std::string dir_path, int property_num, std::vector<Eigen::Vector3d> &point_data)
 {
     std::fstream dat_file;
-    std::string point_file = "./testdata/";
+    // std::string dir_file = "./kyouiku-center/";
+    std::string dir_file = dir_path;
 
-    std::string file_path = point_file + file_name;
+    std::string file_path = dir_file + file_name;
 
     dat_file.open(file_path, std::ios::in);
 
@@ -144,8 +145,6 @@ void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_d
     std::string buffer;
     std::string separator = std::string(" ");
     auto separator_length = separator.length();
-
-    int property_num = 3;
 
     while (std::getline(dat_file, buffer))
     {
@@ -165,7 +164,7 @@ void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_d
         }
 
         // xyzだけを取り出したい
-        // 要素数が3つで# がついてないやつを読み込む。
+        // プロパティの数があっていて、# がついてないやつを読み込む。
         if (buf_list.size() == property_num)
         {
             if (buf_list.at(0) != "#")
@@ -183,10 +182,10 @@ void load_pointdata(std::string file_name, std::vector<Eigen::Vector3d> &point_d
 
     std::cout << std::endl
               << "load ply_point" << std::endl;
-    for (auto e : point_data)
-    {
-        std::cout << e(0) << " " << e(1) << " " << e(2) << std::endl;
-    }
+    // for (auto e : point_data)
+    // {
+    //     std::cout << e(0) << " " << e(1) << " " << e(2) << std::endl;
+    // }
 }
 
 Eigen::Vector3d equirectangular_to_sphere(double u, double v, double w, double h)
@@ -210,10 +209,11 @@ Eigen::Vector3d equirectangular_to_sphere(double u, double v, double w, double h
     return p;
 }
 
-int load_img_pointdata(std::string file_name, std::string img_name, std::vector<Eigen::Vector3d> &point_data)
+int load_img_pointdata(std::string file_name, std::string img_name, std::string dir_path, std::vector<Eigen::Vector3d> &point_data)
 {
     std::fstream dat_file;
-    std::string point_file = "./testdata/";
+    // std::string dir_file = "./kyouiku-center/";
+    std::string dir_file = dir_path;
     std::string img_file = "./img/";
 
     // 画像サイズが欲しいので 取ってくる。
@@ -229,7 +229,7 @@ int load_img_pointdata(std::string file_name, std::string img_name, std::vector<
               << "img_size:height width" << std::endl;
     std::cout << img.rows << " " << img.cols << std::endl;
 
-    std::string file_path = point_file + file_name;
+    std::string file_path = dir_file + file_name;
 
     dat_file.open(file_path, std::ios::in);
 
@@ -349,7 +349,9 @@ void output_result(std::string file_path_1, std::string file_path_2, std::string
 
 void output_ply(std::vector<Eigen::Vector3d> &point_data, std::string out_path)
 {
-    std::ofstream output_ply(out_path, std::ios::app);
+    // std::ios::app : 追記
+    // std::ios::out : 書き込み
+    std::ofstream output_ply(out_path, std::ios::out);
 
     output_ply << "ply" << std::endl
                << "format ascii 1.0" << std::endl
@@ -365,49 +367,56 @@ void output_ply(std::vector<Eigen::Vector3d> &point_data, std::string out_path)
     }
 }
 
-void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string out_path, std::string img_path)
+void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string file_path_3, std::string img_path, std::string out_path)
 {
 
-    std::vector<Eigen::Vector3d> x, x_p, m_x;
-    // std::string file_path_1 = "./point_data/res-data.dat";
-    // std::string file_path_2 = "./point_data/res-data-rotate.dat";
+    std::vector<Eigen::Vector3d> x, x_prime, select_ply_point, plyfile_point;
+    std::string dir_path = "./kyoiku-2/";
 
     std::cout << std::fixed;
 
     // シミュレーション:load data
     //  load_pointdata(file_path_1, x);
-    //  load_pointdata(file_path_2, x_p);
+    //  load_pointdata(file_path_2, x_prime);
 
     // 画像とpointdata
-    load_img_pointdata(file_path_1, img_path, x_p);
-    load_pointdata(file_path_2, m_x);
+    load_img_pointdata(file_path_1, img_path, dir_path, x_prime);
+    load_pointdata(file_path_2, dir_path, 3, select_ply_point);
+    load_pointdata(file_path_3, dir_path, 4, plyfile_point);
 
-    // 3Dデータとカメラとの距離
+    // 3Dデータとカメラとの距離(zのみを想定)
     double h = 0.0;
-    move_pointdata(m_x, x, h);
+    move_pointdata(select_ply_point, x, h);
 
     // シミュレーション: 理論値
-    Eigen::Matrix3d Rironchi_matrix_R;
-    Eigen::Vector3d a = {0, 0, 1.0};
-    Rironchi_matrix_R = simlation_value(a, 30);
+    // Eigen::Matrix3d Rironchi_matrix_R;
+    // Eigen::Vector3d a = {0, 0, 1.0};
+    // Rironchi_matrix_R = simlation_value(a, 30);
 
     // 重み
     double weight = 1;
 
     // 相関行列C
     Eigen::Matrix3d correlation_C;
-    correlation_C = calc_correlation_C(x, x_p, weight);
+    correlation_C = calc_correlation_C(x, x_prime, weight);
 
     // 回転行列計算
-    Eigen::Matrix3d matrix_R;
-    matrix_R = calc_rotation_R(correlation_C);
+    Eigen::Matrix3d rotation_matrix_R;
+    rotation_matrix_R = calc_rotation_R(correlation_C);
+
+    output_ply(x_prime, out_path + "check-img.ply");
+    output_ply(select_ply_point, out_path + "check-ply.ply");
+
+    std::vector<Eigen::Vector3d> rotated_plyfile_point, R_x;
+    rorate_pointdata(plyfile_point, rotated_plyfile_point, rotation_matrix_R);
+
+    output_ply(rotated_plyfile_point, out_path + "rotated_ply.ply");
 
     // SVD_test(correlation_C);
-    // output_result(file_path_1, file_path_2, out_path, matrix_R);
+    // output_result(file_path_1, file_path_2, out_path, rotation_matrix_R);
 
-    // std::vector<Eigen::Vector3d> i_x, R_x;
     // rorate_pointdata(x, R_x, Rironchi_matrix_R);
-    // rorate_pointdata(x_p, i_x, Rironchi_matrix_R);
+    // rorate_pointdata(x_prime, i_x, Rironchi_matrix_R);
 
     // output_ply(R_x, out_path + "Rx.ply");
     // output_ply(i_x, out_path + "ix.ply");
@@ -422,6 +431,8 @@ int main(int argc, char *argv[])
 
     std::string file_path_1;
     std::string file_path_2;
+    std::string file_path_3;
+
     std::string out_path;
     std::string img_path;
 
@@ -446,8 +457,9 @@ int main(int argc, char *argv[])
             optind--;
             file_path_1 = argv[optind++];
             file_path_2 = argv[optind++];
-            out_path = argv[optind++];
-            img_path = argv[optind];
+            file_path_3 = argv[optind++];
+            img_path = argv[optind++];
+            out_path = argv[optind];
 
             // マジでオプション処理の動きがわからない
             //  for (i = 0; i < 1; i++)
@@ -479,13 +491,14 @@ int main(int argc, char *argv[])
         }
     }
 
-    std::cout << "filepath_1 :" << file_path_1 << std::endl;
-    std::cout << "filepath_2 :" << file_path_2 << std::endl
+    std::cout << "img_point :" << file_path_1 << std::endl;
+    std::cout << "ply_point :" << file_path_2 << std::endl;
+    std::cout << "plyfile :" << file_path_3 << std::endl
               << std::endl;
-    std::cout << "outpath :" << out_path << std::endl;
     std::cout << "imgpath :" << img_path << std::endl;
+    std::cout << "outdir :" << out_path << std::endl;
 
-    transform_coordinate(file_path_1, file_path_2, out_path, img_path);
+    transform_coordinate(file_path_1, file_path_2, file_path_3, img_path, out_path);
 
     return 0;
 }
