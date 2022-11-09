@@ -317,6 +317,35 @@ Eigen::Matrix3d simlation_value(Eigen::Vector3d n, double degree)
     return Matrix_R;
 }
 
+void plot_line_origin_to_point(std::vector<Eigen::Vector3d> &point_data, std::vector<Eigen::Vector3d> &plot_point)
+{
+    Eigen::Vector3d origin = {0, 0, 0};
+    plot_point.push_back(origin);
+
+    for (Eigen::Vector3d &tmp_point : point_data)
+    {
+        // rだけ変化させればいいかなと思うので、極座標を扱う。
+        // 極角, 方位角を先に出す。
+        Eigen::Vector3d tmp_normalize;
+        tmp_normalize = tmp_point.normalized();
+
+        double theta = std::acos(
+            tmp_normalize(2) /
+            std::sqrt(std::pow(tmp_normalize(0), 2.0) + std::pow(tmp_normalize(1), 2.0) + std::pow(tmp_normalize(2), 2.0)));
+
+        double phi = std::atan2(tmp_normalize(1), tmp_normalize(0));
+
+        // rを変化させながらplot
+        double r_limit = 10.0;
+        double r_step = 0.15;
+        for (double r = 0.5; r < r_limit; r += r_step)
+        {
+            Eigen::Vector3d tmp = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
+            plot_point.push_back(tmp);
+        }
+    }
+}
+
 void rotate_pointdata(std::vector<Eigen::Vector3d> &point_data, std::vector<Eigen::Vector3d> &rotate_data, Eigen::Matrix3d matrix)
 {
     for (Eigen::Vector3d &tmp : point_data)
@@ -365,6 +394,12 @@ void output_ply(std::vector<Eigen::Vector3d> &point_data, std::string out_path)
     {
         output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
     }
+
+    // for (auto &tmp : point_data)
+    // {
+    //     std::cout << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
+    // }
+    std::cout << point_data.size() << std::endl;
 }
 
 void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string file_path_3, std::string img_path, std::string out_path)
@@ -417,7 +452,15 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     rotate_pointdata(plyfile_point, rotated_plyfile_point, rotation_matrix_R);
 
     output_ply(rotated_ply_corresponding_point, out_path + "rotated-ply-correspondence.ply");
-    output_ply(rotated_plyfile_point, out_path + "rotated_plyfile.ply");
+    output_ply(rotated_plyfile_point, out_path + "rotated-plyfile.ply");
+
+    // 点群に沿った直線を出力させる
+    std::vector<Eigen::Vector3d> line_img_origin_to_point, line_ply_origin_to_point;
+    plot_line_origin_to_point(img_corresponding_point, line_img_origin_to_point);
+    plot_line_origin_to_point(rotated_ply_corresponding_point, line_ply_origin_to_point);
+
+    output_ply(line_img_origin_to_point, out_path + "line-img-origin-to-point.ply");
+    output_ply(line_ply_origin_to_point, out_path + "line-ply-origin-to-point.ply");
 }
 
 int main(int argc, char *argv[])
