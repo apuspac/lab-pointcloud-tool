@@ -576,6 +576,116 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
   /usr/local/include/eigen3/src/LU/Determinant.h \
   /usr/local/include/eigen3/src/LU/InverseImpl.h \
   /usr/local/include/eigen3/src/LU/arch/InverseSize4.h \
+  /usr/local/include/eigen3/Eigen \
+  /usr/local/include/eigen3/Dense \
+  /usr/local/include/eigen3/LU \
+  /usr/local/include/eigen3/SVD \
+  /usr/local/include/eigen3/Geometry \
+  /usr/local/include/eigen3/src/Geometry/OrthoMethods.h \
+  /usr/local/include/eigen3/src/Geometry/EulerAngles.h \
+  /usr/local/include/eigen3/src/Geometry/Homogeneous.h \
+  /usr/local/include/eigen3/src/Geometry/RotationBase.h \
+  /usr/local/include/eigen3/src/Geometry/Rotation2D.h \
+  /usr/local/include/eigen3/src/Geometry/Quaternion.h \
+  /usr/local/include/eigen3/src/Geometry/AngleAxis.h \
+  /usr/local/include/eigen3/src/Geometry/Transform.h \
+  /usr/local/include/eigen3/src/Geometry/Translation.h \
+  /usr/local/include/eigen3/src/Geometry/Scaling.h \
+  /usr/local/include/eigen3/src/Geometry/Hyperplane.h \
+  /usr/local/include/eigen3/src/Geometry/ParametrizedLine.h \
+  /usr/local/include/eigen3/src/Geometry/AlignedBox.h \
+  /usr/local/include/eigen3/src/Geometry/Umeyama.h \
+  /usr/local/include/eigen3/src/Geometry/arch/Geometry_SIMD.h \
+  /usr/local/include/eigen3/Eigenvalues \
+  /usr/local/include/eigen3/src/Eigenvalues/Tridiagonalization.h \
+  /usr/local/include/eigen3/src/Eigenvalues/RealSchur.h \
+  /usr/local/include/eigen3/src/Eigenvalues/HessenbergDecomposition.h \
+  /usr/local/include/eigen3/src/Eigenvalues/EigenSolver.h \
+  /usr/local/include/eigen3/src/Eigenvalues/RealSchur.h \
+  /usr/local/include/eigen3/src/Eigenvalues/SelfAdjointEigenSolver.h \
+  /usr/local/include/eigen3/src/Eigenvalues/Tridiagonalization.h \
+  /usr/local/include/eigen3/src/Eigenvalues/GeneralizedSelfAdjointEigenSolver.h \
+  /usr/local/include/eigen3/src/Eigenvalues/HessenbergDecomposition.h \
+  /usr/local/include/eigen3/src/Eigenvalues/ComplexSchur.h \
+  /usr/local/include/eigen3/src/Eigenvalues/ComplexEigenSolver.h \
+  /usr/local/include/eigen3/src/Eigenvalues/ComplexSchur.h \
+  /usr/local/include/eigen3/src/Eigenvalues/RealQZ.h \
+  /usr/local/include/eigen3/src/Eigenvalues/GeneralizedEigenSolver.h \
+  /usr/local/include/eigen3/src/Eigenvalues/RealQZ.h \
+  /usr/local/include/eigen3/src/Eigenvalues/MatrixBaseEigenvalues.h \
+  /usr/local/include/eigen3/Sparse \
+  /usr/local/include/eigen3/SparseCore \
+  /usr/local/include/eigen3/src/SparseCore/SparseUtil.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseMatrixBase.h \
+  /usr/local/include/eigen3/src/plugins/CommonCwiseUnaryOps.h \
+  /usr/local/include/eigen3/src/plugins/CommonCwiseBinaryOps.h \
+  /usr/local/include/eigen3/src/plugins/MatrixCwiseUnaryOps.h \
+  /usr/local/include/eigen3/src/plugins/MatrixCwiseBinaryOps.h \
+  /usr/local/include/eigen3/src/plugins/BlockMethods.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseAssign.h \
+  /usr/local/include/eigen3/src/SparseCore/CompressedStorage.h \
+  /usr/local/include/eigen3/src/SparseCore/AmbiVector.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseCompressedBase.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseMatrix.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseMap.h \
+  /usr/local/include/eigen3/src/SparseCore/MappedSparseMatrix.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseVector.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseRef.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseCwiseUnaryOp.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseCwiseBinaryOp.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseTranspose.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseBlock.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseDot.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseRedux.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseView.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseDiagonalProduct.h \
+  /usr/local/include/eigen3/src/SparseCore/ConservativeSparseSparseProduct.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseSparseProductWithPruning.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseProduct.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseDenseProduct.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseSelfAdjointView.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseTriangularView.h \
+  /usr/local/include/eigen3/src/SparseCore/TriangularSolver.h \
+  /usr/local/include/eigen3/src/SparseCore/SparsePermutation.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseFuzzy.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseSolverBase.h \
+  /usr/local/include/eigen3/OrderingMethods \
+  /usr/local/include/eigen3/src/OrderingMethods/Amd.h \
+  /usr/local/include/eigen3/src/OrderingMethods/Ordering.h \
+  /usr/local/include/eigen3/src/OrderingMethods/Eigen_Colamd.h \
+  /usr/local/include/eigen3/SparseCholesky \
+  /usr/local/include/eigen3/src/SparseCholesky/SimplicialCholesky.h \
+  /usr/local/include/eigen3/src/SparseCholesky/SimplicialCholesky_impl.h \
+  /usr/local/include/eigen3/SparseLU \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU_gemm_kernel.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU_Structs.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU_SupernodalMatrix.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLUImpl.h \
+  /usr/local/include/eigen3/src/SparseCore/SparseColEtree.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU_Memory.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU_heap_relax_snode.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU_relax_snode.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU_pivotL.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU_panel_dfs.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU_kernel_bmod.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU_panel_bmod.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU_column_dfs.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU_column_bmod.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU_copy_to_ucol.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU_pruneL.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU_Utils.h \
+  /usr/local/include/eigen3/src/SparseLU/SparseLU.h \
+  /usr/local/include/eigen3/SparseQR \
+  /usr/local/include/eigen3/src/SparseQR/SparseQR.h \
+  /usr/local/include/eigen3/IterativeLinearSolvers \
+  /usr/local/include/eigen3/src/IterativeLinearSolvers/SolveWithGuess.h \
+  /usr/local/include/eigen3/src/IterativeLinearSolvers/IterativeSolverBase.h \
+  /usr/local/include/eigen3/src/IterativeLinearSolvers/BasicPreconditioners.h \
+  /usr/local/include/eigen3/src/IterativeLinearSolvers/ConjugateGradient.h \
+  /usr/local/include/eigen3/src/IterativeLinearSolvers/LeastSquareConjugateGradient.h \
+  /usr/local/include/eigen3/src/IterativeLinearSolvers/BiCGSTAB.h \
+  /usr/local/include/eigen3/src/IterativeLinearSolvers/IncompleteLUT.h \
+  /usr/local/include/eigen3/src/IterativeLinearSolvers/IncompleteCholesky.h \
   /usr/include/unistd.h \
   /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
   /usr/include/x86_64-linux-gnu/bits/environments.h \
@@ -597,6 +707,128 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/x86_64-linux-gnu/bits/posix_opt.h:
 
 /usr/include/unistd.h:
+
+/usr/local/include/eigen3/src/IterativeLinearSolvers/IncompleteCholesky.h:
+
+/usr/local/include/eigen3/src/IterativeLinearSolvers/IncompleteLUT.h:
+
+/usr/local/include/eigen3/src/IterativeLinearSolvers/BiCGSTAB.h:
+
+/usr/local/include/eigen3/src/IterativeLinearSolvers/ConjugateGradient.h:
+
+/usr/local/include/eigen3/src/IterativeLinearSolvers/SolveWithGuess.h:
+
+/usr/local/include/eigen3/IterativeLinearSolvers:
+
+/usr/local/include/eigen3/src/SparseQR/SparseQR.h:
+
+/usr/local/include/eigen3/src/SparseLU/SparseLU.h:
+
+/usr/local/include/eigen3/src/SparseLU/SparseLU_panel_bmod.h:
+
+/usr/local/include/eigen3/src/SparseLU/SparseLU_kernel_bmod.h:
+
+/usr/local/include/eigen3/src/SparseLU/SparseLU_panel_dfs.h:
+
+/usr/local/include/eigen3/src/IterativeLinearSolvers/IterativeSolverBase.h:
+
+/usr/local/include/eigen3/src/SparseLU/SparseLU_heap_relax_snode.h:
+
+/usr/local/include/eigen3/src/SparseLU/SparseLU_Memory.h:
+
+/usr/local/include/eigen3/src/SparseLU/SparseLU_SupernodalMatrix.h:
+
+/usr/local/include/eigen3/src/SparseLU/SparseLU_Structs.h:
+
+/usr/local/include/eigen3/src/OrderingMethods/Eigen_Colamd.h:
+
+/usr/local/include/eigen3/src/OrderingMethods/Ordering.h:
+
+/usr/local/include/eigen3/OrderingMethods:
+
+/usr/local/include/eigen3/src/SparseCore/SparseFuzzy.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparsePermutation.h:
+
+/usr/local/include/eigen3/src/SparseCore/TriangularSolver.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseTriangularView.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseSelfAdjointView.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseDenseProduct.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseProduct.h:
+
+/usr/local/include/eigen3/src/SparseCore/ConservativeSparseSparseProduct.h:
+
+/usr/local/include/eigen3/src/SparseLU/SparseLU_Utils.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseDiagonalProduct.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseRedux.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseDot.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseCwiseUnaryOp.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseRef.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseMap.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseAssign.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseMatrixBase.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseUtil.h:
+
+/usr/local/include/eigen3/src/SparseCholesky/SimplicialCholesky.h:
+
+/usr/local/include/eigen3/Sparse:
+
+/usr/local/include/eigen3/src/SparseLU/SparseLUImpl.h:
+
+/usr/local/include/eigen3/src/Eigenvalues/RealQZ.h:
+
+/usr/local/include/eigen3/src/Eigenvalues/ComplexEigenSolver.h:
+
+/usr/local/include/eigen3/src/Eigenvalues/ComplexSchur.h:
+
+/usr/local/include/eigen3/src/Eigenvalues/SelfAdjointEigenSolver.h:
+
+/usr/local/include/eigen3/src/Eigenvalues/HessenbergDecomposition.h:
+
+/usr/local/include/eigen3/src/Eigenvalues/RealSchur.h:
+
+/usr/local/include/eigen3/src/Geometry/arch/Geometry_SIMD.h:
+
+/usr/local/include/eigen3/src/Geometry/Umeyama.h:
+
+/usr/local/include/eigen3/src/Geometry/ParametrizedLine.h:
+
+/usr/local/include/eigen3/src/Geometry/Hyperplane.h:
+
+/usr/local/include/eigen3/src/Geometry/Scaling.h:
+
+/usr/local/include/eigen3/src/Geometry/Transform.h:
+
+/usr/local/include/eigen3/Eigenvalues:
+
+/usr/local/include/eigen3/src/Geometry/AngleAxis.h:
+
+/usr/local/include/eigen3/src/Geometry/Quaternion.h:
+
+/usr/local/include/eigen3/src/Geometry/Rotation2D.h:
+
+/usr/local/include/eigen3/src/Geometry/RotationBase.h:
+
+/usr/local/include/eigen3/src/Geometry/OrthoMethods.h:
+
+/usr/local/include/eigen3/Geometry:
+
+/usr/local/include/eigen3/Dense:
+
+/usr/local/include/eigen3/Eigen:
 
 /usr/local/include/eigen3/src/LU/arch/InverseSize4.h:
 
@@ -654,6 +886,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/include/opencv4/opencv2/flann/saving.h:
 
+/usr/local/include/eigen3/src/Geometry/AlignedBox.h:
+
 /usr/include/c++/11/bits/stl_list.h:
 
 /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h:
@@ -664,7 +898,13 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/local/include/eigen3/src/Core/GeneralProduct.h:
 
+/usr/local/include/eigen3/src/SparseCore/SparseMatrix.h:
+
+/usr/local/include/eigen3/src/SparseCore/AmbiVector.h:
+
 /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h:
+
+/usr/local/include/eigen3/src/SparseLU/SparseLU_column_bmod.h:
 
 /usr/include/c++/11/string_view:
 
@@ -686,6 +926,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/include/c++/11/bits/basic_ios.tcc:
 
+/usr/local/include/eigen3/src/SparseCore/SparseVector.h:
+
 /usr/include/c++/11/bits/codecvt.h:
 
 /usr/include/opencv4/opencv2/flann/kmeans_index.h:
@@ -695,6 +937,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/c++/11/bits/refwrap.h:
 
 /usr/include/c++/11/bits/uses_allocator.h:
+
+/usr/local/include/eigen3/src/Geometry/Homogeneous.h:
 
 /usr/include/c++/11/bits/unique_lock.h:
 
@@ -736,6 +980,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h:
 
+/usr/local/include/eigen3/src/SparseCore/SparseTranspose.h:
+
 /usr/local/include/eigen3/src/Core/util/StaticAssert.h:
 
 /usr/include/c++/11/bits/istream.tcc:
@@ -770,6 +1016,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/include/c++/11/utility:
 
+/usr/local/include/eigen3/src/SparseCore/CompressedStorage.h:
+
 /usr/include/c++/11/ios:
 
 /usr/include/c++/11/cstddef:
@@ -788,6 +1036,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/include/asm-generic/errno.h:
 
+/usr/local/include/eigen3/src/SparseCholesky/SimplicialCholesky_impl.h:
+
 /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h:
 
 /usr/include/wctype.h:
@@ -797,6 +1047,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/x86_64-linux-gnu/bits/errno.h:
 
 /usr/local/include/eigen3/src/Core/SelfAdjointView.h:
+
+/usr/local/include/eigen3/src/SparseLU/SparseLU_column_dfs.h:
 
 /usr/include/c++/11/cerrno:
 
@@ -818,6 +1070,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/local/include/eigen3/src/plugins/IndexedViewMethods.h:
 
+/usr/local/include/eigen3/src/SparseCore/SparseView.h:
+
 /usr/include/x86_64-linux-gnu/bits/byteswap.h:
 
 /usr/include/c++/11/bits/locale_classes.tcc:
@@ -825,6 +1079,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/c++/11/ext/aligned_buffer.h:
 
 /usr/include/x86_64-linux-gnu/sys/types.h:
+
+/usr/local/include/eigen3/src/SparseLU/SparseLU_relax_snode.h:
 
 /usr/include/c++/11/math.h:
 
@@ -865,6 +1121,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/c++/11/typeinfo:
 
 /usr/include/x86_64-linux-gnu/bits/cpu-set.h:
+
+/usr/local/include/eigen3/src/SparseCore/MappedSparseMatrix.h:
 
 /usr/include/c++/11/bits/exception_defines.h:
 
@@ -924,6 +1182,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/local/include/eigen3/src/Core/CwiseNullaryOp.h:
 
+/usr/local/include/eigen3/src/IterativeLinearSolvers/BasicPreconditioners.h:
+
 /usr/include/x86_64-linux-gnu/sys/cdefs.h:
 
 /usr/include/x86_64-linux-gnu/asm/errno.h:
@@ -933,6 +1193,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h:
 
 /usr/include/c++/11/bits/ostream_insert.h:
+
+/usr/local/include/eigen3/src/Eigenvalues/EigenSolver.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h:
 
@@ -960,7 +1222,11 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/local/include/eigen3/src/Core/util/BlasUtil.h:
 
+/usr/local/include/eigen3/src/SparseCore/SparseColEtree.h:
+
 /usr/include/asm-generic/errno-base.h:
+
+/usr/local/include/eigen3/SparseCore:
 
 /usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
 
@@ -973,6 +1239,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/opencv4/opencv2/ml.hpp:
 
 /usr/include/c++/11/bits/stl_function.h:
+
+/usr/local/include/eigen3/SparseLU:
 
 /usr/include/c++/11/bits/memoryfwd.h:
 
@@ -987,6 +1255,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
 
 /usr/include/c++/11/bits/allocator.h:
+
+/usr/local/include/eigen3/SparseCholesky:
 
 /usr/include/c++/11/cmath:
 
@@ -1058,6 +1328,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/include/x86_64-linux-gnu/c++/11/bits/cpu_defines.h:
 
+/usr/local/include/eigen3/src/SparseCore/SparseCompressedBase.h:
+
 /usr/include/x86_64-linux-gnu/bits/math-vector.h:
 
 /usr/include/c++/11/complex:
@@ -1071,6 +1343,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/x86_64-linux-gnu/bits/types/FILE.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/time_t.h:
+
+/usr/local/include/eigen3/src/SparseLU/SparseLU_pruneL.h:
 
 /usr/include/c++/11/string:
 
@@ -1126,6 +1400,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/include/c++/11/unordered_map:
 
+/usr/local/include/eigen3/src/SparseLU/SparseLU_pivotL.h:
+
 /usr/include/c++/11/cctype:
 
 /usr/include/opencv4/opencv2/flann/linear_index.h:
@@ -1140,6 +1416,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/include/c++/11/bits/localefwd.h:
 
+/usr/local/include/eigen3/src/Eigenvalues/Tridiagonalization.h:
+
 /usr/include/x86_64-linux-gnu/bits/setjmp.h:
 
 /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h:
@@ -1151,6 +1429,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/c++/11/tr1/modified_bessel_func.tcc:
 
 /usr/include/opencv4/opencv2/dnn/utils/inference_engine.hpp:
+
+/usr/local/include/eigen3/src/Geometry/EulerAngles.h:
 
 /usr/include/x86_64-linux-gnu/bits/fp-logb.h:
 
@@ -1240,9 +1520,13 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/include/c++/11/tr1/exp_integral.tcc:
 
+/usr/local/include/eigen3/src/Geometry/Translation.h:
+
 /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h:
 
 /usr/include/c++/11/bits/stl_construct.h:
+
+/usr/local/include/eigen3/SparseQR:
 
 /usr/local/include/eigen3/src/Core/ArithmeticSequence.h:
 
@@ -1257,6 +1541,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/x86_64-linux-gnu/bits/locale.h:
 
 /usr/include/x86_64-linux-gnu/bits/posix1_lim.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseBlock.h:
 
 /usr/include/x86_64-linux-gnu/bits/local_lim.h:
 
@@ -1283,6 +1569,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/opencv4/opencv2/objdetect.hpp:
 
 /usr/local/include/eigen3/src/Core/ArrayBase.h:
+
+/usr/local/include/eigen3/src/SparseLU/SparseLU_copy_to_ucol.h:
 
 /usr/include/c++/11/bits/align.h:
 
@@ -1326,6 +1614,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/include/opencv4/opencv2/core/traits.hpp:
 
+/usr/local/include/eigen3/src/SparseLU/SparseLU_gemm_kernel.h:
+
 /usr/local/include/eigen3/src/Core/util/ForwardDeclarations.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h:
@@ -1349,6 +1639,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/opencv4/opencv2/core/bufferpool.hpp:
 
 /usr/include/opencv4/opencv2/core/mat.inl.hpp:
+
+/usr/local/include/eigen3/src/Eigenvalues/MatrixBaseEigenvalues.h:
 
 /usr/local/include/eigen3/src/Core/util/Memory.h:
 
@@ -1377,6 +1669,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/opencv4/opencv2/features2d.hpp:
 
 /usr/include/opencv4/opencv2/flann/defines.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseSolverBase.h:
 
 /usr/include/opencv4/opencv2/core/hal/interface.h:
 
@@ -1439,6 +1733,10 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/x86_64-linux-gnu/c++/11/bits/ctype_base.h:
 
 /usr/include/opencv4/opencv2/flann/result_set.h:
+
+/usr/local/include/eigen3/src/IterativeLinearSolvers/LeastSquareConjugateGradient.h:
+
+/usr/local/include/eigen3/src/Eigenvalues/GeneralizedEigenSolver.h:
 
 /usr/include/x86_64-linux-gnu/gnu/stubs.h:
 
@@ -1514,6 +1812,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/include/opencv4/opencv2/stitching/detail/exposure_compensate.hpp:
 
+/usr/local/include/eigen3/src/OrderingMethods/Amd.h:
+
 /usr/local/include/eigen3/src/QR/CompleteOrthogonalDecomposition.h:
 
 /usr/include/c++/11/bits/locale_conv.h:
@@ -1529,6 +1829,8 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 /usr/include/opencv4/opencv2/imgproc/segmentation.hpp:
 
 /usr/local/include/eigen3/src/Core/PartialReduxEvaluator.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseCwiseBinaryOp.h:
 
 /usr/include/opencv4/opencv2/ml/ml.inl.hpp:
 
@@ -1630,9 +1932,13 @@ CMakeFiles/Rotation.dir/main.cpp.o: ../main.cpp \
 
 /usr/local/include/eigen3/src/Core/DenseBase.h:
 
+/usr/local/include/eigen3/src/Eigenvalues/GeneralizedSelfAdjointEigenSolver.h:
+
 /usr/include/c++/11/bits/nested_exception.h:
 
 /usr/local/include/eigen3/src/plugins/ArrayCwiseBinaryOps.h:
+
+/usr/local/include/eigen3/src/SparseCore/SparseSparseProductWithPruning.h:
 
 /usr/include/c++/11/streambuf:
 

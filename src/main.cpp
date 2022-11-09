@@ -12,6 +12,7 @@
 #include <eigen3/Core>
 #include <eigen3/SVD>
 #include <eigen3/LU>
+#include <eigen3/Eigen>
 
 // オプション処理
 #include <unistd.h>
@@ -106,6 +107,28 @@ Eigen::Matrix3d calc_rotation_R(Eigen::Matrix3d correlation_C)
     //           << std::endl;
 
     return matrix_R;
+}
+
+void calc_rotation_axis_from_matrix_R(Eigen::Matrix3d matrix_R)
+{
+    // Eigen::Matrix3d test;
+    // test << 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0;
+
+    // 固有値を計算
+    // Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> ES(test);
+    Eigen::EigenSolver<Eigen::Matrix3d> ES(matrix_R);
+
+    if (ES.info() != Eigen::Success)
+    {
+        abort();
+    }
+
+    std::cout << "Eigenvalue :" << std::endl
+              << ES.eigenvalues() << std::endl;
+
+    // 固有ベクトル
+    std::cout << "Eigen vec" << std::endl
+              << ES.eigenvectors() << std::endl;
 }
 
 void SVD_test(Eigen::Matrix3d matrix_C)
@@ -405,7 +428,7 @@ void output_ply(std::vector<Eigen::Vector3d> &point_data, std::string out_path)
 void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string file_path_3, std::string img_path, std::string out_path)
 {
 
-    std::vector<Eigen::Vector3d> img_corresponding_point, ply_corresponding_point, moved_ply_corresponding_point, plyfile_point;
+    std::vector<Eigen::Vector3d> img_corresponding_point, ply_corresponding_point, moved_ply_corresponding_point, plyfile_point, moved_plyfile_point;
     // std::string dir_path = "./kyoiku-2/";
     std::string dir_path = out_path;
 
@@ -424,6 +447,7 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     // TODO :ベクトル指定か配列渡して各要素引くのがスマートかも
     double h = 0.0;
     move_pointdata(ply_corresponding_point, moved_ply_corresponding_point, h);
+    move_pointdata(plyfile_point, moved_plyfile_point, h);
 
     // シミュレーション: 理論値
     // Eigen::Matrix3d Rironchi_matrix_R;
@@ -461,6 +485,9 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
 
     output_ply(line_img_origin_to_point, out_path + "line-img-origin-to-point.ply");
     output_ply(line_ply_origin_to_point, out_path + "line-ply-origin-to-point.ply");
+
+    // 回転行列を計算
+    calc_rotation_axis_from_matrix_R(rotation_matrix_R);
 }
 
 int main(int argc, char *argv[])
