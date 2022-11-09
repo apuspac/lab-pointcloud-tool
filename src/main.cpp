@@ -317,7 +317,7 @@ Eigen::Matrix3d simlation_value(Eigen::Vector3d n, double degree)
     return Matrix_R;
 }
 
-void rorate_pointdata(std::vector<Eigen::Vector3d> &point_data, std::vector<Eigen::Vector3d> &rotate_data, Eigen::Matrix3d matrix)
+void rotate_pointdata(std::vector<Eigen::Vector3d> &point_data, std::vector<Eigen::Vector3d> &rotate_data, Eigen::Matrix3d matrix)
 {
     for (Eigen::Vector3d &tmp : point_data)
     {
@@ -370,7 +370,7 @@ void output_ply(std::vector<Eigen::Vector3d> &point_data, std::string out_path)
 void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string file_path_3, std::string img_path, std::string out_path)
 {
 
-    std::vector<Eigen::Vector3d> x, x_prime, select_ply_point, plyfile_point;
+    std::vector<Eigen::Vector3d> img_corresponding_point, ply_corresponding_point, moved_ply_corresponding_point, plyfile_point;
     // std::string dir_path = "./kyoiku-2/";
     std::string dir_path = out_path;
 
@@ -378,16 +378,17 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
 
     // シミュレーション:load data
     //  load_pointdata(file_path_1, x);
-    //  load_pointdata(file_path_2, x_prime);
+    //  load_pointdata(file_path_2, img_corresponding_point);
 
     // 画像とpointdata
-    load_img_pointdata(file_path_1, img_path, dir_path, x_prime);
-    load_pointdata(file_path_2, dir_path, 3, select_ply_point);
+    load_img_pointdata(file_path_1, img_path, dir_path, img_corresponding_point);
+    load_pointdata(file_path_2, dir_path, 3, ply_corresponding_point);
     load_pointdata(file_path_3, dir_path, 4, plyfile_point);
 
     // 3Dデータとカメラとの距離(zのみを想定)
-    double h = -1.0;
-    move_pointdata(select_ply_point, x, h);
+    // TODO :ベクトル指定か配列渡して各要素引くのがスマートかも
+    double h = 0.0;
+    move_pointdata(ply_corresponding_point, moved_ply_corresponding_point, h);
 
     // シミュレーション: 理論値
     // Eigen::Matrix3d Rironchi_matrix_R;
@@ -399,28 +400,24 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
 
     // 相関行列C
     Eigen::Matrix3d correlation_C;
-    correlation_C = calc_correlation_C(x, x_prime, weight);
+    correlation_C = calc_correlation_C(moved_ply_corresponding_point, img_corresponding_point, weight);
 
     // 回転行列計算
     Eigen::Matrix3d rotation_matrix_R;
     rotation_matrix_R = calc_rotation_R(correlation_C);
 
-    output_ply(x_prime, out_path + "check-img.ply");
-    output_ply(x, out_path + "check-ply.ply");
+    // 結果の表示
+    output_ply(img_corresponding_point, out_path + "check-img-correspondence.ply");
+    output_ply(ply_corresponding_point, out_path + "check-ply-correspondence.ply");
 
-    std::vector<Eigen::Vector3d> rotated_plyfile_point, R_x;
-    rorate_pointdata(plyfile_point, rotated_plyfile_point, rotation_matrix_R);
+    // 行列を適用させる
+    std::vector<Eigen::Vector3d> rotated_plyfile_point, rotated_ply_corresponding_point;
 
-    output_ply(rotated_plyfile_point, out_path + "rotated_ply.ply");
+    rotate_pointdata(moved_ply_corresponding_point, rotated_ply_corresponding_point, rotation_matrix_R);
+    rotate_pointdata(plyfile_point, rotated_plyfile_point, rotation_matrix_R);
 
-    // SVD_test(correlation_C);
-    // output_result(file_path_1, file_path_2, out_path, rotation_matrix_R);
-
-    // rorate_pointdata(x, R_x, Rironchi_matrix_R);
-    // rorate_pointdata(x_prime, i_x, Rironchi_matrix_R);
-
-    // output_ply(R_x, out_path + "Rx.ply");
-    // output_ply(i_x, out_path + "ix.ply");
+    output_ply(rotated_ply_corresponding_point, out_path + "rotated-ply-correspondence.ply");
+    output_ply(rotated_plyfile_point, out_path + "rotated_plyfile.ply");
 }
 
 int main(int argc, char *argv[])
