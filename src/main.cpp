@@ -479,6 +479,7 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     // output_ply(img_corresponding_point, out_path + "wrong-check-img-correspondence.ply");
     output_ply(img_corresponding_point, out_path + "check-img-correspondence.ply");
     output_ply(moved_ply_corresponding_point, out_path + "check-ply-correspondence.ply");
+    output_ply(moved_plyfile_point, out_path + "moved-plyfile.ply");
 
     // 行列を適用させる
     std::vector<Eigen::Vector3d> rotated_plyfile_point, rotated_ply_corresponding_point;
