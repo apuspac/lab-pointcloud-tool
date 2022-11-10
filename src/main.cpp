@@ -7,6 +7,7 @@
 #include <typeinfo>
 #include <float.h>
 #include <math.h>
+#include <typeinfo>
 
 #include <opencv2/opencv.hpp>
 #include <eigen3/Core>
@@ -123,8 +124,15 @@ void calc_rotation_axis_from_matrix_R(Eigen::Matrix3d matrix_R)
         abort();
     }
 
+    // (実部, 虚部)
+    // ここで1に対応するのが固有ベクトルが回転軸
     std::cout << "Eigenvalue :" << std::endl
               << ES.eigenvalues() << std::endl;
+
+    // const std::type_info &info = typeid(ES.eigenvalues()(1));
+    // std::cout << info.name() << std::endl;
+
+    // double radian = degree * (M_PI / 180.0);
 
     // 固有ベクトル
     std::cout << "Eigen vec" << std::endl
@@ -359,9 +367,11 @@ void plot_line_origin_to_point(std::vector<Eigen::Vector3d> &point_data, std::ve
         double phi = std::atan2(tmp_normalize(1), tmp_normalize(0));
 
         // rを変化させながらplot
+        // 原点はplotしてある
+        double r_init = 0.15;
         double r_limit = 10.0;
         double r_step = 0.15;
-        for (double r = 0.5; r < r_limit; r += r_step)
+        for (double r = 0.15; r < r_limit; r += r_step)
         {
             Eigen::Vector3d tmp = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
             plot_point.push_back(tmp);
@@ -422,7 +432,7 @@ void output_ply(std::vector<Eigen::Vector3d> &point_data, std::string out_path)
     // {
     //     std::cout << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
     // }
-    std::cout << point_data.size() << std::endl;
+    // std::cout << point_data.size() << std::endl;
 }
 
 void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string file_path_3, std::string img_path, std::string out_path)
@@ -445,7 +455,7 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
 
     // 3Dデータとカメラとの距離(zのみを想定)
     // TODO :ベクトル指定か配列渡して各要素引くのがスマートかも
-    double h = 0.0;
+    double h = -1.0;
     move_pointdata(ply_corresponding_point, moved_ply_corresponding_point, h);
     move_pointdata(plyfile_point, moved_plyfile_point, h);
 
@@ -466,14 +476,15 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     rotation_matrix_R = calc_rotation_R(correlation_C);
 
     // 結果の表示
+    // output_ply(img_corresponding_point, out_path + "wrong-check-img-correspondence.ply");
     output_ply(img_corresponding_point, out_path + "check-img-correspondence.ply");
-    output_ply(ply_corresponding_point, out_path + "check-ply-correspondence.ply");
+    output_ply(moved_ply_corresponding_point, out_path + "check-ply-correspondence.ply");
 
     // 行列を適用させる
     std::vector<Eigen::Vector3d> rotated_plyfile_point, rotated_ply_corresponding_point;
 
     rotate_pointdata(moved_ply_corresponding_point, rotated_ply_corresponding_point, rotation_matrix_R);
-    rotate_pointdata(plyfile_point, rotated_plyfile_point, rotation_matrix_R);
+    rotate_pointdata(moved_plyfile_point, rotated_plyfile_point, rotation_matrix_R);
 
     output_ply(rotated_ply_corresponding_point, out_path + "rotated-ply-correspondence.ply");
     output_ply(rotated_plyfile_point, out_path + "rotated-plyfile.ply");
