@@ -245,7 +245,7 @@ int load_img_pointdata(std::string file_name, std::string img_name, std::string 
     std::fstream dat_file;
     // std::string dir_file = "./kyouiku-center/";
     std::string dir_file = dir_path;
-    std::string img_file = "./img/";
+    std::string img_file = "../../img/";
 
     // 画像サイズが欲しいので 取ってくる。
     std::string img_file_path = img_file + img_name;
@@ -435,6 +435,113 @@ void output_ply(std::vector<Eigen::Vector3d> &point_data, std::string out_path)
     // std::cout << point_data.size() << std::endl;
 }
 
+void create_xi(std::vector<Eigen::Vector3d> &img_point, std::vector<Eigen::Vector3d> &ply_point, std::vector<Eigen::Matrix<double, 9, 1>> &vector_xi)
+{
+    std::vector<Eigen::Vector3d>::const_iterator img_itr, ply_itr;
+    for (img_itr = img_point.begin(), ply_itr = ply_point.begin(); img_itr != img_point.end(); ++img_itr, ++ply_itr)
+    {
+        // TODO: もうちょっとスマートにしたい
+        Eigen::Vector3d img = *img_itr;
+        Eigen::Vector3d ply = *ply_itr;
+
+        double x = img(0);
+        double y = img(1);
+        double z = img(2);
+        double x_p = ply(0);
+        double y_p = ply(1);
+        double z_p = ply(2);
+
+        Eigen::Matrix<double, 9, 1> xi = {
+            x * x_p, x * y_p, x * z_p,
+            y * x_p, y * y_p, y * z_p,
+            z * x_p, z * y_p, z * z_p};
+
+        vector_xi.push_back(xi);
+    }
+}
+
+Eigen::Matrix<double, 9, 9> calc_matrix_M(std::vector<Eigen::Matrix<double, 9, 1>> vector_xi)
+{
+    Eigen::Matrix<double, 9, 9> Matrix_M = Eigen::Matrix<double, 9, 9>::Identity();
+
+    for (const auto &tmp : vector_xi)
+    {
+        Matrix_M += tmp * tmp.transpose();
+
+        // std::cout << "tmp" << tmp << std::endl
+        //           << "tmp.transpose()" << tmp.transpose() << std::endl
+        //           << tmp * tmp.transpose() << std::endl;
+
+        // std::cout << "Matrix_M:" << std::endl
+        //           << Matrix_M << std::endl;
+    }
+
+    std::cout << "Matrix_M:" << std::endl
+              << Matrix_M << std::endl;
+    return Matrix_M;
+}
+
+// TODO: これ最小固有値求めて単位固有ベクトル求めるのはたぶんいろいろ使うから 行列の大きさをdynamicで指定できるようにしたい
+void calc_Essential_Matrix(Eigen::Matrix<double, 9, 9> Matrix_M)
+{
+    // 固有値を計算
+    // Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> ES(test);
+    Eigen::EigenSolver<Eigen::Matrix<double, 9, 9>> ES(Matrix_M);
+
+    if (ES.info() != Eigen::Success)
+    {
+        abort();
+    }
+
+    // (実部, 虚部)
+    // 最小固有値を探す
+    std::cout << "Eigenvalue :" << std::endl
+              << ES.eigenvalues() << std::endl;
+
+    double min_eigen = ES.eigenvalues()(1).real();
+
+    int index = 1;
+    for (const auto &tmp : ES.eigenvalues())
+    {
+        if (tmp.real() < min_eigen)
+        {
+            min_eigen = tmp.real();
+            index = &tmp - &ES.eigenvalues()(0);
+        }
+    }
+
+    std::cout << "min_eigen" << std::endl
+              << min_eigen << std::endl
+              << "index: " << index << std::endl;
+
+    // 固有ベクトル
+    std::cout << "Eigen vec" << std::endl
+              << ES.eigenvectors() << std::endl;
+
+    //対応するベクトル
+    std::cout << "min_eigenvector" << std::endl
+              << ES.eigenvectors().col(index) << std::endl;
+
+    Eigen::Matrix<double, 9, 1> vector_f = ES.eigenvectors().col(index).real();
+
+    std::cout << "vector_f" << std::endl
+              << vector_f << std::endl;
+
+    // ベクトルの正規化
+    vector_f = vector_f / vector_f.norm();
+
+    std::cout << "vector_f" << std::endl
+              << vector_f << std::endl;
+    // Eigen::Matrix3d Essential_Matrix = {
+    //     ES.eigenvectors()(index * 1), ES.eigenvectors()(index * 2),ES.eigenvectors()(index * 3),
+    //     ES.eigenvectors()(index * 4),ES.eigenvectors()(index * 5),ES.eigenvectors()(index * 6),
+    //     ES.eigenvectors()(index * 7),ES.eigenvectors()(index * 1),ES.eigenvectors()(index * 1),
+
+    // }
+    // std::cout << "Eigen vec" << std::endl
+    //           << ES.eigenvectors()(index) << std::endl;
+}
+
 void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string file_path_3, std::string img_path, std::string out_path)
 {
 
@@ -444,6 +551,27 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
 
     std::cout << std::fixed;
 
+    // pointデータの読み込み
+    load_img_pointdata(file_path_1, img_path, dir_path, img_corresponding_point);
+    load_pointdata(file_path_2, dir_path, 3, ply_corresponding_point);
+
+    //直積の組を作って並べる。
+    std::vector<Eigen::Matrix<double, 9, 1>> xi;
+    create_xi(img_corresponding_point, ply_corresponding_point, xi);
+
+    for (const auto &e : xi)
+    {
+        std::cout << e << std::endl
+                  << std::endl;
+    }
+
+    Eigen::Matrix<double, 9, 9> matrix_M;
+
+    matrix_M = calc_matrix_M(xi);
+
+    calc_Essential_Matrix(matrix_M);
+
+    /** TODO: コメントアウト
     // シミュレーション:load data
     //  load_pointdata(file_path_1, x);
     //  load_pointdata(file_path_2, img_corresponding_point);
@@ -500,6 +628,8 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
 
     // 回転行列を計算
     calc_rotation_axis_from_matrix_R(rotation_matrix_R);
+     TODO: コメントアウト
+     */
 }
 
 int main(int argc, char *argv[])
