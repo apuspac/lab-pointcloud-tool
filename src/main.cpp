@@ -482,7 +482,7 @@ Eigen::Matrix<double, 9, 9> calc_matrix_M(std::vector<Eigen::Matrix<double, 9, 1
 }
 
 // TODO: これ最小固有値求めて単位固有ベクトル求めるのはたぶんいろいろ使うから 行列の大きさをdynamicで指定できるようにしたい
-void calc_Essential_Matrix(Eigen::Matrix<double, 9, 9> Matrix_M)
+Eigen::Matrix3d calc_Essential_Matrix(Eigen::Matrix<double, 9, 9> Matrix_M)
 {
     // 固有値を計算
     // Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> ES(test);
@@ -528,18 +528,112 @@ void calc_Essential_Matrix(Eigen::Matrix<double, 9, 9> Matrix_M)
               << vector_f << std::endl;
 
     // ベクトルの正規化
-    vector_f = vector_f / vector_f.norm();
+    vector_f /= vector_f.norm();
 
-    std::cout << "vector_f" << std::endl
+    std::cout << "vector_f_unit" << std::endl
               << vector_f << std::endl;
-    // Eigen::Matrix3d Essential_Matrix = {
-    //     ES.eigenvectors()(index * 1), ES.eigenvectors()(index * 2),ES.eigenvectors()(index * 3),
-    //     ES.eigenvectors()(index * 4),ES.eigenvectors()(index * 5),ES.eigenvectors()(index * 6),
-    //     ES.eigenvectors()(index * 7),ES.eigenvectors()(index * 1),ES.eigenvectors()(index * 1),
 
-    // }
-    // std::cout << "Eigen vec" << std::endl
-    //           << ES.eigenvectors()(index) << std::endl;
+    Eigen::Matrix3d Matrix_E;
+
+    Matrix_E << vector_f(0), vector_f(1), vector_f(2),
+        vector_f(3), vector_f(4), vector_f(5),
+        vector_f(6), vector_f(7), vector_f(8);
+
+    std::cout << "Essential Matrix:" << std::endl
+              << Matrix_E << std::endl;
+
+    return Matrix_E;
+}
+
+Eigen::Vector3d calc_translation_t(Eigen::Matrix3d matrix_E)
+{
+    Eigen::Matrix3d matrix_EEt = matrix_E * matrix_E.transpose();
+
+    // 固有値を計算
+    Eigen::EigenSolver<Eigen::Matrix3d> ES(matrix_EEt);
+
+    if (ES.info() != Eigen::Success)
+    {
+        abort();
+    }
+
+    // 最小固有値を探す
+    std::cout << "E * E.t Eigenvalue :" << std::endl
+              << ES.eigenvalues() << std::endl;
+
+    double min_eigen = ES.eigenvalues()(1).real();
+
+    int index = 1;
+    for (const auto &tmp : ES.eigenvalues())
+    {
+        if (tmp.real() < min_eigen)
+        {
+            min_eigen = tmp.real();
+            index = &tmp - &ES.eigenvalues()(0);
+        }
+    }
+
+    std::cout << "E * E.t min_eigen" << std::endl
+              << min_eigen << std::endl
+              << "index: " << index << std::endl;
+
+    // 固有ベクトル
+    std::cout << "E * E.t Eigen vec" << std::endl
+              << ES.eigenvectors() << std::endl;
+
+    //対応するベクトル
+    std::cout << "E * E.t min_eigenvector" << std::endl
+              << ES.eigenvectors().col(index) << std::endl;
+
+    Eigen::Vector3d vector_t = ES.eigenvectors().col(index).real();
+
+    std::cout << "vector_t" << std::endl
+              << vector_t << std::endl;
+
+    // ベクトルの正規化
+    vector_t /= vector_t.norm();
+
+    std::cout << "vector_t_unit" << std::endl
+              << vector_t << std::endl;
+
+    Eigen::Vector3d translation_diff_scale = {vector_t(0), vector_t(1), vector_t(2)};
+    return translation_diff_scale;
+}
+
+void Decomposition_Essential_Matrix(Eigen::Matrix3d matrix_e, Eigen::Vector3d vector_t)
+{
+    Eigen::Matrix3d vector_t_cross;
+
+    vector_t_cross << 0, -vector_t(2), vector_t(1),
+        vector_t(2), 0, -vector_t(0),
+        -vector_t(1), vector_t(0), 0;
+
+    Eigen::Matrix3d matrix_K = -vector_t_cross * matrix_e;
+
+    // 特異値分解
+    Eigen::JacobiSVD<Eigen::Matrix3d> SVD(matrix_K, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    Eigen::Matrix3d matrix_V, matrix_U, matrix_R;
+
+    // https://eigen.tuxfamily.org/dox/classEigen_1_1JacobiSVD.html
+    //  ここみると、SVD結果が A = USVで出力されている。
+    //  計算は資料の方に合わせたいので、ここで反転させる。
+    matrix_V = SVD.matrixU();
+    matrix_U = SVD.matrixV();
+
+    // det(V UT) 計算結果は 1か-1になるはず
+    double det_VUt = (matrix_V * matrix_U.transpose()).determinant();
+
+    // 対角行列
+    Eigen::DiagonalMatrix<double, 3> matrix_Diag = {1.0, 1.0, det_VUt};
+
+    // 回転行列Rの最大化の式
+    matrix_R = matrix_V * matrix_Diag * matrix_U.transpose();
+
+    // 回転行列R
+    std::cout << std::endl
+              << "Matrix_R calc from matrix_E" << std::endl;
+    std::cout << std::setprecision(15) << matrix_R << std::endl
+              << std::endl;
 }
 
 void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string file_path_3, std::string img_path, std::string out_path)
@@ -559,33 +653,36 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     std::vector<Eigen::Matrix<double, 9, 1>> xi;
     create_xi(img_corresponding_point, ply_corresponding_point, xi);
 
-    for (const auto &e : xi)
-    {
-        std::cout << e << std::endl
-                  << std::endl;
-    }
+    // for (const auto &e : xi)
+    // {
+    //     std::cout << e << std::endl
+    //               << std::endl;
+    // }
 
     Eigen::Matrix<double, 9, 9> matrix_M;
-
     matrix_M = calc_matrix_M(xi);
 
-    calc_Essential_Matrix(matrix_M);
+    Eigen::Matrix3d matrix_E;
+    matrix_E = calc_Essential_Matrix(matrix_M);
 
-    /** TODO: コメントアウト
+    Eigen::Vector3d translation_vector_diff_scale;
+    translation_vector_diff_scale = calc_translation_t(matrix_E);
+
+    Decomposition_Essential_Matrix(matrix_E, translation_vector_diff_scale);
     // シミュレーション:load data
     //  load_pointdata(file_path_1, x);
     //  load_pointdata(file_path_2, img_corresponding_point);
 
-    // 画像とpointdata
-    load_img_pointdata(file_path_1, img_path, dir_path, img_corresponding_point);
-    load_pointdata(file_path_2, dir_path, 3, ply_corresponding_point);
-    load_pointdata(file_path_3, dir_path, 4, plyfile_point);
+    // // 画像とpointdata
+    // load_img_pointdata(file_path_1, img_path, dir_path, img_corresponding_point);
+    // load_pointdata(file_path_2, dir_path, 3, ply_corresponding_point);
+    // load_pointdata(file_path_3, dir_path, 4, plyfile_point);
 
     // 3Dデータとカメラとの距離(zのみを想定)
     // TODO :ベクトル指定か配列渡して各要素引くのがスマートかも
-    double h = -1.0;
+    double h = 0.0;
     move_pointdata(ply_corresponding_point, moved_ply_corresponding_point, h);
-    move_pointdata(plyfile_point, moved_plyfile_point, h);
+    // move_pointdata(plyfile_point, moved_plyfile_point, h);
 
     // シミュレーション: 理論値
     // Eigen::Matrix3d Rironchi_matrix_R;
@@ -603,33 +700,31 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     Eigen::Matrix3d rotation_matrix_R;
     rotation_matrix_R = calc_rotation_R(correlation_C);
 
-    // 結果の表示
-    // output_ply(img_corresponding_point, out_path + "wrong-check-img-correspondence.ply");
-    output_ply(img_corresponding_point, out_path + "check-img-correspondence.ply");
-    output_ply(moved_ply_corresponding_point, out_path + "check-ply-correspondence.ply");
-    output_ply(moved_plyfile_point, out_path + "moved-plyfile.ply");
+    // // 結果の表示
+    // // output_ply(img_corresponding_point, out_path + "wrong-check-img-correspondence.ply");
+    // output_ply(img_corresponding_point, out_path + "check-img-correspondence.ply");
+    // output_ply(moved_ply_corresponding_point, out_path + "check-ply-correspondence.ply");
+    // output_ply(moved_plyfile_point, out_path + "moved-plyfile.ply");
 
-    // 行列を適用させる
-    std::vector<Eigen::Vector3d> rotated_plyfile_point, rotated_ply_corresponding_point;
+    // // 行列を適用させる
+    // std::vector<Eigen::Vector3d> rotated_plyfile_point, rotated_ply_corresponding_point;
 
-    rotate_pointdata(moved_ply_corresponding_point, rotated_ply_corresponding_point, rotation_matrix_R);
-    rotate_pointdata(moved_plyfile_point, rotated_plyfile_point, rotation_matrix_R);
+    // rotate_pointdata(moved_ply_corresponding_point, rotated_ply_corresponding_point, rotation_matrix_R);
+    // rotate_pointdata(moved_plyfile_point, rotated_plyfile_point, rotation_matrix_R);
 
-    output_ply(rotated_ply_corresponding_point, out_path + "rotated-ply-correspondence.ply");
-    output_ply(rotated_plyfile_point, out_path + "rotated-plyfile.ply");
+    // output_ply(rotated_ply_corresponding_point, out_path + "rotated-ply-correspondence.ply");
+    // output_ply(rotated_plyfile_point, out_path + "rotated-plyfile.ply");
 
-    // 点群に沿った直線を出力させる
-    std::vector<Eigen::Vector3d> line_img_origin_to_point, line_ply_origin_to_point;
-    plot_line_origin_to_point(img_corresponding_point, line_img_origin_to_point);
-    plot_line_origin_to_point(rotated_ply_corresponding_point, line_ply_origin_to_point);
+    // // 点群に沿った直線を出力させる
+    // std::vector<Eigen::Vector3d> line_img_origin_to_point, line_ply_origin_to_point;
+    // plot_line_origin_to_point(img_corresponding_point, line_img_origin_to_point);
+    // plot_line_origin_to_point(rotated_ply_corresponding_point, line_ply_origin_to_point);
 
-    output_ply(line_img_origin_to_point, out_path + "line-img-origin-to-point.ply");
-    output_ply(line_ply_origin_to_point, out_path + "line-ply-origin-to-point.ply");
+    // output_ply(line_img_origin_to_point, out_path + "line-img-origin-to-point.ply");
+    // output_ply(line_ply_origin_to_point, out_path + "line-ply-origin-to-point.ply");
 
     // 回転行列を計算
     calc_rotation_axis_from_matrix_R(rotation_matrix_R);
-     TODO: コメントアウト
-     */
 }
 
 int main(int argc, char *argv[])
