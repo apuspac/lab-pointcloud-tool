@@ -126,17 +126,50 @@ void calc_rotation_axis_from_matrix_R(Eigen::Matrix3d matrix_R)
 
     // (実部, 虚部)
     // ここで1に対応するのが固有ベクトルが回転軸
-    std::cout << "Eigenvalue :" << std::endl
+    std::cout << "Rotation matrix Eigenvalue :" << std::endl
               << ES.eigenvalues() << std::endl;
-
-    // const std::type_info &info = typeid(ES.eigenvalues()(1));
-    // std::cout << info.name() << std::endl;
-
-    // double radian = degree * (M_PI / 180.0);
 
     // 固有ベクトル
     std::cout << "Eigen vec" << std::endl
               << ES.eigenvectors() << std::endl;
+
+    // というか1に近いやつを探す
+    double min_eigen = std::abs(1.0 - ES.eigenvalues()(0).real());
+
+    int index = 0;
+    for (const auto &tmp : ES.eigenvalues())
+    {
+        if (std::abs(1.0 - tmp.real()) < min_eigen)
+        {
+            min_eigen = std::abs(1.0 - tmp.real());
+            index = &tmp - &ES.eigenvalues()(0);
+        }
+    }
+
+    std::cout << "Rotation matrix min_eigen" << std::endl
+              << min_eigen << std::endl
+              << "index: " << index << std::endl;
+
+    // 対応するベクトル
+    std::cout << "corresponding vectors" << std::endl
+              << ES.eigenvectors().col(index) << std::endl;
+
+    Eigen::Vector3d vector_t = ES.eigenvectors().col(index).real();
+
+    std::cout << "vector_t" << std::endl
+              << vector_t << std::endl;
+
+    // 回転角の計算
+    double nx = vector_t(0);
+    double ny = vector_t(1);
+    double nz = vector_t(2);
+
+    double theta = (matrix_R(0, 0) + matrix_R(1, 1) + matrix_R(2, 2) - (std::pow(nx, 2.0) + std::pow(ny, 2.0) + std::pow(nz, 2.0))) /
+                   (3 - (std::pow(nx, 2.0) + std::pow(ny, 2.0) + std::pow(nz, 2.0)));
+
+    theta = std::acos(theta);
+
+    std::cout << "theta: " << theta << std::endl;
 }
 
 void SVD_test(Eigen::Matrix3d matrix_C)
@@ -518,7 +551,7 @@ Eigen::Matrix3d calc_Essential_Matrix(Eigen::Matrix<double, 9, 9> Matrix_M)
     std::cout << "Eigen vec" << std::endl
               << ES.eigenvectors() << std::endl;
 
-    //対応するベクトル
+    // 対応するベクトル
     std::cout << "min_eigenvector" << std::endl
               << ES.eigenvectors().col(index) << std::endl;
 
@@ -581,7 +614,7 @@ Eigen::Vector3d calc_translation_t(Eigen::Matrix3d matrix_E)
     std::cout << "E * E.t Eigen vec" << std::endl
               << ES.eigenvectors() << std::endl;
 
-    //対応するベクトル
+    // 対応するベクトル
     std::cout << "E * E.t min_eigenvector" << std::endl
               << ES.eigenvectors().col(index) << std::endl;
 
@@ -649,7 +682,7 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     load_img_pointdata(file_path_1, img_path, dir_path, img_corresponding_point);
     load_pointdata(file_path_2, dir_path, 3, ply_corresponding_point);
 
-    //直積の組を作って並べる。
+    // 直積の組を作って並べる。
     std::vector<Eigen::Matrix<double, 9, 1>> xi;
     create_xi(img_corresponding_point, ply_corresponding_point, xi);
 
