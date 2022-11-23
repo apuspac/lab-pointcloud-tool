@@ -515,9 +515,57 @@ Eigen::Matrix<double, 9, 9> calc_matrix_M(std::vector<Eigen::Matrix<double, 9, 1
     return Matrix_M;
 }
 
+Eigen::Matrix3d calc_Essential_Matrix_RE(Eigen::Matrix<double, 9, 9> Matrix_M)
+{
+    // 固有値を計算
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 9, 9>> ES(Matrix_M);
+
+    if (ES.info() != Eigen::Success)
+    {
+        abort();
+    }
+
+    std::cout << "Eigenvalue :" << std::endl
+              << ES.eigenvalues() << std::endl;
+
+    // 最小固有値
+    double min_eigen = ES.eigenvalues()(0);
+
+    std::cout << "min_eigen" << std::endl
+              << min_eigen << std::endl;
+
+    // 最小固有値に対応するベクトル
+    std::cout << "min_eigenvector" << std::endl
+              << ES.eigenvectors().col(0) << std::endl;
+
+    Eigen::Matrix<double, 9, 1> vector_d = ES.eigenvectors().col(0);
+
+    std::cout << "vector_d" << std::endl
+              << vector_d << std::endl;
+
+    // ベクトルの正規化もやってくれてるらしいが 一応
+    vector_d /= vector_d.norm();
+
+    std::cout << "vector_f_unit" << std::endl
+              << vector_d << std::endl;
+
+    Eigen::Matrix3d Matrix_E;
+
+    Matrix_E << vector_d(0), vector_d(1), vector_d(2),
+        vector_d(3), vector_d(4), vector_d(5),
+        vector_d(6), vector_d(7), vector_d(8);
+
+    std::cout << "Essential Matrix:" << std::endl
+              << Matrix_E << std::endl;
+
+    return Matrix_E;
+}
+
 // TODO: これ最小固有値求めて単位固有ベクトル求めるのはたぶんいろいろ使うから 行列の大きさをdynamicで指定できるようにしたい
 Eigen::Matrix3d calc_Essential_Matrix(Eigen::Matrix<double, 9, 9> Matrix_M)
 {
+
+    //これだけは Eigenのsolverを残す
     // 固有値を計算
     // Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> ES(test);
     Eigen::EigenSolver<Eigen::Matrix<double, 9, 9>> ES(Matrix_M);
@@ -584,7 +632,7 @@ Eigen::Vector3d calc_translation_t(Eigen::Matrix3d matrix_E)
     Eigen::Matrix3d matrix_EEt = matrix_E * matrix_E.transpose();
 
     // 固有値を計算
-    Eigen::EigenSolver<Eigen::Matrix3d> ES(matrix_EEt);
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> ES(matrix_EEt);
 
     if (ES.info() != Eigen::Success)
     {
@@ -595,21 +643,10 @@ Eigen::Vector3d calc_translation_t(Eigen::Matrix3d matrix_E)
     std::cout << "E * E.t Eigenvalue :" << std::endl
               << ES.eigenvalues() << std::endl;
 
-    double min_eigen = ES.eigenvalues()(1).real();
-
-    int index = 1;
-    for (const auto &tmp : ES.eigenvalues())
-    {
-        if (tmp.real() < min_eigen)
-        {
-            min_eigen = tmp.real();
-            index = &tmp - &ES.eigenvalues()(0);
-        }
-    }
+    double min_eigen = ES.eigenvalues()(0);
 
     std::cout << "E * E.t min_eigen" << std::endl
-              << min_eigen << std::endl
-              << "index: " << index << std::endl;
+              << min_eigen << std::endl;
 
     // 固有ベクトル
     std::cout << "E * E.t Eigen vec" << std::endl
@@ -617,24 +654,58 @@ Eigen::Vector3d calc_translation_t(Eigen::Matrix3d matrix_E)
 
     // 対応するベクトル
     std::cout << "E * E.t min_eigenvector" << std::endl
-              << ES.eigenvectors().col(index) << std::endl;
+              << ES.eigenvectors().col(0) << std::endl;
 
-    Eigen::Vector3d vector_t = ES.eigenvectors().col(index).real();
+    Eigen::Vector3d vector_t_hat = ES.eigenvectors().col(0);
 
-    std::cout << "vector_t" << std::endl
-              << vector_t << std::endl;
+    std::cout << "vector_t_hat" << std::endl
+              << vector_t_hat << std::endl;
 
     // ベクトルの正規化
-    vector_t /= vector_t.norm();
+    vector_t_hat /= vector_t_hat.norm();
 
-    std::cout << "vector_t_unit" << std::endl
-              << vector_t << std::endl;
+    std::cout << "vector_t_hat_unit" << std::endl
+              << vector_t_hat << std::endl;
 
-    Eigen::Vector3d translation_diff_scale = {vector_t(0), vector_t(1), vector_t(2)};
+    Eigen::Vector3d translation_diff_scale = {vector_t_hat(0), vector_t_hat(1), vector_t_hat(2)};
+
     return translation_diff_scale;
 }
 
-void Decomposition_Essential_Matrix(Eigen::Matrix3d matrix_e, Eigen::Vector3d vector_t)
+/// @brief 並進ベクトルの符号をチェックする
+/// @param img_point img_corresponding_pointの先頭アドレス
+/// @param ply_point ply_corresponding_pointの先頭アドレス
+/// @param vector_t  並進ベクトルt
+/// @param matrix_e 基本行列E
+/// @return チェックした並進ベクトルt
+Eigen::Vector3d check_sign_translation_t(std::vector<Eigen::Vector3d> &img_point, std::vector<Eigen::Vector3d> &ply_point, Eigen::Vector3d vector_t, Eigen::Matrix3d matrix_e)
+{
+    std::vector<Eigen::Vector3d>::const_iterator img_itr, ply_itr;
+    double check_sign = 0;
+    for (img_itr = img_point.begin(), ply_itr = ply_point.begin(); img_itr != img_point.end(); ++img_itr, ++ply_itr)
+    {
+        Eigen::Vector3d img = *img_itr;
+        Eigen::Vector3d ply = *ply_itr;
+
+        auto Ex = matrix_e * ply;
+
+        auto cross_M = img.cross(Ex);
+
+        check_sign += vector_t.dot(cross_M);
+    }
+
+    std::cout << "check_sign: " << std::endl
+              << check_sign << std::endl;
+
+    if (check_sign > 0)
+    {
+        vector_t = -vector_t;
+    }
+
+    return vector_t;
+}
+
+void Calc_Rotation_Matrix_from_Essential_Matrix(Eigen::Matrix3d matrix_e, Eigen::Vector3d vector_t)
 {
     Eigen::Matrix3d vector_t_cross;
 
@@ -683,26 +754,26 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     load_img_pointdata(file_path_1, img_path, dir_path, img_corresponding_point);
     load_pointdata(file_path_2, dir_path, 3, ply_corresponding_point);
 
-    // 直積の組を作って並べる。
+    // 組を作って並べる。
     std::vector<Eigen::Matrix<double, 9, 1>> xi;
     create_xi(img_corresponding_point, ply_corresponding_point, xi);
 
-    // for (const auto &e : xi)
-    // {
-    //     std::cout << e << std::endl
-    //               << std::endl;
-    // }
-
+    //行列Mを計算
     Eigen::Matrix<double, 9, 9> matrix_M;
     matrix_M = calc_matrix_M(xi);
 
+    //最小固有値に対する固有ベクトルを求め、基本行列を求める
     Eigen::Matrix3d matrix_E;
     matrix_E = calc_Essential_Matrix(matrix_M);
 
+    // 基本行列Eから並進ベクトルtを求める
     Eigen::Vector3d translation_vector_diff_scale;
     translation_vector_diff_scale = calc_translation_t(matrix_E);
+    translation_vector_diff_scale = check_sign_translation_t(
+        img_corresponding_point, ply_corresponding_point,
+        translation_vector_diff_scale, matrix_E);
 
-    Decomposition_Essential_Matrix(matrix_E, translation_vector_diff_scale);
+    Calc_Rotation_Matrix_from_Essential_Matrix(matrix_E, translation_vector_diff_scale);
     // シミュレーション:load data
     //  load_pointdata(file_path_1, x);
     //  load_pointdata(file_path_2, img_corresponding_point);
