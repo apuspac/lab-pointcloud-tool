@@ -680,7 +680,8 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     std::cout << std::fixed;
 
     // pointデータの読み込み
-    load_img_pointdata(file_path_1, img_path, dir_path, img_corresponding_point);
+    // load_img_pointdata(file_path_1, img_path, dir_path, img_corresponding_point);
+    // sim
     load_pointdata(file_path_2, dir_path, 3, ply_corresponding_point);
 
     // 直積の組を作って並べる。
