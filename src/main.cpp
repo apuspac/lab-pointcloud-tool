@@ -146,17 +146,17 @@ void calc_rotation_axis_from_matrix_R(Eigen::Matrix3d matrix_R)
         }
     }
 
-    std::cout << "Rotation matrix min_eigen" << std::endl
-              << min_eigen << std::endl
-              << "index: " << index << std::endl;
+    // std::cout << "Rotation matrix min_eigen" << std::endl
+    //           << min_eigen << std::endl
+    //           << "index: " << index << std::endl;
 
     // 対応するベクトル
-    std::cout << "corresponding vectors" << std::endl
-              << ES.eigenvectors().col(index) << std::endl;
+    // std::cout << "corresponding vectors" << std::endl
+    //           << ES.eigenvectors().col(index) << std::endl;
 
     Eigen::Vector3d vector_t = ES.eigenvectors().col(index).real();
 
-    std::cout << "vector_t" << std::endl
+    std::cout << "Rotation_axis" << std::endl
               << vector_t << std::endl;
 
     // 回転角の計算
@@ -492,6 +492,12 @@ void create_xi(std::vector<Eigen::Vector3d> &img_point, std::vector<Eigen::Vecto
 
         vector_xi.push_back(xi);
     }
+
+    // for (auto tmp : vector_xi)
+    // {
+    //     std::cout << "vector_xi:" << std::endl
+    //               << tmp << std::endl;
+    // }
 }
 
 Eigen::Matrix<double, 9, 9> calc_matrix_M(std::vector<Eigen::Matrix<double, 9, 1>> vector_xi)
@@ -546,8 +552,8 @@ Eigen::Matrix3d calc_Essential_Matrix_RE(Eigen::Matrix<double, 9, 9> Matrix_M)
     // ベクトルの正規化もやってくれてるらしいが 一応
     vector_d /= vector_d.norm();
 
-    std::cout << "vector_f_unit" << std::endl
-              << vector_d << std::endl;
+    // std::cout << "vector_f_unit" << std::endl
+    //           << vector_d << std::endl;
 
     Eigen::Matrix3d Matrix_E;
 
@@ -640,7 +646,8 @@ Eigen::Vector3d calc_translation_t(Eigen::Matrix3d matrix_E)
     }
 
     // 最小固有値を探す
-    std::cout << "E * E.t Eigenvalue :" << std::endl
+    std::cout << std::endl
+              << "E * E.t Eigenvalue :" << std::endl
               << ES.eigenvalues() << std::endl;
 
     double min_eigen = ES.eigenvalues()(0);
@@ -664,8 +671,8 @@ Eigen::Vector3d calc_translation_t(Eigen::Matrix3d matrix_E)
     // ベクトルの正規化
     vector_t_hat /= vector_t_hat.norm();
 
-    std::cout << "vector_t_hat_unit" << std::endl
-              << vector_t_hat << std::endl;
+    // std::cout << "vector_t_hat_unit" << std::endl
+    //           << vector_t_hat << std::endl;
 
     Eigen::Vector3d translation_diff_scale = {vector_t_hat(0), vector_t_hat(1), vector_t_hat(2)};
 
@@ -705,13 +712,16 @@ Eigen::Vector3d check_sign_translation_t(std::vector<Eigen::Vector3d> &img_point
     return vector_t;
 }
 
-void Calc_Rotation_Matrix_from_Essential_Matrix(Eigen::Matrix3d matrix_e, Eigen::Vector3d vector_t)
+Eigen::Matrix3d Calc_Rotation_Matrix_from_Essential_Matrix(Eigen::Matrix3d matrix_e, Eigen::Vector3d vector_t)
 {
     Eigen::Matrix3d vector_t_cross;
 
     vector_t_cross << 0, -vector_t(2), vector_t(1),
         vector_t(2), 0, -vector_t(0),
         -vector_t(1), vector_t(0), 0;
+
+    std::cout << "vector_t_cross" << std::endl
+              << vector_t_cross << std::endl;
 
     Eigen::Matrix3d matrix_K = -vector_t_cross * matrix_e;
 
@@ -739,8 +749,53 @@ void Calc_Rotation_Matrix_from_Essential_Matrix(Eigen::Matrix3d matrix_e, Eigen:
               << "Matrix_R calc from matrix_E" << std::endl;
     std::cout << std::setprecision(15) << matrix_R << std::endl
               << std::endl;
+
+    return matrix_R;
 }
 
+/// @brief 並進ベクトルのscaleを推定する
+/// @param img_point img_corresponding_pointの先頭アドレス
+/// @param ply_point ply_corresponding_pointの先頭アドレス
+/// @param vector_t 並進ベクトルt
+/// @param matrix_R 基本行列R
+/// @return 推定したスケール double
+double calc_scale_of_translation_t(std::vector<Eigen::Vector3d> &img_point, std::vector<Eigen::Vector3d> &ply_point, Eigen::Vector3d vector_t, Eigen::Matrix3d matrix_R)
+{
+
+    std::vector<Eigen::Vector3d>::const_iterator img_itr, ply_itr;
+    double scale_s = 1.0;
+    for (img_itr = img_point.begin(), ply_itr = ply_point.begin(); img_itr != img_point.end(); ++img_itr, ++ply_itr)
+    {
+        Eigen::Vector3d img = *img_itr;
+        Eigen::Vector3d ply = *ply_itr;
+
+        auto Rx_cross_m = (matrix_R * ply).cross(img);
+        auto m_cross_t = img.cross(vector_t);
+
+        auto frac_up = Rx_cross_m.dot(m_cross_t);
+        auto frac_down = std::pow(img.cross(vector_t).norm(), 2.0);
+
+        scale_s += frac_up / frac_down;
+    }
+
+    scale_s /= img_point.size();
+
+    std::cout << "scale_s" << std::endl
+              << std::setprecision(15) << scale_s << std::endl;
+
+    return scale_s;
+}
+
+/// @brief 座標の位置合わせ
+/// @param file_path_1
+/// @param file_path_2
+/// @param file_path_3
+/// @param img_path
+/// @param out_path
+///
+/// プログラム実行例
+/// ./Rotation -i image_point.dat ply_point.dat 1108_kyoiku.ply kyoiku.JPG ../../ply_data/test_idou/ >! ./output.dat
+///
 void transform_coordinate(std::string file_path_1, std::string file_path_2, std::string file_path_3, std::string img_path, std::string out_path)
 {
 
@@ -764,7 +819,7 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
 
     //最小固有値に対する固有ベクトルを求め、基本行列を求める
     Eigen::Matrix3d matrix_E;
-    matrix_E = calc_Essential_Matrix(matrix_M);
+    matrix_E = calc_Essential_Matrix_RE(matrix_M);
 
     // 基本行列Eから並進ベクトルtを求める
     Eigen::Vector3d translation_vector_diff_scale;
@@ -773,7 +828,13 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
         img_corresponding_point, ply_corresponding_point,
         translation_vector_diff_scale, matrix_E);
 
-    Calc_Rotation_Matrix_from_Essential_Matrix(matrix_E, translation_vector_diff_scale);
+    Eigen::Matrix3d Rotation_matrix;
+    Rotation_matrix = Calc_Rotation_Matrix_from_Essential_Matrix(matrix_E, translation_vector_diff_scale);
+
+    double scale_s = calc_scale_of_translation_t(
+        img_corresponding_point, ply_corresponding_point,
+        translation_vector_diff_scale, Rotation_matrix);
+
     // シミュレーション:load data
     //  load_pointdata(file_path_1, x);
     //  load_pointdata(file_path_2, img_corresponding_point);
