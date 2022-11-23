@@ -164,12 +164,13 @@ void calc_rotation_axis_from_matrix_R(Eigen::Matrix3d matrix_R)
     double ny = vector_t(1);
     double nz = vector_t(2);
 
-    double theta = (matrix_R(0, 0) + matrix_R(1, 1) + matrix_R(2, 2) - (std::pow(nx, 2.0) + std::pow(ny, 2.0) + std::pow(nz, 2.0))) /
-                   (3 - (std::pow(nx, 2.0) + std::pow(ny, 2.0) + std::pow(nz, 2.0)));
+    double theta_rad = (matrix_R(0, 0) + matrix_R(1, 1) + matrix_R(2, 2) - (std::pow(nx, 2.0) + std::pow(ny, 2.0) + std::pow(nz, 2.0))) /
+                       (3 - (std::pow(nx, 2.0) + std::pow(ny, 2.0) + std::pow(nz, 2.0)));
 
-    theta = std::acos(theta);
+    theta_rad = std::acos(theta_rad);
+    double theta_deg = theta_rad * 180.0 / M_PI;
 
-    std::cout << "theta: " << theta << std::endl;
+    std::cout << "Rotation_degree: " << theta_deg << std::endl;
 }
 
 void SVD_test(Eigen::Matrix3d matrix_C)
