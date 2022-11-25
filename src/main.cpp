@@ -899,14 +899,15 @@ void transform_coordinate(std::string file_path_1, std::string file_path_2, std:
     // シミュレーション用の読み込み
     std::vector<Eigen::Vector3d> plyimg_corresponding_point, plyimg_corresponding_point2;
     load_pointdata(file_path_1, dir_path, 3, plyimg_corresponding_point);
+    output_ply(plyimg_corresponding_point, out_path + "corres.ply");
     conversion_ply_to_img_point(plyimg_corresponding_point, img_corresponding_point);
 
     // load_pointdata(file_path_2, dir_path, 3, ply_corresponding_point);
 
     // シミュレーション用のデータを作成してみる。(make_simのデータは元のだけ。)
-    Eigen::Vector3d h = {0.0, 0, 5.0};
-    move_pointdata(plyimg_corresponding_point, plyimg_corresponding_point2, h, 1.0);
-    rotate_pointdata(plyimg_corresponding_point2, ply_corresponding_point, Rironchi_matrix_R);
+    Eigen::Vector3d h = {1.0, 0, 5.0};
+    rotate_pointdata(plyimg_corresponding_point, plyimg_corresponding_point2, Rironchi_matrix_R.transpose());
+    move_pointdata(plyimg_corresponding_point2, ply_corresponding_point, h, 1.0);
 
     print_ply(img_corresponding_point, "img対応点1");
     print_ply(ply_corresponding_point, "ply対応点1");
