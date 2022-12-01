@@ -5,25 +5,22 @@
 #include <vector>
 #include <eigen3/Core>
 
+// 本当はtemplateを使って imgもplyも一緒に扱いたい けどうまくいかんかった
+// template <typename T>
 class PointSet
 {
 private:
     std::vector<Eigen::Vector3d> point3;
-    long unsigned int point_num;
     std::string name;
 
 public:
-    PointSet(std::string point_name) : name(point_name)
-    {
-        point_num = point3.size();
-    }
-    ~PointSet()
-    {
-        point_num = 0;
-    }
+    PointSet() {}
+    ~PointSet() {}
 
     void print();
-    void add_point(Eigen::Vector3d point) { point3.push_back(point); }
+    void add_point(Eigen::Vector3d add_point) { point3.push_back(add_point); }
+    std::vector<Eigen::Vector3d> get_point() { return point3; }
+    long unsigned int get_point_num() { return point3.size(); }
 };
 
 class ImagePointSet

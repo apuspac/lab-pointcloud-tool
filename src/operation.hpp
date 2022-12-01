@@ -7,9 +7,10 @@
 #define OPERATION_HPP_INCLUDE_GUARD
 
 #include "pointset.hpp"
-#include <fstream>
-#include <unistd.h>
-#include <getopt.h>
+#include "object_io.hpp"
+
+//相互依存
+class ObjectIO;
 
 /**
  * @brief オプション処理をして、ファイル名等を格納。その後の処理を決定する
@@ -22,30 +23,25 @@ private:
 
     std::vector<std::string> corresp_img_file_name;
     std::vector<std::string> corresp_ply_file_name;
-    std::vector<std::string> ply_file_path;
+    std::vector<std::string> ply_file_name;
     std::vector<std::string> img_file_path;
     std::string default_dir_path;
 
 public:
-    int option_process(int, char **);
-    std::string get_corresp_img_file_path(int number) { return corresp_img_file_name.at(number); }
-    std::string get_corresp_ply_file_path(int number) { return corresp_ply_file_name.at(number); }
-    std::string get_ply_file_path(int number) { return ply_file_path.at(number); }
+    std::string get_corresp_img_file_name(int number) { return corresp_img_file_name.at(number); }
+    std::string get_corresp_ply_file_name(int number) { return corresp_ply_file_name.at(number); }
+    std::string get_ply_file_path(int number) { return ply_file_name.at(number); }
     std::string get_img_file_path(int number) { return img_file_path.at(number); }
     std::string get_default_dir_path() { return default_dir_path; }
 
-    void print();
-};
+    void add_corresp_img_file_name(std::string name) { corresp_img_file_name.push_back(name); }
+    void add_corresp_ply_file_name(std::string name) { corresp_ply_file_name.push_back(name); }
+    void add_plyfile_name(std::string name) { ply_file_name.push_back(name); }
+    void add_img_file_path(std::string name) { img_file_path.push_back(name); }
+    void set_default_dir_path(std::string name) { default_dir_path = name; }
 
-/**
- * @brief imgfile pointfile plyfileの読み込み
- *
- */
-class PointSetIO
-{
-public:
     void print();
-    void load_ply_file(std::string, std::string, int, PointSet *);
+    void transform_coordinate();
 };
 
 #endif

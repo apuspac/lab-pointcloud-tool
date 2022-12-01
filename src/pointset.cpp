@@ -6,6 +6,6 @@ void PointSet::print()
 
     for (const auto &tmp : point3)
     {
-        std::cout << tmp << std::endl;
+        std::cout << tmp.transpose() << std::endl;
     }
 }

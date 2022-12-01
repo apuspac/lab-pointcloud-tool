@@ -12,6 +12,7 @@ add_executable(
     main.cpp
     pointset.cpp
     operation.cpp
+    object_io.cpp
     calc_pointset.cpp
 )
 
