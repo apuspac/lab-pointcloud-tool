@@ -23,7 +23,7 @@ public:
     }
 
     void print();
-    void set_point(std::vector<Eigen::Vector3d>);
+    void add_point(Eigen::Vector3d point) { point3.push_back(point); }
 };
 
 class ImagePointSet

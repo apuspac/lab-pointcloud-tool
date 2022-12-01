@@ -25,4 +25,4 @@ target_compile_options(${PROJECT_NAME} PUBLIC -Wall -Wextra -pedantic -Wcast-ali
 
 
 # c++の標準規格は指定しなかったらいくつになるんですかね
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)

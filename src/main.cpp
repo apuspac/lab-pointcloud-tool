@@ -7,23 +7,21 @@ int main(int argc, char *argv[])
     PointOperation opt;
     opt.option_process(argc, argv);
 
-    std::cout
-        << argc << std::endl;
+    opt.print();
 
-    // for (int i = 0; i < argc; i++)
-    // {
-    //     std::cout << argv[i] << std::endl;
-    // }
+    // ./Rotation -i image_point.dat ply_point.dat 1108_kyoiku.ply kyoiku.JPG ../../ply_data/test_idou/
 
-    PointSet vec("test");
-    // vec.set_point()
-    // vec.print();
+    // PointSetIO::load_ply_file();
 
-    PointSetIO hello;
-    hello.print();
+    // PointSet vec("test");
+    // // vec.set_point()
+    // // vec.print();
 
-    CalcPointSet world;
-    world.test_print();
+    // PointSetIO hello;
+    // hello.print();
+
+    // CalcPointSet world;
+    // world.test_print();
 
     return 0;
 }
