@@ -43,9 +43,10 @@ public:
 
     void print();
 
-    //ここに実行できるやつを作って modeで切り替えしたい。
+    //ここに実行listを作ってmodeで切り替えしたい。
     void transform_coordinate();
     void Rotation_point();
+    void Rotation_point_simlation();
 };
 
 #endif

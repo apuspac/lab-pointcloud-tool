@@ -14,7 +14,8 @@ int main(int argc, char *argv[])
     opt.print();
 
     // opt.transform_coordinate();
-    opt.Rotation_point();
+    // opt.Rotation_point();
+    opt.Rotation_point_simlation();
 
     return 0;
 }

@@ -22,6 +22,9 @@ public:
     //回転前後の点群を扱う
     Eigen::Matrix3d calc_correlation_C(PointSet &, PointSet &, double);
     Eigen::Matrix3d calc_rotation_matrix_from_correlation_c(Eigen::Matrix3d &);
+    void calc_rotation_axis_from_matrix_R(Eigen::Matrix3d &);
+
+    PointSet conversion_ply_to_img_point(PointSet &);
 };
 
 #endif

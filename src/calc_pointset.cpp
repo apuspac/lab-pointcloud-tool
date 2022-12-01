@@ -391,6 +391,12 @@ Eigen::Matrix3d CalcPointSet::calc_correlation_C(
     return correlation_C;
 }
 
+/**
+ * @brief 相関行列から回転角を計算する
+ *
+ * @param correlation_C
+ * @return Eigen::Matrix3d
+ */
 Eigen::Matrix3d CalcPointSet::calc_rotation_matrix_from_correlation_c(Eigen::Matrix3d &correlation_C)
 {
     // 特異値分解
@@ -434,6 +440,87 @@ Eigen::Matrix3d CalcPointSet::calc_rotation_matrix_from_correlation_c(Eigen::Mat
     return matrix_R;
 }
 
+/**
+ * @brief 回転行列から回転軸と回転角を計算する
+ *
+ * @param matrix_R
+ */
+void CalcPointSet::calc_rotation_axis_from_matrix_R(Eigen::Matrix3d &matrix_R)
+{
+
+    // 固有値を計算
+    Eigen::EigenSolver<Eigen::Matrix3d> ES(matrix_R);
+
+    if (ES.info() != Eigen::Success)
+    {
+        abort();
+    }
+
+    // (実部, 虚部)
+    // ここで1に対応するのが固有ベクトルが回転軸
+    std::cout << "Rotation matrix Eigenvalue :" << std::endl
+              << ES.eigenvalues() << std::endl;
+
+    // 固有ベクトル
+    std::cout << "Eigen vec" << std::endl
+              << ES.eigenvectors() << std::endl;
+
+    // 1に近いやつを探す
+    double min_eigen = std::abs(1.0 - ES.eigenvalues()(0).real());
+
+    long int index = 0;
+    for (const auto &tmp : ES.eigenvalues())
+    {
+        if (std::abs(1.0 - tmp.real()) < min_eigen)
+        {
+            min_eigen = std::abs(1.0 - tmp.real());
+            index = &tmp - &ES.eigenvalues()(0);
+        }
+    }
+
+    Eigen::Vector3d vector_t = ES.eigenvectors().col(index).real();
+
+    std::cout << "Rotation_axis" << std::endl
+              << vector_t << std::endl
+              << std::endl;
+
+    // 回転角の計算
+    double nx = vector_t(0);
+    double ny = vector_t(1);
+    double nz = vector_t(2);
+
+    double theta_rad = (matrix_R(0, 0) + matrix_R(1, 1) + matrix_R(2, 2) - (std::pow(nx, 2.0) + std::pow(ny, 2.0) + std::pow(nz, 2.0))) /
+                       (3 - (std::pow(nx, 2.0) + std::pow(ny, 2.0) + std::pow(nz, 2.0)));
+
+    theta_rad = std::acos(theta_rad);
+    double theta_deg = theta_rad * 180.0 / M_PI;
+
+    std::cout << "Rotation_degree: " << std::endl
+              << theta_deg << std::endl
+              << std::endl;
+}
+
+PointSet CalcPointSet::conversion_ply_to_img_point(PointSet &point_data)
+{
+    PointSet img_point_data("ply_to_img");
+    for (auto tmp : point_data.get_point())
+    {
+        double theta = std::acos(
+            tmp(2) /
+            std::sqrt(std::pow(tmp(0), 2.0) + std::pow(tmp(1), 2.0) + std::pow(tmp(2), 2.0)));
+
+        double phi = std::atan2(tmp(1), tmp(0));
+
+        double r = 1.0;
+
+        // 方向ベクトル
+        Eigen::Vector3d p = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
+
+        img_point_data.add_point(p);
+    }
+
+    return img_point_data;
+}
 /**
 
 

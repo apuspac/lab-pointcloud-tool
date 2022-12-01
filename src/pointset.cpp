@@ -10,7 +10,7 @@ void PointSet::print()
 
     for (const auto &tmp : point3)
     {
-        std::cout << tmp.transpose() << std::endl;
+        std::cout << std::setprecision(15) << tmp.transpose() << std::endl;
     }
     std::cout << std::endl;
 }
