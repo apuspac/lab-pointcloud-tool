@@ -9,7 +9,7 @@ class PointSet
 {
 private:
     std::vector<Eigen::Vector3d> point3;
-    int point_num;
+    long unsigned int point_num;
     std::string name;
 
 public:
