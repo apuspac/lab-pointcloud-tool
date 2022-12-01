@@ -76,14 +76,13 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
 }
 
 /**
- * @brief
+ * @brief plyファイルと その対応点を作る。
  *
  * @param file_name 入力plyファイル名
  * @param dir_path 入力plyファイルのあるディレクトリ
  * @param property_num plyファイルのパラメータの数。// TODO#と空白で区切った数で入力しているので、もしheader部分がプロパティの個数と一緒の区切り方をしてたら変更する
  * @param loaded_point_data PointSetクラス
  */
-
 void ObjectIO::load_ply_point_file(std::string file_name, std::string dir_path, int property_num, PointSet &loaded_point_data)
 {
     std::fstream data_file;

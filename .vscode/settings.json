@@ -62,7 +62,8 @@
         "typeinfo": "cpp",
         "core": "cpp",
         "optional": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "svd": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

@@ -3,9 +3,18 @@
 
 #include <iostream>
 #include <vector>
-#include <eigen3/Core>
+#include <float.h>
+#include <math.h>
+#include <iomanip>
 
-// 本当はtemplateを使って imgもplyも一緒に扱いたい けどうまくいかんかった
+#include <eigen3/Core>
+#include <eigen3/LU>
+#include <eigen3/Dense>
+
+// TODO 本当はtemplateを使って Vector3d 以外も一緒に扱いたい
+// けどうまくいかんかったしすぐに解決できなさそうなので後回し
+// https://eigen.tuxfamily.org/dox/TopicTemplateKeyword.html
+// ぱっとみ めちゃめんどそう
 // template <typename T>
 class PointSet
 {
@@ -14,17 +23,17 @@ private:
     std::string name;
 
 public:
-    PointSet() {}
+    PointSet(std::string point_name = "none") : name(point_name) {}
     ~PointSet() {}
 
     void print();
+
+    std::string get_name() { return name; }
     void add_point(Eigen::Vector3d add_point) { point3.push_back(add_point); }
     std::vector<Eigen::Vector3d> get_point() { return point3; }
     long unsigned int get_point_num() { return point3.size(); }
-};
 
-class ImagePointSet
-{
+    void rotate(Eigen::Matrix3d);
+    void transform(Eigen::Vector3d);
 };
-
 #endif

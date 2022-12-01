@@ -8,6 +8,7 @@
 
 #include "pointset.hpp"
 #include "object_io.hpp"
+#include "calc_pointset.hpp"
 
 //相互依存
 class ObjectIO;
@@ -41,7 +42,10 @@ public:
     void set_default_dir_path(std::string name) { default_dir_path = name; }
 
     void print();
+
+    //ここに実行できるやつを作って modeで切り替えしたい。
     void transform_coordinate();
+    void Rotation_point();
 };
 
 #endif

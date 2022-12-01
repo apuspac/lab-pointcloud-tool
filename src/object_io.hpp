@@ -23,7 +23,7 @@ public:
     static void option_process(int, char **, PointOperation &);
     void load_ply_point_file(std::string, std::string, int, PointSet &);
     void load_img_point_file(std::string, std::string, std::string, PointSet &);
-    void output_ply(PointSet &, std::string);
+    static void output_ply(PointSet &, std::string);
 };
 
 #endif
