@@ -50,7 +50,7 @@ std::vector<Eigen::Matrix<double, 9, 1>> CalcPointSet::create_xi_vector(PointSet
     img_point.print();
     std::vector<Eigen::Matrix<double, 9, 1>> vector_xi;
 
-    // TODO begin()+1としないと 1個目の取得が変な値になってしまう。
+    // TODO begin()+1としないと 1個目の取得が変な値になってしまうのはなぜ。
     for (
         img_itr = img_point.get_point_all().begin() + 1, ply_itr = ply_point.get_point_all().begin() + 1;
         img_itr != img_point.get_point_all().end();
@@ -282,8 +282,8 @@ Eigen::Matrix3d CalcPointSet::calc_rotation_matrix_from_essential_matrix(Eigen::
     // https://eigen.tuxfamily.org/dox/classEigen_1_1JacobiSVD.html
     //  ここみると、SVD結果が A = USVで出力されている。
     //  計算は資料の方に合わせたいので、ここで反転させる。
-    matrix_V = SVD.matrixU();
-    matrix_U = SVD.matrixV();
+    matrix_V = SVD.matrixV();
+    matrix_U = SVD.matrixU();
 
     // det(V UT) 計算結果は 1か-1になるはず
     double det_VUt = (matrix_V * matrix_U.transpose()).determinant();
@@ -568,7 +568,7 @@ void CalcPointSet::pickup_corresp_point(PointSet &point_data, PointSet &point_da
     {
         pickup_data.add_point(point_data.get_point(pick_num));
         pickup_data2.add_point(point_data2.get_point(pick_num));
-        }
+    }
 
     // ramdomに選ぶ場合
     // for (int i = 0; i < 30; i++)
