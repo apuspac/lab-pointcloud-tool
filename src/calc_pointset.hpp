@@ -2,6 +2,7 @@
 #define CALC_POINTSET_HPP_INCLUDE_GUARD
 
 #include <random>
+#include <fstream>
 
 #include "pointset.hpp"
 

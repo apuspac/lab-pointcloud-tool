@@ -534,20 +534,54 @@ uint64_t get_rand_range(uint64_t min_val, uint64_t max_val)
     return get_rand_uni_int(mt64);
 }
 
+void load_ramdom_data(std::string file_name, std::string dir_path, std::vector<int> &pickdata)
+{
+    std::fstream data_file;
+    std::string file_path = dir_path + file_name;
+
+    data_file.open(file_path, std::ios::in);
+
+    std::string one_line_buffer;
+
+    // getlineで1行ずつ処理する
+    while (std::getline(data_file, one_line_buffer))
+    {
+        pickdata.push_back(std::stoi(one_line_buffer));
+    }
+
+    for (const auto tmp : pickdata)
+    {
+        std::cout << tmp << " ";
+    }
+}
+
+// TODO ランダム生成して保存する場合と 生成したやつを読み込むものに分けたい。
 void CalcPointSet::pickup_corresp_point(PointSet &point_data, PointSet &point_data2, PointSet &pickup_data, PointSet &pickup_data2)
 {
     std::cout << "pickup point :" << std::endl;
-    // ramdomに選ぶ
-    for (int i = 0; i < 30; i++)
-    {
-        uint64_t pick_num = get_rand_range(0, point_data.get_point_num());
-        std::cout << pick_num << std::endl;
 
+    std::vector<int> ramdom_pickup;
+    load_ramdom_data("pickup_num.dat", "../../ply_data/", ramdom_pickup);
+
+    //読み込む場合
+    for (const auto pick_num : ramdom_pickup)
+    {
         pickup_data.add_point(point_data.get_point(pick_num));
         pickup_data2.add_point(point_data2.get_point(pick_num));
+        }
 
-        // pickup_point.add_point(point_data.get_point()));
-    }
+    // ramdomに選ぶ場合
+    // for (int i = 0; i < 30; i++)
+    // {
+
+    //     uint64_t pick_num = get_rand_range(0, point_data.get_point_num());
+    //     std::cout << pick_num << std::endl;
+
+    //     pickup_data.add_point(point_data.get_point(pick_num));
+    //     pickup_data2.add_point(point_data2.get_point(pick_num));
+
+    //     // pickup_point.add_point(point_data.get_point()));
+    // }
 }
 /**
 
