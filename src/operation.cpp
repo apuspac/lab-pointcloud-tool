@@ -90,6 +90,8 @@ void PointOperation::Rotation_point()
 void PointOperation::Rotation_point_simlation()
 {
     // ./Rotation --ply_cp r0_0_1-d30.dat --ply_cp img.dat --dir ../../ply_data/check_1130/
+    // ./Rotation --ply_cp t0_0_5.0.dat --ply_cp img.dat --dir ../../ply_data/check_1130/
+
     std::cout << "Rotation Point" << std::endl;
     ObjectIO obj_io;
 
@@ -102,16 +104,25 @@ void PointOperation::Rotation_point_simlation()
     obj_io.load_ply_point_file(corresp_ply_file_name.at(1), default_dir_path, 3, corresp_imgply_point);
     corresp_imgply_point.print();
 
+    //  対応点をピックアップ
     CalcPointSet calc;
-
-    PointSet conversion_imgply_point = calc.conversion_ply_to_img_point(corresp_imgply_point);
-    conversion_imgply_point.print();
-
     PointSet pickup1, pickup2;
-    calc.pickup_corresp_point(conversion_imgply_point, corresp_ply_point, pickup1, pickup2);
+    calc.pickup_corresp_point(corresp_imgply_point, corresp_ply_point, pickup1, pickup2);
 
-    obj_io.output_ply_with_line(pickup1, default_dir_path + "pickup_im" + ".ply");
-    obj_io.output_ply(pickup2, default_dir_path + "pickup" + ".ply");
+    //一時出力
+    obj_io.output_ply(pickup1, default_dir_path + "pickup1" + ".ply");
+    obj_io.output_ply(pickup2, default_dir_path + "pickup2" + ".ply");
+    obj_io.output_ply_with_line(pickup1, default_dir_path + "pickup1_line" + ".ply");
+
+    //方向ベクトルへconvert
+    PointSet conversion_imgply_point = calc.conversion_ply_to_img_point(pickup1);
+    conversion_imgply_point.print();
+    obj_io.output_ply(conversion_imgply_point, default_dir_path + "pickup1_convert" + ".ply");
+
+    // plyファイルのほうは transform
+    Eigen::Vector3d transform_vec = {0, 0, -5.0};
+    pickup2.transform(transform_vec);
+    obj_io.output_ply(pickup2, default_dir_path + "pickup2_transform" + ".ply");
 
     //理論値計算
     Eigen::Matrix3d Rironchi;
@@ -119,15 +130,28 @@ void PointOperation::Rotation_point_simlation()
     double rotate_angle = 30.0;
     Rironchi = calc.calc_theory_value_Rotation_Matrix(rotate_axis, rotate_angle);
 
+    // TODO もしかして ここの値代入していくやり方って数値計算的に良くないのか？？
     // 相関行列C
     double weight = 1.0;
-    Eigen::Matrix3d correlation_C = calc.calc_correlation_C(pickup1, pickup2, weight);
+    Eigen::Matrix3d correlation_C = calc.calc_correlation_C(pickup2, pickup1, weight);
+    Eigen::Matrix3d correlation_C_origin = calc.calc_correlation_C(corresp_ply_point, corresp_imgply_point, weight);
 
     // 回転行列計算
     Eigen::Matrix3d rotation_matrix_R = calc.calc_rotation_matrix_from_correlation_c(correlation_C);
+    Eigen::Matrix3d rotation_matrix_R_origin = calc.calc_rotation_matrix_from_correlation_c(correlation_C_origin);
 
     //回転軸・角度計算
     calc.calc_rotation_axis_from_matrix_R(rotation_matrix_R);
+    calc.calc_rotation_axis_from_matrix_R(rotation_matrix_R_origin);
+
+    //結果出力
+    corresp_ply_point.rotate(rotation_matrix_R);
+    corresp_ply_point.transform(transform_vec);
+    obj_io.output_ply(corresp_ply_point, default_dir_path + "ply_transform_rotate" + ".ply");
+
+    pickup2.rotate(rotation_matrix_R);
+    obj_io.output_ply(pickup2, default_dir_path + "pickup2_transform_rotate" + ".ply");
+
     // obj_io.output_ply(corresp_ply_point, default_dir_path + corresp_ply_point.get_name() + ".ply");
 }
 

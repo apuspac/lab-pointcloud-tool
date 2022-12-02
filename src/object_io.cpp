@@ -374,7 +374,7 @@ void ObjectIO::output_ply_with_line(PointSet &point_data, std::string out_path)
 
     output_ply << "ply" << std::endl
                << "format ascii 1.0" << std::endl
-               << "element vertex " << point_data.get_point_num() + 1 << std::endl
+               << "element vertex " << point_data.get_point_num() * 2 + 1 << std::endl
                << "property float x" << std::endl
                << "property float y" << std::endl
                << "property float z" << std::endl
@@ -388,12 +388,60 @@ void ObjectIO::output_ply_with_line(PointSet &point_data, std::string out_path)
     {
         output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
     }
-    for (long unsigned int i = 1; i < point_data.get_point_num() + 1; i++)
+
+    // lineを引くための点を追加
+    for (const Eigen::Vector3d &tmp : point_data.get_point_all())
+    {
+        Eigen::Vector3d tmp_normalize = tmp.normalized();
+        double theta = std::acos(
+            tmp_normalize(2) /
+            std::sqrt(std::pow(tmp_normalize(0), 2.0) + std::pow(tmp_normalize(1), 2.0) + std::pow(tmp_normalize(2), 2.0)));
+
+        double phi = std::atan2(tmp_normalize(1), tmp_normalize(0));
+        double r = 20.0;
+
+        Eigen::Vector3d tmp_vec = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
+
+        output_ply << tmp_vec(0) << " " << tmp_vec(1) << " " << tmp_vec(2) << std::endl;
+    }
+
+    //原点0と line を引くための点とでedgeを結ぶ
+    for (long unsigned int i = point_data.get_point_num() + 1; i < point_data.get_point_num() * 2 + 1; i++)
     {
         output_ply << 0 << " " << i << std::endl;
     }
 }
 
+/**
+ *     Eigen::Vector3d origin = {0, 0, 0};
+    plot_point.push_back(origin);
+
+    for (Eigen::Vector3d &tmp_point : point_data)
+    {
+        // rだけ変化させればいいかなと思うので、極座標を扱う。
+        // 極角, 方位角を先に出す。
+        Eigen::Vector3d tmp_normalize;
+        tmp_normalize = tmp_point.normalized();
+
+        double theta = std::acos(
+            tmp_normalize(2) /
+            std::sqrt(std::pow(tmp_normalize(0), 2.0) + std::pow(tmp_normalize(1), 2.0) + std::pow(tmp_normalize(2), 2.0)));
+
+        double phi = std::atan2(tmp_normalize(1), tmp_normalize(0));
+
+        // rを変化させながらplot
+        // 原点はplotしてある
+        double r_init = 0.15;
+        double r_limit = 10.0;
+        double r_step = 0.15;
+        for (double r = 0.15; r < r_limit; r += r_step)
+        {
+            Eigen::Vector3d tmp = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
+            plot_point.push_back(tmp);
+        }
+    }
+ *
+ */
 void ObjectIO::print()
 {
     std::cout << "operation load" << std::endl;

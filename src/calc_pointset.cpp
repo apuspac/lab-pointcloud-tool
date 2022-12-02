@@ -511,7 +511,7 @@ PointSet CalcPointSet::conversion_ply_to_img_point(PointSet &point_data)
 
         double phi = std::atan2(tmp(1), tmp(0));
 
-        double r = 1.0;
+        double r = 5.0;
 
         // 方向ベクトル
         Eigen::Vector3d p = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
@@ -536,6 +536,7 @@ uint64_t get_rand_range(uint64_t min_val, uint64_t max_val)
 
 void CalcPointSet::pickup_corresp_point(PointSet &point_data, PointSet &point_data2, PointSet &pickup_data, PointSet &pickup_data2)
 {
+    std::cout << "pickup point :" << std::endl;
     // ramdomに選ぶ
     for (int i = 0; i < 30; i++)
     {
