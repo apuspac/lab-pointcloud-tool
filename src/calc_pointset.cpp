@@ -273,7 +273,7 @@ Eigen::Matrix3d CalcPointSet::calc_rotation_matrix_from_essential_matrix(Eigen::
               << vector_t_cross << std::endl
               << std::endl;
 
-    Eigen::Matrix3d matrix_K = vector_t_cross * matrix_e;
+    Eigen::Matrix3d matrix_K = -vector_t_cross * matrix_e;
 
     // 特異値分解
     Eigen::JacobiSVD<Eigen::Matrix3d> SVD(matrix_K, Eigen::ComputeFullU | Eigen::ComputeFullV);
@@ -511,7 +511,7 @@ PointSet CalcPointSet::conversion_ply_to_img_point(PointSet &point_data)
 
         double phi = std::atan2(tmp(1), tmp(0));
 
-        double r = 5.0;
+        double r = 1.0;
 
         // 方向ベクトル
         Eigen::Vector3d p = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};

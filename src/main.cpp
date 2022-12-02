@@ -13,9 +13,10 @@ int main(int argc, char *argv[])
     ObjectIO::option_process(argc, argv, opt);
     opt.print();
 
-    // opt.transform_coordinate();
+    // opt.transform_rotate();
     // opt.Rotation_point();
-    opt.Rotation_point_simlation();
+    // opt.Rotation_point_simulation();
+    opt.transform_rotate_simulation();
 
     return 0;
 }
