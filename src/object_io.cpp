@@ -227,7 +227,7 @@ Eigen::Vector3d equirectangular_to_sphere(double u, double v, double img_width, 
     Eigen::Vector3d p = {abs(sin(theta)) * sin(phi), abs(sin(theta)) * cos(phi), cos(theta)};
 
     return p;
-};
+}
 
 /**
  * @brief imgファイルからの対応点の読み込み。方向ベクトルの変換
@@ -346,38 +346,6 @@ void ObjectIO::load_img_point_file(std::string file_name, std::string dir_path, 
     }
 }
 
-// void output_ply2(std::vector<Eigen::Vector3d> &point_data, std::string out_path, Eigen::Vector3d translation_t)
-// {
-//     // std::ios::app : 追記
-//     // std::ios::out : 書き込み
-//     std::ofstream output_ply(out_path, std::ios::out);
-
-//     output_ply << "ply" << std::endl
-//                << "format ascii 1.0" << std::endl
-//                << "element vertex " << point_data.size() + 2 << std::endl
-//                << "property float x" << std::endl
-//                << "property float y" << std::endl
-//                << "property float z" << std::endl
-//                << "element edge 1" << std::endl
-//                << "property int vertex1" << std::endl
-//                << "property int vertex2" << std::endl
-//                << "end_header" << std::endl
-//                << "0 0 0" << std::endl
-//                << translation_t(0) << " " << translation_t(0) << " " << translation_t(0) << std::endl;
-
-//     for (const Eigen::Vector3d &tmp : point_data)
-//     {
-//         output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
-//     }
-
-//     output_ply << "1 2" << std::endl;
-
-//     // for (auto &tmp : point_data)
-//     // {
-//     //     std::cout << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
-//     // }
-//     // std::cout << point_data.size() << std::endl;
-// }
 void ObjectIO::output_ply(PointSet &point_data, std::string out_path)
 {
     // std::ios::app : 追記
@@ -392,9 +360,37 @@ void ObjectIO::output_ply(PointSet &point_data, std::string out_path)
                << "property float z" << std::endl
                << "end_header" << std::endl;
 
-    for (const Eigen::Vector3d &tmp : point_data.get_point())
+    for (const Eigen::Vector3d &tmp : point_data.get_point_all())
     {
         output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
+    }
+}
+
+void ObjectIO::output_ply_with_line(PointSet &point_data, std::string out_path)
+{
+    // std::ios::app : 追記
+    // std::ios::out : 書き込み
+    std::ofstream output_ply(out_path, std::ios::out);
+
+    output_ply << "ply" << std::endl
+               << "format ascii 1.0" << std::endl
+               << "element vertex " << point_data.get_point_num() + 1 << std::endl
+               << "property float x" << std::endl
+               << "property float y" << std::endl
+               << "property float z" << std::endl
+               << "element edge " << point_data.get_point_num() << std::endl
+               << "property int vertex1" << std::endl
+               << "property int vertex2" << std::endl
+               << "end_header" << std::endl
+               << "0 0 0" << std::endl;
+
+    for (const Eigen::Vector3d &tmp : point_data.get_point_all())
+    {
+        output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
+    }
+    for (long unsigned int i = 1; i < point_data.get_point_num() + 1; i++)
+    {
+        output_ply << 0 << " " << i << std::endl;
     }
 }
 

@@ -1,6 +1,8 @@
 #ifndef CALC_POINTSET_HPP_INCLUDE_GUARD
 #define CALC_POINTSET_HPP_INCLUDE_GUARD
 
+#include <random>
+
 #include "pointset.hpp"
 
 class CalcPointSet
@@ -25,6 +27,7 @@ public:
     void calc_rotation_axis_from_matrix_R(Eigen::Matrix3d &);
 
     PointSet conversion_ply_to_img_point(PointSet &);
+    void pickup_corresp_point(PointSet &, PointSet &, PointSet &, PointSet &);
 };
 
 #endif

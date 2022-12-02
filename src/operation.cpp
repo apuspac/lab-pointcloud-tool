@@ -83,6 +83,7 @@ void PointOperation::Rotation_point()
     // 回転行列計算
     Eigen::Matrix3d rotation_matrix_R = calc.calc_rotation_matrix_from_correlation_c(correlation_C);
 
+    calc.calc_rotation_axis_from_matrix_R(rotation_matrix_R);
     obj_io.output_ply(corresp_ply_point, default_dir_path + corresp_ply_point.get_name() + ".ply");
 }
 
@@ -106,6 +107,12 @@ void PointOperation::Rotation_point_simlation()
     PointSet conversion_imgply_point = calc.conversion_ply_to_img_point(corresp_imgply_point);
     conversion_imgply_point.print();
 
+    PointSet pickup1, pickup2;
+    calc.pickup_corresp_point(conversion_imgply_point, corresp_ply_point, pickup1, pickup2);
+
+    obj_io.output_ply_with_line(pickup1, default_dir_path + "pickup_im" + ".ply");
+    obj_io.output_ply(pickup2, default_dir_path + "pickup" + ".ply");
+
     //理論値計算
     Eigen::Matrix3d Rironchi;
     Eigen::Vector3d rotate_axis = {0, 0, 1.0};
@@ -114,7 +121,7 @@ void PointOperation::Rotation_point_simlation()
 
     // 相関行列C
     double weight = 1.0;
-    Eigen::Matrix3d correlation_C = calc.calc_correlation_C(corresp_ply_point, conversion_imgply_point, weight);
+    Eigen::Matrix3d correlation_C = calc.calc_correlation_C(pickup1, pickup2, weight);
 
     // 回転行列計算
     Eigen::Matrix3d rotation_matrix_R = calc.calc_rotation_matrix_from_correlation_c(correlation_C);

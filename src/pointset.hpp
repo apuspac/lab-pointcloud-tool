@@ -30,7 +30,10 @@ public:
 
     std::string get_name() { return name; }
     void add_point(Eigen::Vector3d add_point) { point3.push_back(add_point); }
-    std::vector<Eigen::Vector3d> get_point() { return point3; }
+
+    Eigen::Vector3d get_point(uint64_t i) { return point3.at(i); }
+    std::vector<Eigen::Vector3d> get_point_all() { return point3; }
+
     long unsigned int get_point_num() { return point3.size(); }
 
     void rotate(Eigen::Matrix3d);

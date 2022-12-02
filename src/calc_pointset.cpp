@@ -52,8 +52,8 @@ std::vector<Eigen::Matrix<double, 9, 1>> CalcPointSet::create_xi_vector(PointSet
 
     // TODO begin()+1としないと 1個目の取得が変な値になってしまう。
     for (
-        img_itr = img_point.get_point().begin() + 1, ply_itr = ply_point.get_point().begin() + 1;
-        img_itr != img_point.get_point().end();
+        img_itr = img_point.get_point_all().begin() + 1, ply_itr = ply_point.get_point_all().begin() + 1;
+        img_itr != img_point.get_point_all().end();
         ++img_itr, ++ply_itr)
     {
         // TODO: いちいち呼び出さない方法はないですか？
@@ -219,8 +219,8 @@ Eigen::Vector3d CalcPointSet::check_sign_translation_t(
 {
     std::vector<Eigen::Vector3d>::const_iterator img_itr, ply_itr;
     double check_sign = 0;
-    for (img_itr = img_point.get_point().begin() + 1, ply_itr = ply_point.get_point().begin() + 1;
-         img_itr != img_point.get_point().end();
+    for (img_itr = img_point.get_point_all().begin() + 1, ply_itr = ply_point.get_point_all().begin() + 1;
+         img_itr != img_point.get_point_all().end();
          ++img_itr, ++ply_itr)
     {
         Eigen::Vector3d img = *img_itr;
@@ -319,8 +319,8 @@ double CalcPointSet::calc_scale_of_translation_t(
     std::vector<Eigen::Vector3d>::const_iterator img_itr, ply_itr;
     double scale_s = 1.0;
     for (
-        img_itr = img_point.get_point().begin(), ply_itr = ply_point.get_point().begin();
-        img_itr != img_point.get_point().end();
+        img_itr = img_point.get_point_all().begin(), ply_itr = ply_point.get_point_all().begin();
+        img_itr != img_point.get_point_all().end();
         ++img_itr, ++ply_itr)
     {
         Eigen::Vector3d img = *img_itr;
@@ -361,11 +361,11 @@ Eigen::Matrix3d CalcPointSet::calc_correlation_C(
     std::vector<Eigen::Vector3d> m, m_p;
 
     //単位行列の変換
-    for (const Eigen::Vector3d &point_to_vec : x.get_point())
+    for (const Eigen::Vector3d &point_to_vec : x.get_point_all())
     {
         m.push_back(point_to_vec.normalized());
     }
-    for (const Eigen::Vector3d &point_to_vec : x_p.get_point())
+    for (const Eigen::Vector3d &point_to_vec : x_p.get_point_all())
     {
         m_p.push_back(point_to_vec.normalized());
     }
@@ -503,7 +503,7 @@ void CalcPointSet::calc_rotation_axis_from_matrix_R(Eigen::Matrix3d &matrix_R)
 PointSet CalcPointSet::conversion_ply_to_img_point(PointSet &point_data)
 {
     PointSet img_point_data("ply_to_img");
-    for (auto tmp : point_data.get_point())
+    for (auto tmp : point_data.get_point_all())
     {
         double theta = std::acos(
             tmp(2) /
@@ -521,50 +521,33 @@ PointSet CalcPointSet::conversion_ply_to_img_point(PointSet &point_data)
 
     return img_point_data;
 }
-/**
 
-
-Eigen::Matrix3d calc_rotation_R(Eigen::Matrix3d correlation_C)
+uint64_t get_rand_range(uint64_t min_val, uint64_t max_val)
 {
-    // 特異値分解
-    Eigen::JacobiSVD<Eigen::Matrix3d> SVD(correlation_C, Eigen::ComputeFullU | Eigen::ComputeFullV);
-    Eigen::Matrix3d matrix_V, matrix_U, matrix_R;
+    // 乱数生成器
+    static std::mt19937_64 mt64(0);
 
-    // https://eigen.tuxfamily.org/dox/classEigen_1_1JacobiSVD.html
-    //  ここみると、SVD結果が A = USVで出力されている。
-    //  計算は資料の方に合わせたいので、ここで反転させる。
-    matrix_V = SVD.matrixU();
-    matrix_U = SVD.matrixV();
+    // [min_val, max_val] の一様分布整数 (int) の分布生成器
+    std::uniform_int_distribution<uint64_t> get_rand_uni_int(min_val, max_val);
 
-    // det(V UT) 計算結果は 1か-1になるはず
-    double det_VUt = (matrix_V * matrix_U.transpose()).determinant();
-
-    // 対角行列
-    Eigen::DiagonalMatrix<double, 3> matrix_Diag = {1.0, 1.0, det_VUt};
-
-    // 回転行列Rの最大化の式
-    matrix_R = matrix_V * matrix_Diag * matrix_U.transpose();
-
-    // 回転行列R
-    std::cout << std::endl
-              << "Matrix_R" << std::endl;
-    std::cout << std::setprecision(15) << matrix_R << std::endl
-              << std::endl;
-
-    // // TODO check方法をもうちょっと工夫する 許容範囲の誤差以外になったらはじくとか。
-    // std::cout << "check R_top*R = R*R_top = I" << std::endl;
-    // std::cout << matrix_R.transpose() * matrix_R << std::endl
-    //           << std::endl;
-    // std::cout << matrix_R * matrix_R.transpose() << std::endl
-    //           << std::endl;
-
-    // double r_det = matrix_R.determinant();
-
-    // std::cout << "detR = +1 check" << std::endl;
-    // std::cout << r_det << std::endl
-    //           << std::endl;
-
-    return matrix_R;
+    // 乱数を生成
+    return get_rand_uni_int(mt64);
 }
+
+void CalcPointSet::pickup_corresp_point(PointSet &point_data, PointSet &point_data2, PointSet &pickup_data, PointSet &pickup_data2)
+{
+    // ramdomに選ぶ
+    for (int i = 0; i < 30; i++)
+    {
+        uint64_t pick_num = get_rand_range(0, point_data.get_point_num());
+        std::cout << pick_num << std::endl;
+
+        pickup_data.add_point(point_data.get_point(pick_num));
+        pickup_data2.add_point(point_data2.get_point(pick_num));
+
+        // pickup_point.add_point(point_data.get_point()));
+    }
+}
+/**
 
 **/

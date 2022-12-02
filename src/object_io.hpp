@@ -24,6 +24,7 @@ public:
     void load_ply_point_file(std::string, std::string, int, PointSet &);
     void load_img_point_file(std::string, std::string, std::string, PointSet &);
     static void output_ply(PointSet &, std::string);
+    static void output_ply_with_line(PointSet &, std::string);
 };
 
 #endif
