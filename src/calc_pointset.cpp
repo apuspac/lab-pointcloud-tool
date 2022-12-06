@@ -250,6 +250,9 @@ Eigen::Vector3d CalcPointSet::check_sign_translation_t(
         vector_t = -vector_t;
     }
 
+    std::cout << "translation:: change_sign" << std::endl
+              << vector_t << std::endl;
+
     return vector_t;
 }
 
@@ -317,25 +320,49 @@ double CalcPointSet::calc_scale_of_translation_t(
 {
 
     std::vector<Eigen::Vector3d>::const_iterator img_itr, ply_itr;
-    double scale_s = 1.0;
+
+    double scale_s = 0.0;
     for (
-        img_itr = img_point.get_point_all().begin(), ply_itr = ply_point.get_point_all().begin();
+        img_itr = img_point.get_point_all().begin() + 1, ply_itr = ply_point.get_point_all().begin() + 1;
         img_itr != img_point.get_point_all().end();
         ++img_itr, ++ply_itr)
     {
         Eigen::Vector3d img = *img_itr;
         Eigen::Vector3d ply = *ply_itr;
 
-        auto Rx_cross_m = (matrix_R * ply).cross(img);
-        auto m_cross_t = img.cross(vector_t);
+        // std::cout << "m" << img << std::endl
+        //           << "x" << ply << std::endl
+        //           << "t" << vector_t << std::endl
+        //           << "R" << matrix_R << std::endl;
 
-        auto frac_up = Rx_cross_m.dot(m_cross_t);
-        auto frac_down = std::pow(img.cross(vector_t).norm(), 2.0);
+        // Eigen::Vector3d Rx_cross_m = (matrix_R * ply).cross(img);
+        // Eigen::Vector3d m_cross_t = img.cross(vector_t);
 
-        scale_s += frac_up / frac_down;
+        // double frac_up = Rx_cross_m.dot(m_cross_t);
+        // double frac_down = vector_t.cross(img).squaredNorm();
+
+        // scale_s += frac_up / frac_down;
+
+        scale_s += (matrix_R * ply).cross(img).dot(img.cross(vector_t)) / img.cross(vector_t).squaredNorm();
+
+        // std::cout << "Rx_cross_m" << Rx_cross_m << std::endl
+        //           << "m_cross_t" << m_cross_t << std::endl
+        //           << "frac_up" << frac_up << std::endl
+        //           << "frac_down" << frac_down << std::endl
+        //           << "scale_s 推定" << (matrix_R * ply).cross(img).dot(img.cross(vector_t)) / img.cross(vector_t).squaredNorm() << std::endl
+        //           << "scale_s sum" << scale_s << std::endl
+        //           << "img_point_num" << double(img_point.get_point_num()) << std::endl
+        //           << std::endl;
     }
 
-    scale_s /= double(img_point.get_point_num());
+    // iterがなぜか+1しないと nanが出てしまうので-1している
+    scale_s /= double(img_point.get_point_num() - 1);
+
+    // 測定誤差を考慮しないとき
+    // Eigen::Vector3d rx_cross_m = (matrix_R * ply_point.get_point(1)).cross(img_point.get_point(1));
+    // Eigen::Vector3d m_cross_t = img_point.get_point(1).cross(vector_t);
+
+    // double scale_s = rx_cross_m.dot(m_cross_t) / img_point.get_point(1).cross(vector_t).squaredNorm();
 
     std::cout << "scale_s" << std::endl
               << scale_s << std::endl

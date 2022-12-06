@@ -114,12 +114,19 @@ void PointOperation::transform_rotate_simulation()
     Eigen::Matrix3d matrix_R = calc.calc_rotation_matrix_from_essential_matrix(matrix_E, vector_t_diff_scale);
 
     // scaleの推定
-    double scale = calc.calc_scale_of_translation_t(pickup_img_convert, pickup_ply, matrix_E, vector_t_diff_scale);
+    double scale = calc.calc_scale_of_translation_t(pickup_img_convert, pickup_ply, matrix_R, vector_t_diff_scale);
 
     Eigen::Vector3d translation_vector = scale * vector_t_diff_scale;
 
-    std::cout << "Rotation Matrix:" << std::endl
+    std::cout << "----RESULT" << std::endl
+              << "Essential Matrix:" << std::endl
+              << matrix_E << std::endl
+              << std::endl
+              << "Rotation Matrix:" << std::endl
               << matrix_R << std::endl
+              << std::endl
+              << "scale" << std::endl
+              << scale << std::endl
               << std::endl
               << "translation Vector: " << std::endl
               << translation_vector << std::endl
