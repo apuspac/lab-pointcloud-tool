@@ -8,7 +8,7 @@ libopencv-dev cmake をインストール
 
 - vscodeでopencvのが見つからないよってエラー吐くときは、  
 vscodeのC++設定ファイルにinclude pathを書くところがあるので、 そこにopencvのpathを追加する。
-ubuntu22.04で`sudo apt install livopencv-dev`したときは、includepathが`/usr/include/opencv4`でした。
+ubuntu22.04で`sudo apt install libopencv-dev`したときは、includepathが`/usr/include/opencv4`でした。
 
 - eigenインストール  
 [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page)のget itからDLするなりwgetするなりしてきて 展開した中のEigenディレクトリを/usr/local/include/eigen3にコピーする。
