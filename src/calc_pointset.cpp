@@ -485,12 +485,12 @@ void CalcPointSet::calc_rotation_axis_from_matrix_R(Eigen::Matrix3d &matrix_R)
 
     // (実部, 虚部)
     // ここで1に対応するのが固有ベクトルが回転軸
-    std::cout << "Rotation matrix Eigenvalue :" << std::endl
-              << ES.eigenvalues() << std::endl;
+    // std::cout << "Rotation matrix Eigenvalue :" << std::endl
+    //           << ES.eigenvalues() << std::endl;
 
     // 固有ベクトル
-    std::cout << "Eigen vec" << std::endl
-              << ES.eigenvectors() << std::endl;
+    // std::cout << "Eigen vec" << std::endl
+    //           << ES.eigenvectors() << std::endl;
 
     // 1に近いやつを探す
     double min_eigen = std::abs(1.0 - ES.eigenvalues()(0).real());

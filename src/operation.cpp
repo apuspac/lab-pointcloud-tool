@@ -132,6 +132,8 @@ void PointOperation::transform_rotate_simulation()
               << translation_vector << std::endl
               << std::endl;
 
+    calc.calc_rotation_axis_from_matrix_R(matrix_R);
+
     // obj_io.output_ply(corresp_ply_point, default_dir_path + corresp_ply_point.get_name() + ".ply");
 }
 
@@ -209,8 +211,9 @@ void PointOperation::Rotation_point_simulation()
 
     // TODO もしかして ここの値代入していくやり方って数値計算的に良くないのか？？
     // 相関行列C
+    // 相関行列Cは単位行列にする処理を含んでいるので、 convertしたのものを
     double weight = 1.0;
-    Eigen::Matrix3d correlation_C = calc.calc_correlation_C(pickup2, pickup1, weight);
+    Eigen::Matrix3d correlation_C = calc.calc_correlation_C(pickup2, conversion_imgply_point, weight);
     Eigen::Matrix3d correlation_C_origin = calc.calc_correlation_C(corresp_ply_point, corresp_imgply_point, weight);
 
     // 回転行列計算
