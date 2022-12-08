@@ -109,12 +109,13 @@ void PointOperation::transform_rotate_simulation()
 
     // 並進tの符号チェック
     calc.check_sign_translation_t(pickup_img_convert, pickup_ply, vector_t_diff_scale, matrix_E);
-
+    auto tmp = vector_t_diff_scale;
     // 回転行列の推定
     Eigen::Matrix3d matrix_R = calc.calc_rotation_matrix_from_essential_matrix(matrix_E, vector_t_diff_scale);
 
     // scaleの推定
     double scale = calc.calc_scale_of_translation_t(pickup_img_convert, pickup_ply, matrix_R, vector_t_diff_scale);
+    // double scale = calc.calc_scale_of_translation_t(pickup_img_convert, pickup_ply, matrix_R, tmp);
 
     Eigen::Vector3d translation_vector = scale * vector_t_diff_scale;
 
