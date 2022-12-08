@@ -174,7 +174,7 @@ Eigen::Vector3d CalcPointSet::calc_translation_t(Eigen::Matrix3d &matrix_E)
     {
         abort();
     }
-    //固有値・固有ベクトル
+    // 固有値・固有ベクトル
     std::cout << std::endl
               << "Translation:: E * E.t Eigenvalue :" << std::endl
               << ES.eigenvalues() << std::endl
@@ -183,7 +183,7 @@ Eigen::Vector3d CalcPointSet::calc_translation_t(Eigen::Matrix3d &matrix_E)
               << ES.eigenvectors() << std::endl
               << std::endl;
 
-    //最小固有値・固有ベクトル
+    // 最小固有値・固有ベクトル
     double min_eigen = ES.eigenvalues()(0);
     Eigen::Vector3d vector_t_hat = ES.eigenvectors().col(0);
     std::cout << "Translation:: E * E.t min_eigen" << std::endl
@@ -387,21 +387,23 @@ Eigen::Matrix3d CalcPointSet::calc_correlation_C(
 
     std::vector<Eigen::Vector3d> m, m_p;
 
-    //単位行列の変換
+    // 単位行列の変換
     for (const Eigen::Vector3d &point_to_vec : x.get_point_all())
     {
-        m.push_back(point_to_vec.normalized());
+        // m.push_back(point_to_vec.normalized());
+        m.push_back(point_to_vec);
     }
     for (const Eigen::Vector3d &point_to_vec : x_p.get_point_all())
     {
-        m_p.push_back(point_to_vec.normalized());
+        // m_p.push_back(point_to_vec.normalized());
+        m_p.push_back(point_to_vec);
     }
 
     // 相関行列C
     Eigen::Matrix3d correlation_C = Eigen::Matrix3d::Identity();
 
     // 相関行列Cを求める
-    for (auto iter = std::begin(m), iter_p = std::begin(m_p), last = std::end(m);
+    for (auto iter = std::begin(m) + 1, iter_p = std::begin(m_p) + 1, last = std::end(m);
          iter != last; ++iter, ++iter_p)
     {
         Eigen::Vector3d tmp = *iter;
@@ -431,10 +433,9 @@ Eigen::Matrix3d CalcPointSet::calc_rotation_matrix_from_correlation_c(Eigen::Mat
     Eigen::Matrix3d matrix_V, matrix_U, matrix_R;
 
     // https://eigen.tuxfamily.org/dox/classEigen_1_1JacobiSVD.html
-    //  ここみると、SVD結果が A = USVで出力されている。
-    //  計算は資料の方に合わせたいので、ここで反転させる。
-    matrix_V = SVD.matrixU();
-    matrix_U = SVD.matrixV();
+    //  ここみると、SVD結果が A = USVで出力
+    matrix_V = SVD.matrixV();
+    matrix_U = SVD.matrixU();
 
     // det(V UT) 計算結果は 1か-1になるはず
     double det_VUt = (matrix_V * matrix_U.transpose()).determinant();
@@ -590,7 +591,7 @@ void CalcPointSet::pickup_corresp_point(PointSet &point_data, PointSet &point_da
     std::vector<int> ramdom_pickup;
     load_ramdom_data("pickup_num.dat", "../../ply_data/", ramdom_pickup);
 
-    //読み込む場合
+    // 読み込む場合
     for (const auto pick_num : ramdom_pickup)
     {
         pickup_data.add_point(point_data.get_point(pick_num));
