@@ -46,6 +46,7 @@ Eigen::Matrix3d CalcPointSet::calc_theory_value_Rotation_Matrix(Eigen::Vector3d 
  */
 std::vector<Eigen::Matrix<double, 9, 1>> CalcPointSet::create_xi_vector(PointSet &img_point, PointSet &ply_point)
 {
+    std::cout << "create xi:" << std::endl;
     std::vector<Eigen::Vector3d>::const_iterator img_itr, ply_itr;
     img_point.print();
     std::vector<Eigen::Matrix<double, 9, 1>> vector_xi;
@@ -323,7 +324,7 @@ double CalcPointSet::calc_scale_of_translation_t(
     std::vector<Eigen::Vector3d>::const_iterator img_itr, ply_itr;
 
     double scale_s = 0.0;
-    int i;
+    int i = 1;
 
     for (
         img_itr = img_point.get_point_all().begin() + 1, ply_itr = ply_point.get_point_all().begin() + 1;
@@ -593,7 +594,7 @@ void CalcPointSet::pickup_corresp_point(PointSet &point_data, PointSet &point_da
     std::cout << "pickup point :" << std::endl;
 
     std::vector<int> ramdom_pickup;
-    load_ramdom_data("pickup_num2.dat", "../../ply_data/", ramdom_pickup);
+    load_ramdom_data("pickup_lessgrid_2.dat", "../../ply_data/", ramdom_pickup);
 
     // 読み込む場合
     // for (const auto pick_num : ramdom_pickup)
@@ -611,11 +612,11 @@ void CalcPointSet::pickup_corresp_point(PointSet &point_data, PointSet &point_da
     }
 
     // ramdomに選ぶ場合
-    // std::string out_path = "../../ply_data/pickup_num2.dat";
+    // std::string out_path = "../../ply_data/pickup_lessgrid_2.dat";
     // std::ofstream ramdom_ply(out_path, std::ios::out);
     // for (int i = 0; i < 30; i++)
     // {
-    //     uint64_t pick_num = get_rand_range(0, point_data.get_point_num());
+    //     uint64_t pick_num = get_rand_range(0, point_data.get_point_num() - 1);
     //     std::cout << pick_num << std::endl;
     //     ramdom_ply << pick_num << std::endl;
 

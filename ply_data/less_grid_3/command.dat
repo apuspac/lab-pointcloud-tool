@@ -1,0 +1,1 @@
+./Rotation --ply_cp s10-t550-r001-d30.dat --ply_cp s10.dat --dir ../../ply_data/less_grid_3/ >! ./output/out-less_grid_3.dat
