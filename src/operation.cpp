@@ -109,7 +109,7 @@ void PointOperation::transform_rotate_simulation()
 
     // 並進tの符号チェック
     calc.check_sign_translation_t(pickup_img_convert, pickup_ply, vector_t_diff_scale, matrix_E);
-    auto tmp = vector_t_diff_scale;
+
     // 回転行列の推定
     Eigen::Matrix3d matrix_R = calc.calc_rotation_matrix_from_essential_matrix(matrix_E, vector_t_diff_scale);
 
@@ -134,6 +134,11 @@ void PointOperation::transform_rotate_simulation()
               << std::endl;
 
     calc.calc_rotation_axis_from_matrix_R(matrix_R);
+
+    corresp_ply_point.rotate(matrix_R);
+    corresp_ply_point.transform(translation_vector);
+
+    obj_io.output_ply(corresp_ply_point, default_dir_path + pickup_ply.get_name() + ".ply");
 
     // obj_io.output_ply(corresp_ply_point, default_dir_path + corresp_ply_point.get_name() + ".ply");
 }

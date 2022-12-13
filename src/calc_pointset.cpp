@@ -285,8 +285,8 @@ Eigen::Matrix3d CalcPointSet::calc_rotation_matrix_from_essential_matrix(Eigen::
     // https://eigen.tuxfamily.org/dox/classEigen_1_1JacobiSVD.html
     //  ここみると、SVD結果が A = USVで出力されている。
     //  計算は資料の方に合わせたいので、ここで反転させる。
-    matrix_V = SVD.matrixV();
-    matrix_U = SVD.matrixU();
+    matrix_U = SVD.matrixV();
+    matrix_V = SVD.matrixU();
 
     // det(V UT) 計算結果は 1か-1になるはず
     double det_VUt = (matrix_V * matrix_U.transpose()).determinant();
@@ -318,10 +318,13 @@ double CalcPointSet::calc_scale_of_translation_t(
     PointSet &img_point, PointSet &ply_point,
     Eigen::Matrix3d &matrix_R, Eigen::Vector3d &vector_t)
 {
+    std::cout << "calc scale: " << std::endl;
 
     std::vector<Eigen::Vector3d>::const_iterator img_itr, ply_itr;
 
     double scale_s = 0.0;
+    int i;
+
     for (
         img_itr = img_point.get_point_all().begin() + 1, ply_itr = ply_point.get_point_all().begin() + 1;
         img_itr != img_point.get_point_all().end();
@@ -342,8 +345,9 @@ double CalcPointSet::calc_scale_of_translation_t(
         // double frac_down = vector_t.cross(img).squaredNorm();
 
         // scale_s += frac_up / frac_down;
-
-        scale_s += (matrix_R * ply).cross(img).dot(img.cross(vector_t)) / img.cross(vector_t).squaredNorm();
+        double scale_hat = (matrix_R * ply).cross(img).dot(img.cross(vector_t)) / img.cross(vector_t).squaredNorm();
+        std::cout << "point:" << i++ << " " << scale_hat << std::endl;
+        scale_s += scale_hat;
 
         // std::cout << "Rx_cross_m" << Rx_cross_m << std::endl
         //           << "m_cross_t" << m_cross_t << std::endl
@@ -530,7 +534,7 @@ void CalcPointSet::calc_rotation_axis_from_matrix_R(Eigen::Matrix3d &matrix_R)
 
 PointSet CalcPointSet::conversion_ply_to_img_point(PointSet &point_data)
 {
-    PointSet img_point_data("ply_to_img");
+    PointSet img_point_data("conversion_img_point");
     for (auto tmp : point_data.get_point_all())
     {
         double theta = std::acos(
@@ -589,28 +593,35 @@ void CalcPointSet::pickup_corresp_point(PointSet &point_data, PointSet &point_da
     std::cout << "pickup point :" << std::endl;
 
     std::vector<int> ramdom_pickup;
-    load_ramdom_data("pickup_num.dat", "../../ply_data/", ramdom_pickup);
+    load_ramdom_data("pickup_num2.dat", "../../ply_data/", ramdom_pickup);
 
     // 読み込む場合
-    for (const auto pick_num : ramdom_pickup)
+    // for (const auto pick_num : ramdom_pickup)
+    // {
+    //     std::cout << point_data.get_point(pick_num) << " " << std::endl;
+    //     pickup_data.add_point(point_data.get_point(pick_num));
+    //     pickup_data2.add_point(point_data2.get_point(pick_num));
+    // }
+
+    // 読み込まない場合
+    for (int pick_num = 1; pick_num < int(point_data.get_point_num()); pick_num++)
     {
         pickup_data.add_point(point_data.get_point(pick_num));
         pickup_data2.add_point(point_data2.get_point(pick_num));
     }
 
     // ramdomに選ぶ場合
+    // std::string out_path = "../../ply_data/pickup_num2.dat";
+    // std::ofstream ramdom_ply(out_path, std::ios::out);
     // for (int i = 0; i < 30; i++)
     // {
-
     //     uint64_t pick_num = get_rand_range(0, point_data.get_point_num());
     //     std::cout << pick_num << std::endl;
+    //     ramdom_ply << pick_num << std::endl;
 
-    //     pickup_data.add_point(point_data.get_point(pick_num));
-    //     pickup_data2.add_point(point_data2.get_point(pick_num));
+    //     // pickup_data.add_point(point_data.get_point(pick_num));
+    //     // pickup_data2.add_point(point_data2.get_point(pick_num));
 
     //     // pickup_point.add_point(point_data.get_point()));
     // }
 }
-/**
-
-**/
