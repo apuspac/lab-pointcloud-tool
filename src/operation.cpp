@@ -1,5 +1,9 @@
 #include "operation.hpp"
 
+/**
+ * @brief
+ *
+ */
 void PointOperation::transform_rotate()
 {
     std::cout << "transform_rotate" << std::endl;
@@ -21,8 +25,8 @@ void PointOperation::transform_rotate()
 
     // 理論値計算
     Eigen::Matrix3d Rironchi;
-    Eigen::Vector3d rotate_axis = {0, 1.0, 0};
-    double rotate_angle = 30.0;
+    Eigen::Vector3d rotate_axis = {0, 0, 0};
+    double rotate_angle = 0;
     Rironchi = calc.calc_theory_value_Rotation_Matrix(rotate_axis, rotate_angle);
 
     // 基本行列計算
@@ -48,8 +52,15 @@ void PointOperation::transform_rotate()
 
     Eigen::Vector3d translation_vector = scale * vector_t_diff_scale;
 
-    std::cout << "Rotation Matrix:" << std::endl
+    std::cout << "----RESULT" << std::endl
+              << "Essential Matrix:" << std::endl
+              << matrix_E << std::endl
+              << std::endl
+              << "Rotation Matrix:" << std::endl
               << matrix_R << std::endl
+              << std::endl
+              << "scale" << std::endl
+              << scale << std::endl
               << std::endl
               << "translation Vector: " << std::endl
               << translation_vector << std::endl

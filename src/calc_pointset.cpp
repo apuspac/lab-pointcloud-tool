@@ -326,6 +326,11 @@ double CalcPointSet::calc_scale_of_translation_t(
     double scale_s = 0.0;
     int i = 1;
 
+    std::cout << "vector_t: " << std::endl
+              << vector_t << std::endl
+              << "matrix_R:" << std::endl
+              << matrix_R << std::endl;
+
     for (
         img_itr = img_point.get_point_all().begin() + 1, ply_itr = ply_point.get_point_all().begin() + 1;
         img_itr != img_point.get_point_all().end();
@@ -334,30 +339,17 @@ double CalcPointSet::calc_scale_of_translation_t(
         Eigen::Vector3d img = *img_itr;
         Eigen::Vector3d ply = *ply_itr;
 
-        // std::cout << "m" << img << std::endl
-        //           << "x" << ply << std::endl
-        //           << "t" << vector_t << std::endl
-        //           << "R" << matrix_R << std::endl;
-
-        // Eigen::Vector3d Rx_cross_m = (matrix_R * ply).cross(img);
-        // Eigen::Vector3d m_cross_t = img.cross(vector_t);
-
-        // double frac_up = Rx_cross_m.dot(m_cross_t);
-        // double frac_down = vector_t.cross(img).squaredNorm();
-
-        // scale_s += frac_up / frac_down;
         double scale_hat = (matrix_R * ply).cross(img).dot(img.cross(vector_t)) / img.cross(vector_t).squaredNorm();
-        std::cout << "point:" << i++ << " " << scale_hat << std::endl;
         scale_s += scale_hat;
 
-        // std::cout << "Rx_cross_m" << Rx_cross_m << std::endl
-        //           << "m_cross_t" << m_cross_t << std::endl
-        //           << "frac_up" << frac_up << std::endl
-        //           << "frac_down" << frac_down << std::endl
-        //           << "scale_s 推定" << (matrix_R * ply).cross(img).dot(img.cross(vector_t)) / img.cross(vector_t).squaredNorm() << std::endl
-        //           << "scale_s sum" << scale_s << std::endl
-        //           << "img_point_num" << double(img_point.get_point_num()) << std::endl
-        //           << std::endl;
+        std::cout << std::endl;
+        std::cout << "point:" << i++ << " " << scale_hat << std::endl;
+        std::cout << "img: " << std::endl
+                  << img << std::endl
+                  << "ply:" << std::endl
+                  << ply << std::endl;
+        std::cout << "fraction top: " << (matrix_R * ply).cross(img).dot(img.cross(vector_t)) << std::endl;
+        std::cout << "fraction bottom:" << img.cross(vector_t).squaredNorm() << std::endl;
     }
 
     // iterがなぜか+1しないと nanが出てしまうので-1している
@@ -533,11 +525,44 @@ void CalcPointSet::calc_rotation_axis_from_matrix_R(Eigen::Matrix3d &matrix_R)
               << std::endl;
 }
 
+/**
+ * @brief doubleの誤差を考慮した等価比較
+ * https://marycore.jp/prog/c-lang/compare-floating-point-number/
+ *
+ * @param a
+ * @param b
+ * @return true : 等価
+ * @return false : 等価じゃない
+ */
+bool check_float_equal(double a, double b)
+{
+    if (std::fabs(a - b) <= DBL_EPSILON * std::fmax(1, std::fmax(std::fabs(a), std::fabs(b))))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+/**
+ * @brief 入力されたpoint_dataを単位球投影した方向ベクトルに変換する。
+ *
+ * @param point_data
+ * @return PointSet
+ */
 PointSet CalcPointSet::conversion_ply_to_img_point(PointSet &point_data)
 {
-    PointSet img_point_data("conversion_img_point");
+    PointSet img_point_data("conversion_unit_sphere");
     for (auto tmp : point_data.get_point_all())
     {
+
+        if (check_float_equal(tmp(0), 0) && check_float_equal(tmp(1), 0) && check_float_equal(tmp(2), 0))
+        {
+            throw "0,0,0が含まれてます～！！！！！！！";
+        }
+
         double theta = std::acos(
             tmp(2) /
             std::sqrt(std::pow(tmp(0), 2.0) + std::pow(tmp(1), 2.0) + std::pow(tmp(2), 2.0)));
@@ -588,10 +613,35 @@ void load_ramdom_data(std::string file_name, std::string dir_path, std::vector<i
     }
 }
 
+void save_ramdom_pickup(std::string out_path, int pick_num, int pick_limit)
+{
+
+    // ramdomに選ぶ
+    std::ofstream ramdom_ply(out_path, std::ios::out);
+
+    if (pick_limit < pick_num)
+    {
+        pick_num = pick_limit;
+    }
+
+    for (int i = 0; i < pick_num; i++)
+    {
+        uint64_t pick_point = get_rand_range(0, pick_limit - 1);
+        std::cout << pick_point << std::endl;
+        ramdom_ply << pick_point << std::endl;
+    }
+}
+
 // TODO ランダム生成して保存する場合と 生成したやつを読み込むものに分けたい。
 void CalcPointSet::pickup_corresp_point(PointSet &point_data, PointSet &point_data2, PointSet &pickup_data, PointSet &pickup_data2)
 {
     std::cout << "pickup point :" << std::endl;
+
+    std::string out_path = "../../ply_data/pickup_lessgrid_2.dat";
+    int pickup_num = 30;
+    int pickup_limit = int(point_data.get_point_num());
+
+    save_ramdom_pickup(out_path, pickup_num, pickup_limit);
 
     std::vector<int> ramdom_pickup;
     load_ramdom_data("pickup_lessgrid_2.dat", "../../ply_data/", ramdom_pickup);
@@ -610,19 +660,4 @@ void CalcPointSet::pickup_corresp_point(PointSet &point_data, PointSet &point_da
         pickup_data.add_point(point_data.get_point(pick_num));
         pickup_data2.add_point(point_data2.get_point(pick_num));
     }
-
-    // ramdomに選ぶ場合
-    // std::string out_path = "../../ply_data/pickup_lessgrid_2.dat";
-    // std::ofstream ramdom_ply(out_path, std::ios::out);
-    // for (int i = 0; i < 30; i++)
-    // {
-    //     uint64_t pick_num = get_rand_range(0, point_data.get_point_num() - 1);
-    //     std::cout << pick_num << std::endl;
-    //     ramdom_ply << pick_num << std::endl;
-
-    //     // pickup_data.add_point(point_data.get_point(pick_num));
-    //     // pickup_data2.add_point(point_data2.get_point(pick_num));
-
-    //     // pickup_point.add_point(point_data.get_point()));
-    // }
 }
