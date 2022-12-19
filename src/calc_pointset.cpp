@@ -46,6 +46,7 @@ Eigen::Matrix3d CalcPointSet::calc_theory_value_Rotation_Matrix(Eigen::Vector3d 
  */
 std::vector<Eigen::Matrix<double, 9, 1>> CalcPointSet::create_xi_vector(PointSet &img_point, PointSet &ply_point)
 {
+    std::cout << "create xi:" << std::endl;
     std::vector<Eigen::Vector3d>::const_iterator img_itr, ply_itr;
     img_point.print();
     std::vector<Eigen::Matrix<double, 9, 1>> vector_xi;
@@ -174,7 +175,7 @@ Eigen::Vector3d CalcPointSet::calc_translation_t(Eigen::Matrix3d &matrix_E)
     {
         abort();
     }
-    //固有値・固有ベクトル
+    // 固有値・固有ベクトル
     std::cout << std::endl
               << "Translation:: E * E.t Eigenvalue :" << std::endl
               << ES.eigenvalues() << std::endl
@@ -183,7 +184,7 @@ Eigen::Vector3d CalcPointSet::calc_translation_t(Eigen::Matrix3d &matrix_E)
               << ES.eigenvectors() << std::endl
               << std::endl;
 
-    //最小固有値・固有ベクトル
+    // 最小固有値・固有ベクトル
     double min_eigen = ES.eigenvalues()(0);
     Eigen::Vector3d vector_t_hat = ES.eigenvectors().col(0);
     std::cout << "Translation:: E * E.t min_eigen" << std::endl
@@ -285,8 +286,8 @@ Eigen::Matrix3d CalcPointSet::calc_rotation_matrix_from_essential_matrix(Eigen::
     // https://eigen.tuxfamily.org/dox/classEigen_1_1JacobiSVD.html
     //  ここみると、SVD結果が A = USVで出力されている。
     //  計算は資料の方に合わせたいので、ここで反転させる。
-    matrix_V = SVD.matrixV();
-    matrix_U = SVD.matrixU();
+    matrix_U = SVD.matrixV();
+    matrix_V = SVD.matrixU();
 
     // det(V UT) 計算結果は 1か-1になるはず
     double det_VUt = (matrix_V * matrix_U.transpose()).determinant();
@@ -318,10 +319,18 @@ double CalcPointSet::calc_scale_of_translation_t(
     PointSet &img_point, PointSet &ply_point,
     Eigen::Matrix3d &matrix_R, Eigen::Vector3d &vector_t)
 {
+    std::cout << "calc scale: " << std::endl;
 
     std::vector<Eigen::Vector3d>::const_iterator img_itr, ply_itr;
 
     double scale_s = 0.0;
+    int i = 1;
+
+    std::cout << "vector_t: " << std::endl
+              << vector_t << std::endl
+              << "matrix_R:" << std::endl
+              << matrix_R << std::endl;
+
     for (
         img_itr = img_point.get_point_all().begin() + 1, ply_itr = ply_point.get_point_all().begin() + 1;
         img_itr != img_point.get_point_all().end();
@@ -330,29 +339,17 @@ double CalcPointSet::calc_scale_of_translation_t(
         Eigen::Vector3d img = *img_itr;
         Eigen::Vector3d ply = *ply_itr;
 
-        // std::cout << "m" << img << std::endl
-        //           << "x" << ply << std::endl
-        //           << "t" << vector_t << std::endl
-        //           << "R" << matrix_R << std::endl;
+        double scale_hat = (matrix_R * ply).cross(img).dot(img.cross(vector_t)) / img.cross(vector_t).squaredNorm();
+        scale_s += scale_hat;
 
-        // Eigen::Vector3d Rx_cross_m = (matrix_R * ply).cross(img);
-        // Eigen::Vector3d m_cross_t = img.cross(vector_t);
-
-        // double frac_up = Rx_cross_m.dot(m_cross_t);
-        // double frac_down = vector_t.cross(img).squaredNorm();
-
-        // scale_s += frac_up / frac_down;
-
-        scale_s += (matrix_R * ply).cross(img).dot(img.cross(vector_t)) / img.cross(vector_t).squaredNorm();
-
-        // std::cout << "Rx_cross_m" << Rx_cross_m << std::endl
-        //           << "m_cross_t" << m_cross_t << std::endl
-        //           << "frac_up" << frac_up << std::endl
-        //           << "frac_down" << frac_down << std::endl
-        //           << "scale_s 推定" << (matrix_R * ply).cross(img).dot(img.cross(vector_t)) / img.cross(vector_t).squaredNorm() << std::endl
-        //           << "scale_s sum" << scale_s << std::endl
-        //           << "img_point_num" << double(img_point.get_point_num()) << std::endl
-        //           << std::endl;
+        std::cout << std::endl;
+        std::cout << "point:" << i++ << " " << scale_hat << std::endl;
+        std::cout << "img: " << std::endl
+                  << img << std::endl
+                  << "ply:" << std::endl
+                  << ply << std::endl;
+        std::cout << "fraction top: " << (matrix_R * ply).cross(img).dot(img.cross(vector_t)) << std::endl;
+        std::cout << "fraction bottom:" << img.cross(vector_t).squaredNorm() << std::endl;
     }
 
     // iterがなぜか+1しないと nanが出てしまうので-1している
@@ -387,21 +384,23 @@ Eigen::Matrix3d CalcPointSet::calc_correlation_C(
 
     std::vector<Eigen::Vector3d> m, m_p;
 
-    //単位行列の変換
+    // 単位行列の変換
     for (const Eigen::Vector3d &point_to_vec : x.get_point_all())
     {
-        m.push_back(point_to_vec.normalized());
+        // m.push_back(point_to_vec.normalized());
+        m.push_back(point_to_vec);
     }
     for (const Eigen::Vector3d &point_to_vec : x_p.get_point_all())
     {
-        m_p.push_back(point_to_vec.normalized());
+        // m_p.push_back(point_to_vec.normalized());
+        m_p.push_back(point_to_vec);
     }
 
     // 相関行列C
     Eigen::Matrix3d correlation_C = Eigen::Matrix3d::Identity();
 
     // 相関行列Cを求める
-    for (auto iter = std::begin(m), iter_p = std::begin(m_p), last = std::end(m);
+    for (auto iter = std::begin(m) + 1, iter_p = std::begin(m_p) + 1, last = std::end(m);
          iter != last; ++iter, ++iter_p)
     {
         Eigen::Vector3d tmp = *iter;
@@ -431,10 +430,9 @@ Eigen::Matrix3d CalcPointSet::calc_rotation_matrix_from_correlation_c(Eigen::Mat
     Eigen::Matrix3d matrix_V, matrix_U, matrix_R;
 
     // https://eigen.tuxfamily.org/dox/classEigen_1_1JacobiSVD.html
-    //  ここみると、SVD結果が A = USVで出力されている。
-    //  計算は資料の方に合わせたいので、ここで反転させる。
-    matrix_V = SVD.matrixU();
-    matrix_U = SVD.matrixV();
+    //  ここみると、SVD結果が A = USVで出力
+    matrix_V = SVD.matrixV();
+    matrix_U = SVD.matrixU();
 
     // det(V UT) 計算結果は 1か-1になるはず
     double det_VUt = (matrix_V * matrix_U.transpose()).determinant();
@@ -485,12 +483,12 @@ void CalcPointSet::calc_rotation_axis_from_matrix_R(Eigen::Matrix3d &matrix_R)
 
     // (実部, 虚部)
     // ここで1に対応するのが固有ベクトルが回転軸
-    std::cout << "Rotation matrix Eigenvalue :" << std::endl
-              << ES.eigenvalues() << std::endl;
+    // std::cout << "Rotation matrix Eigenvalue :" << std::endl
+    //           << ES.eigenvalues() << std::endl;
 
     // 固有ベクトル
-    std::cout << "Eigen vec" << std::endl
-              << ES.eigenvectors() << std::endl;
+    // std::cout << "Eigen vec" << std::endl
+    //           << ES.eigenvectors() << std::endl;
 
     // 1に近いやつを探す
     double min_eigen = std::abs(1.0 - ES.eigenvalues()(0).real());
@@ -527,11 +525,44 @@ void CalcPointSet::calc_rotation_axis_from_matrix_R(Eigen::Matrix3d &matrix_R)
               << std::endl;
 }
 
+/**
+ * @brief doubleの誤差を考慮した等価比較
+ * https://marycore.jp/prog/c-lang/compare-floating-point-number/
+ *
+ * @param a
+ * @param b
+ * @return true : 等価
+ * @return false : 等価じゃない
+ */
+bool check_float_equal(double a, double b)
+{
+    if (std::fabs(a - b) <= DBL_EPSILON * std::fmax(1, std::fmax(std::fabs(a), std::fabs(b))))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+/**
+ * @brief 入力されたpoint_dataを単位球投影した方向ベクトルに変換する。
+ *
+ * @param point_data
+ * @return PointSet
+ */
 PointSet CalcPointSet::conversion_ply_to_img_point(PointSet &point_data)
 {
-    PointSet img_point_data("ply_to_img");
+    PointSet img_point_data("conversion_unit_sphere");
     for (auto tmp : point_data.get_point_all())
     {
+
+        if (check_float_equal(tmp(0), 0) && check_float_equal(tmp(1), 0) && check_float_equal(tmp(2), 0))
+        {
+            throw "0,0,0が含まれてます～！！！！！！！";
+        }
+
         double theta = std::acos(
             tmp(2) /
             std::sqrt(std::pow(tmp(0), 2.0) + std::pow(tmp(1), 2.0) + std::pow(tmp(2), 2.0)));
@@ -582,34 +613,51 @@ void load_ramdom_data(std::string file_name, std::string dir_path, std::vector<i
     }
 }
 
+void save_ramdom_pickup(std::string out_path, int pick_num, int pick_limit)
+{
+
+    // ramdomに選ぶ
+    std::ofstream ramdom_ply(out_path, std::ios::out);
+
+    if (pick_limit < pick_num)
+    {
+        pick_num = pick_limit;
+    }
+
+    for (int i = 0; i < pick_num; i++)
+    {
+        uint64_t pick_point = get_rand_range(0, pick_limit - 1);
+        std::cout << pick_point << std::endl;
+        ramdom_ply << pick_point << std::endl;
+    }
+}
+
 // TODO ランダム生成して保存する場合と 生成したやつを読み込むものに分けたい。
 void CalcPointSet::pickup_corresp_point(PointSet &point_data, PointSet &point_data2, PointSet &pickup_data, PointSet &pickup_data2)
 {
     std::cout << "pickup point :" << std::endl;
 
-    std::vector<int> ramdom_pickup;
-    load_ramdom_data("pickup_num.dat", "../../ply_data/", ramdom_pickup);
+    std::string out_path = "../../ply_data/pickup_lessgrid_2.dat";
+    int pickup_num = 30;
+    int pickup_limit = int(point_data.get_point_num());
 
-    //読み込む場合
-    for (const auto pick_num : ramdom_pickup)
+    save_ramdom_pickup(out_path, pickup_num, pickup_limit);
+
+    std::vector<int> ramdom_pickup;
+    load_ramdom_data("pickup_lessgrid_2.dat", "../../ply_data/", ramdom_pickup);
+
+    // 読み込む場合
+    // for (const auto pick_num : ramdom_pickup)
+    // {
+    //     std::cout << point_data.get_point(pick_num) << " " << std::endl;
+    //     pickup_data.add_point(point_data.get_point(pick_num));
+    //     pickup_data2.add_point(point_data2.get_point(pick_num));
+    // }
+
+    // 読み込まない場合
+    for (int pick_num = 1; pick_num < int(point_data.get_point_num()); pick_num++)
     {
         pickup_data.add_point(point_data.get_point(pick_num));
         pickup_data2.add_point(point_data2.get_point(pick_num));
     }
-
-    // ramdomに選ぶ場合
-    // for (int i = 0; i < 30; i++)
-    // {
-
-    //     uint64_t pick_num = get_rand_range(0, point_data.get_point_num());
-    //     std::cout << pick_num << std::endl;
-
-    //     pickup_data.add_point(point_data.get_point(pick_num));
-    //     pickup_data2.add_point(point_data2.get_point(pick_num));
-
-    //     // pickup_point.add_point(point_data.get_point()));
-    // }
 }
-/**
-
-**/
