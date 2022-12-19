@@ -53,7 +53,7 @@ std::vector<Eigen::Matrix<double, 9, 1>> CalcPointSet::create_xi_vector(PointSet
 
     // TODO begin()+1としないと 1個目の取得が変な値になってしまうのはなぜ。
     for (
-        img_itr = img_point.get_point_all().begin() + 1, ply_itr = ply_point.get_point_all().begin() + 1;
+        img_itr = img_point.get_point_all().begin(), ply_itr = ply_point.get_point_all().begin();
         img_itr != img_point.get_point_all().end();
         ++img_itr, ++ply_itr)
     {
@@ -220,7 +220,7 @@ Eigen::Vector3d CalcPointSet::check_sign_translation_t(
 {
     std::vector<Eigen::Vector3d>::const_iterator img_itr, ply_itr;
     double check_sign = 0;
-    for (img_itr = img_point.get_point_all().begin() + 1, ply_itr = ply_point.get_point_all().begin() + 1;
+    for (img_itr = img_point.get_point_all().begin(), ply_itr = ply_point.get_point_all().begin();
          img_itr != img_point.get_point_all().end();
          ++img_itr, ++ply_itr)
     {
@@ -326,21 +326,49 @@ double CalcPointSet::calc_scale_of_translation_t(
     double scale_s = 0.0;
     int i = 1;
 
+    int scale_point_num = 0;
+
     std::cout << "vector_t: " << std::endl
               << vector_t << std::endl
               << "matrix_R:" << std::endl
               << matrix_R << std::endl;
 
+    auto is_cross_product_clone_to_zero = [](double calc_cross)
+    {
+        /**
+         * @brief scaleの計算値が0に近いかどうかの基準値
+         *
+         */
+        double delta = 0.001;
+        if (calc_cross < delta)
+        {
+            std::cout << "------cross_product_clone_to_zero" << std::endl;
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    };
+
     for (
-        img_itr = img_point.get_point_all().begin() + 1, ply_itr = ply_point.get_point_all().begin() + 1;
+        img_itr = img_point.get_point_all().begin(), ply_itr = ply_point.get_point_all().begin();
         img_itr != img_point.get_point_all().end();
         ++img_itr, ++ply_itr)
     {
         Eigen::Vector3d img = *img_itr;
         Eigen::Vector3d ply = *ply_itr;
 
-        double scale_hat = (matrix_R * ply).cross(img).dot(img.cross(vector_t)) / img.cross(vector_t).squaredNorm();
-        scale_s += scale_hat;
+        double fraction_top = (matrix_R * ply).cross(img).dot(img.cross(vector_t));
+        double fraction_bottom = img.cross(vector_t).squaredNorm();
+
+        double scale_hat = fraction_top / fraction_bottom;
+
+        if (is_cross_product_clone_to_zero(fraction_bottom))
+        {
+            scale_s += scale_hat;
+            scale_point_num++;
+        }
 
         std::cout << std::endl;
         std::cout << "point:" << i++ << " " << scale_hat << std::endl;
@@ -350,10 +378,10 @@ double CalcPointSet::calc_scale_of_translation_t(
                   << ply << std::endl;
         std::cout << "fraction top: " << (matrix_R * ply).cross(img).dot(img.cross(vector_t)) << std::endl;
         std::cout << "fraction bottom:" << img.cross(vector_t).squaredNorm() << std::endl;
+        std::cout << "scale_s_progress: " << scale_s << std::endl;
     }
 
-    // iterがなぜか+1しないと nanが出てしまうので-1している
-    scale_s /= double(img_point.get_point_num() - 1);
+    scale_s /= double(scale_point_num);
 
     // 測定誤差を考慮しないとき
     // Eigen::Vector3d rx_cross_m = (matrix_R * ply_point.get_point(1)).cross(img_point.get_point(1));
