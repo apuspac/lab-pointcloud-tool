@@ -91,7 +91,7 @@ void PointOperation::transform_rotate_simulation()
     //  対応点をピックアップ
     CalcPointSet calc;
     PointSet pickup_img("pickup_img"), pickup_ply("pickup_ply");
-    calc.pickup_corresp_point(corresp_imgply_point, corresp_ply_point, pickup_img, pickup_ply);
+    calc.pickup_corresp_point(corresp_imgply_point, corresp_ply_point, pickup_img, pickup_ply, default_dir_path);
     pickup_img.print();
     pickup_ply.print();
 
@@ -117,6 +117,9 @@ void PointOperation::transform_rotate_simulation()
 
     // 基本行列Eから並進t^hatを計算
     Eigen::Vector3d vector_t_diff_scale = calc.calc_translation_t(matrix_E);
+
+    pickup_img_convert.print();
+    pickup_ply.print();
 
     // 並進tの符号チェック
     calc.check_sign_translation_t(pickup_img_convert, pickup_ply, vector_t_diff_scale, matrix_E);
@@ -149,7 +152,9 @@ void PointOperation::transform_rotate_simulation()
     corresp_ply_point.rotate(matrix_R);
     corresp_ply_point.transform(translation_vector);
 
-    obj_io.output_ply(corresp_ply_point, default_dir_path + pickup_ply.get_name() + ".ply");
+    obj_io.output_ply(corresp_ply_point, default_dir_path + corresp_ply_point.get_name() + ".ply");
+    obj_io.output_ply(pickup_img, default_dir_path + "pickup_img.ply");
+    obj_io.output_ply(pickup_ply, default_dir_path + "pickup_ply.ply");
 
     // obj_io.output_ply(corresp_ply_point, default_dir_path + corresp_ply_point.get_name() + ".ply");
 }
@@ -203,7 +208,7 @@ void PointOperation::Rotation_point_simulation()
     //  対応点をピックアップ
     CalcPointSet calc;
     PointSet pickup_img("pickup_img"), pickup_ply("pickup_ply");
-    calc.pickup_corresp_point(corresp_imgply_point, corresp_ply_point, pickup_img, pickup_ply);
+    calc.pickup_corresp_point(corresp_imgply_point, corresp_ply_point, pickup_img, pickup_ply, default_dir_path);
     pickup_img.print();
     pickup_ply.print();
 
@@ -227,7 +232,6 @@ void PointOperation::Rotation_point_simulation()
     double rotate_angle = 45.0;
     Rironchi = calc.calc_theory_value_Rotation_Matrix(rotate_axis, rotate_angle);
 
-    // TODO もしかして ここの値代入していくやり方って数値計算的に良くないのか？？
     // 相関行列C
     // 相関行列Cは単位行列にする処理を含んでいるので、 convertしたのものを
     double weight = 1.0;

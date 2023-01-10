@@ -51,7 +51,6 @@ std::vector<Eigen::Matrix<double, 9, 1>> CalcPointSet::create_xi_vector(PointSet
     img_point.print();
     std::vector<Eigen::Matrix<double, 9, 1>> vector_xi;
 
-    // TODO begin()+1としないと 1個目の取得が変な値になってしまうのはなぜ。
     for (
         img_itr = img_point.get_point_all().begin(), ply_itr = ply_point.get_point_all().begin();
         img_itr != img_point.get_point_all().end();
@@ -94,6 +93,8 @@ std::vector<Eigen::Matrix<double, 9, 1>> CalcPointSet::create_xi_vector(PointSet
  */
 Eigen::Matrix<double, 9, 9> CalcPointSet::calc_matrix_M(std::vector<Eigen::Matrix<double, 9, 1>> &vector_xi)
 {
+
+    std::cout << "----calc_matrix_M" << std::endl;
     Eigen::Matrix<double, 9, 9> Matrix_M = Eigen::Matrix<double, 9, 9>::Identity();
 
     for (const auto &xi : vector_xi)
@@ -218,20 +219,53 @@ Eigen::Vector3d CalcPointSet::check_sign_translation_t(
     Eigen::Vector3d &vector_t,
     Eigen::Matrix3d &matrix_e)
 {
+
+    std::cout << "-----check sign translation t" << std::endl;
+
     std::vector<Eigen::Vector3d>::const_iterator img_itr, ply_itr;
     double check_sign = 0;
-    for (img_itr = img_point.get_point_all().begin(), ply_itr = ply_point.get_point_all().begin();
+
+    /**
+     * @brief yが前にあるかどうか 決めて判定を行う
+     *
+     */
+    auto is_vector_in_front = [](Eigen::Vector3d &img, Eigen::Vector3d &ply)
+    {
+        // y>0を前と決めてしまう。
+        // TODO これどっちもy>0がいいのか、 imgだけでいいのか 分からんね。
+        std::cout << "img_vec:" << std::endl
+                  << img << std::endl;
+        std::cout << "ply_vec:" << std::endl
+                  << ply << std::endl;
+
+        // signbitは minusだったら true返す
+        if (std::signbit(img(1)))
+        {
+            std::cout << "img_point y<0, exclusion " << std::endl;
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    };
+
+    // TODO なんか最初のアクセスだけおかしい値が出るよなぁ
+    for (img_itr = img_point.get_point_all().begin() + 1, ply_itr = ply_point.get_point_all().begin() + 1;
          img_itr != img_point.get_point_all().end();
          ++img_itr, ++ply_itr)
     {
         Eigen::Vector3d img = *img_itr;
         Eigen::Vector3d ply = *ply_itr;
 
+        bool print_check = is_vector_in_front(img, ply);
+
+        // if (is_vector_in_front(img, ply))
+        // {
         auto Ex = matrix_e * ply;
-
         auto cross_M = img.cross(Ex);
-
         check_sign += vector_t.dot(cross_M);
+        // }
     }
 
     std::cout << "translation:: check_sign: " << std::endl
@@ -351,8 +385,9 @@ double CalcPointSet::calc_scale_of_translation_t(
         }
     };
 
+    // TODO ここも並進tの符号計算と同じようにアクセスがおかしい場合がある。
     for (
-        img_itr = img_point.get_point_all().begin(), ply_itr = ply_point.get_point_all().begin();
+        img_itr = img_point.get_point_all().begin() + 1, ply_itr = ply_point.get_point_all().begin() + 1;
         img_itr != img_point.get_point_all().end();
         ++img_itr, ++ply_itr)
     {
@@ -370,7 +405,6 @@ double CalcPointSet::calc_scale_of_translation_t(
             scale_point_num++;
         }
 
-        std::cout << std::endl;
         std::cout << "point:" << i++ << " " << scale_hat << std::endl;
         std::cout << "img: " << std::endl
                   << img << std::endl
@@ -378,7 +412,8 @@ double CalcPointSet::calc_scale_of_translation_t(
                   << ply << std::endl;
         std::cout << "fraction top: " << (matrix_R * ply).cross(img).dot(img.cross(vector_t)) << std::endl;
         std::cout << "fraction bottom:" << img.cross(vector_t).squaredNorm() << std::endl;
-        std::cout << "scale_s_progress: " << scale_s << std::endl;
+        std::cout << "scale_s_progress: " << scale_s << std::endl
+                  << std::endl;
     }
 
     scale_s /= double(scale_point_num);
@@ -611,7 +646,7 @@ PointSet CalcPointSet::conversion_ply_to_img_point(PointSet &point_data)
 uint64_t get_rand_range(uint64_t min_val, uint64_t max_val)
 {
     // 乱数生成器
-    static std::mt19937_64 mt64(0);
+    static std::mt19937_64 mt64(1);
 
     // [min_val, max_val] の一様分布整数 (int) の分布生成器
     std::uniform_int_distribution<uint64_t> get_rand_uni_int(min_val, max_val);
@@ -641,6 +676,13 @@ void load_ramdom_data(std::string file_name, std::string dir_path, std::vector<i
     }
 }
 
+/**
+ * @brief 与えられた数からランダムに選ぶ。 pick_numよりpicklimit(pointの総数)が小さければその範囲でエアr部
+ *
+ * @param out_path ランダムに選んだ数字を保存するpath
+ * @param pick_num 何個pickupするか
+ * @param pick_limit 0~pick_limitの間でランダムに選ぶ。
+ */
 void save_ramdom_pickup(std::string out_path, int pick_num, int pick_limit)
 {
 
@@ -661,31 +703,45 @@ void save_ramdom_pickup(std::string out_path, int pick_num, int pick_limit)
 }
 
 // TODO ランダム生成して保存する場合と 生成したやつを読み込むものに分けたい。
-void CalcPointSet::pickup_corresp_point(PointSet &point_data, PointSet &point_data2, PointSet &pickup_data, PointSet &pickup_data2)
+void CalcPointSet::pickup_corresp_point(
+    PointSet &point_data, PointSet &point_data2,
+    PointSet &pickup_data, PointSet &pickup_data2,
+    std::string default_dir_path)
 {
-    std::cout << "pickup point :" << std::endl;
+    std::cout << "-------pickup point :" << std::endl;
 
-    std::string out_path = "../../ply_data/pickup_lessgrid_2.dat";
-    int pickup_num = 30;
-    int pickup_limit = int(point_data.get_point_num());
+    bool is_file_exists = std::filesystem::exists(default_dir_path + "pickup_num.dat");
 
-    save_ramdom_pickup(out_path, pickup_num, pickup_limit);
+    std::cout << "pickup_file exists: " << is_file_exists << std::endl;
+
+    // bool is_file_exists = true;
+
+    if (is_file_exists == false)
+    {
+        std::cout << "no pickup file -> make_point_data" << std::endl;
+
+        std::string out_path = default_dir_path + "pickup_num.dat";
+        int pickup_num = 30;
+        int pickup_limit = int(point_data.get_point_num());
+
+        save_ramdom_pickup(out_path, pickup_num, pickup_limit);
+    }
 
     std::vector<int> ramdom_pickup;
-    load_ramdom_data("pickup_lessgrid_2.dat", "../../ply_data/", ramdom_pickup);
+    load_ramdom_data("pickup_num.dat", default_dir_path, ramdom_pickup);
 
     // 読み込む場合
-    // for (const auto pick_num : ramdom_pickup)
-    // {
-    //     std::cout << point_data.get_point(pick_num) << " " << std::endl;
-    //     pickup_data.add_point(point_data.get_point(pick_num));
-    //     pickup_data2.add_point(point_data2.get_point(pick_num));
-    // }
-
-    // 読み込まない場合
-    for (int pick_num = 1; pick_num < int(point_data.get_point_num()); pick_num++)
+    for (const auto pick_num : ramdom_pickup)
     {
+        std::cout << point_data.get_point(pick_num).transpose() << " " << std::endl;
         pickup_data.add_point(point_data.get_point(pick_num));
         pickup_data2.add_point(point_data2.get_point(pick_num));
     }
+
+    // 読み込まない場合
+    // for (int pick_num = 1; pick_num < int(point_data.get_point_num()); pick_num++)
+    // {
+    //     pickup_data.add_point(point_data.get_point(pick_num));
+    //     pickup_data2.add_point(point_data2.get_point(pick_num));
+    // }
 }

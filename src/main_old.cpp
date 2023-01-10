@@ -641,7 +641,6 @@ Eigen::Matrix3d calc_Essential_Matrix_RE(Eigen::Matrix<double, 9, 9> Matrix_M)
     return Matrix_E;
 }
 
-// TODO: これ最小固有値求めて単位固有ベクトル求めるのはたぶんいろいろ使うから 行列の大きさをdynamicで指定できるようにしたい
 Eigen::Matrix3d calc_Essential_Matrix(Eigen::Matrix<double, 9, 9> Matrix_M)
 {
 
