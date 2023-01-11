@@ -623,7 +623,7 @@ PointSet CalcPointSet::conversion_ply_to_img_point(PointSet &point_data)
 
         if (check_float_equal(tmp(0), 0) && check_float_equal(tmp(1), 0) && check_float_equal(tmp(2), 0))
         {
-            throw "0,0,0が含まれてます～！！！！！！！";
+            throw "0,0,0が含まれてます~~~~!!!!";
         }
 
         double theta = std::acos(

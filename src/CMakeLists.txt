@@ -14,6 +14,7 @@ add_executable(
     operation.cpp
     object_io.cpp
     calc_pointset.cpp
+    capture_boxpoint.cpp
 )
 
 # ここeigenはなんでリンクしなくていいのかよくわからん
