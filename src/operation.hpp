@@ -9,8 +9,9 @@
 #include "pointset.hpp"
 #include "object_io.hpp"
 #include "calc_pointset.hpp"
+#include "capture_boxpoint.hpp"
 
-//相互依存
+// 相互依存
 class ObjectIO;
 
 /**
@@ -43,11 +44,12 @@ public:
 
     void print();
 
-    //ここに実行listを作ってmodeで切り替えしたい。
+    // ここに実行listを作ってmodeで切り替えしたい。
     void transform_rotate();
     void transform_rotate_simulation();
     void Rotation_point();
     void Rotation_point_simulation();
+    void capture_boxpoint();
 };
 
 #endif

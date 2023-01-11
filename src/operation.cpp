@@ -258,6 +258,28 @@ void PointOperation::Rotation_point_simulation()
 }
 
 /**
+ * @brief バウンディングボックスデータと 点群を取り出して、点群を１つ１つ切り出す。
+ *
+ */
+void PointOperation::capture_boxpoint()
+{
+    // ./Rotation --ply_cp r0_0_1-d30.dat --ply_cp img.dat --dir ../../ply_data/check_1130/
+    // ./Rotation --ply "ply_data_name" --dir ../../ply_data/"ply_data_dir"/ >! ../../ply_data/"ply_data_dir"/out-"log_name".dat
+    std::cout << "capture box point" << std::endl;
+    ObjectIO obj_io;
+
+    // load
+    PointSet ply_point("plydata");
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
+    ply_point.print();
+
+    CalcPointSet calc;
+    CaptureBoxPoint capbox;
+
+    capbox.test_print();
+}
+
+/**
  * @brief 読み込むファイル名, pathをprintする
  *
  */
