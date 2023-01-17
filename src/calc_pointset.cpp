@@ -239,7 +239,7 @@ Eigen::Vector3d CalcPointSet::check_sign_translation_t(
                   << ply << std::endl;
 
         // signbitは minusだったら true返す
-        if (std::signbit(img(1)))
+        if (std::signbit(img(1)) or std::signbit(ply(1)))
         {
             std::cout << "img_point y<0, exclusion " << std::endl;
             return false;
@@ -260,17 +260,21 @@ Eigen::Vector3d CalcPointSet::check_sign_translation_t(
 
         bool print_check = is_vector_in_front(img, ply);
 
-        // if (is_vector_in_front(img, ply))
-        // {
-        auto Ex = matrix_e * ply;
-        auto cross_M = img.cross(Ex);
-        check_sign += vector_t.dot(cross_M);
-        // }
+        if (is_vector_in_front(img, ply))
+        {
+            auto Ex = matrix_e * ply;
+            auto cross_M = img.cross(Ex);
+            check_sign += vector_t.dot(cross_M);
+            std::cout << "check_sign_NUM :" << vector_t.dot(cross_M) << std::endl;
+        }
     }
 
-    std::cout << "translation:: check_sign: " << std::endl
+    std::cout << "translation:: check_sign_sam: " << std::endl
               << check_sign << std::endl
               << std::endl;
+
+    std::cout << "translation:: change_sign before" << std::endl
+              << vector_t << std::endl;
 
     auto is_large_than_zero = [](double check_num)
     {
@@ -285,7 +289,7 @@ Eigen::Vector3d CalcPointSet::check_sign_translation_t(
         vector_t = -vector_t;
     }
 
-    std::cout << "translation:: change_sign" << std::endl
+    std::cout << "translation:: change_sign after" << std::endl
               << vector_t << std::endl;
 
     return vector_t;
@@ -404,7 +408,7 @@ double CalcPointSet::calc_scale_of_translation_t(
             scale_s += scale_hat;
             scale_point_num++;
         }
-
+        // /** check 用
         std::cout << "point:" << i++ << " " << scale_hat << std::endl;
         std::cout << "img: " << std::endl
                   << img << std::endl
@@ -414,6 +418,7 @@ double CalcPointSet::calc_scale_of_translation_t(
         std::cout << "fraction bottom:" << img.cross(vector_t).squaredNorm() << std::endl;
         std::cout << "scale_s_progress: " << scale_s << std::endl
                   << std::endl;
+        // */
     }
 
     scale_s /= double(scale_point_num);
