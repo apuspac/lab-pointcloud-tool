@@ -1,8 +1,51 @@
 #include "capture_boxpoint.hpp"
 
+void check_point_in_polygon()
+{
+    Eigen::Vector3d target_point = {2, 2, 2};
+
+    std::vector<Eigen::Vector3d> triangle;
+    Eigen::Vector3d tri_0 = {1, 0, 0};
+    Eigen::Vector3d tri_1 = {0, 1, 0};
+    Eigen::Vector3d tri_2 = {0, 0, 1};
+    triangle.push_back(tri_0);
+    triangle.push_back(tri_1);
+    triangle.push_back(tri_2);
+
+    Eigen::Vector3d edge1 = triangle.at(1) - triangle.at(0);
+    Eigen::Vector3d edge2 = triangle.at(2) - triangle.at(0);
+
+    Eigen::Vector3d tri_center = {
+        tri_0(0) + tri_1(0) + tri_2(0) / 3.0,
+        tri_0(1) + tri_1(1) + tri_2(1) / 3.0,
+        tri_0(2) + tri_1(2) + tri_2(2) / 3.0,
+    };
+
+    Eigen::Vector3d ray = tri_center - target_point;
+
+    // print
+    std::cout << "target: " << std::endl
+              << target_point << std::endl
+              << "triangle: " << std::endl
+              << triangle.at(0) << std::endl
+              << triangle.at(1) << std::endl
+              << triangle.at(2) << std::endl
+              << "edge: " << std::endl
+              << edge1 << std::endl
+              << edge2 << std::endl
+              << "tri_center: " << std::endl
+              << tri_center << std::endl
+              << "ray: " << std::endl
+              << ray << std::endl;
+
+    // check
+}
+
 void CaptureBoxPoint::test_print()
 {
     std::cout << "capture_boxpoint" << std::endl;
+
+    check_point_in_polygon();
 }
 
 // Eigen::Vector3d equirectangular_to_sphere(double u, double v, double img_width, double img_height)

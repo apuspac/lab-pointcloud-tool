@@ -30,6 +30,7 @@ private:
 
 public:
     void test_print();
+
     // void Load_json();
     void set_bbox(double, double, double, double);
 };

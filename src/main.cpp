@@ -16,8 +16,8 @@ int main(int argc, char *argv[])
     // opt.transform_rotate();
     // opt.Rotation_point();
     // opt.Rotation_point_simulation();
-    opt.transform_rotate_simulation();
-    // opt.capture_boxpoint();
+    // opt.transform_rotate_simulation();
+    opt.capture_boxpoint();
 
     return 0;
 }
