@@ -18,9 +18,9 @@ private:
     double ymax;
 
 public:
-    BBox(double xmin, double ymin, double xmax, double ymax) : xmin(xmin), {}
-    ~PointSet() {}
-}
+    BBox(double x_min, double y_min, double x_max, double y_max) : xmin(x_min), ymin(y_min), xmax(x_max), ymax(y_max) {}
+    ~BBox() {}
+};
 
 class CaptureBoxPoint
 {
