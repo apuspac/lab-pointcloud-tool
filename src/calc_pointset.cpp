@@ -260,13 +260,13 @@ Eigen::Vector3d CalcPointSet::check_sign_translation_t(
 
         bool print_check = is_vector_in_front(img, ply);
 
-        if (is_vector_in_front(img, ply))
-        {
-            auto Ex = matrix_e * ply;
-            auto cross_M = img.cross(Ex);
-            check_sign += vector_t.dot(cross_M);
-            std::cout << "check_sign_NUM :" << vector_t.dot(cross_M) << std::endl;
-        }
+        // if (is_vector_in_front(img, ply))
+        // {
+        auto Ex = matrix_e * ply;
+        auto cross_M = img.cross(Ex);
+        check_sign += vector_t.dot(cross_M);
+        std::cout << "check_sign_NUM :" << vector_t.dot(cross_M) << std::endl;
+        // }
     }
 
     std::cout << "translation:: check_sign_sam: " << std::endl
