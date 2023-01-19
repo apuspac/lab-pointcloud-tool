@@ -1,7 +1,7 @@
 
 ply
 format ascii 1.0
-element vertex 1331
+element vertex 1330
 property float x
 property float y
 property float z

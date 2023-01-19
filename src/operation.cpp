@@ -270,13 +270,25 @@ void PointOperation::capture_boxpoint()
 
     // load
     PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
-    ply_point.print();
+    // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
+
+    // ply_point.print();
+
+    PointSet bbox_img_point("corresp_imgpoint");
+    obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), bbox_img_point);
+    bbox_img_point.print();
 
     CalcPointSet calc;
     CaptureBoxPoint capbox;
 
-    capbox.test_print();
+    PointSet capture_ply("capture_boxpoint");
+    PointSet bbox_point("bbox");
+    capbox.test_check_process(ply_point, capture_ply, bbox_point);
+
+    // capture_ply.print();
+    obj_io.output_ply(capture_ply, default_dir_path + "capture.ply");
+    obj_io.output_ply(bbox_point, default_dir_path + "bbox.ply");
 }
 
 /**

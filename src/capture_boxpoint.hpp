@@ -26,10 +26,10 @@ class CaptureBoxPoint
 {
 private:
     // なんとか格納させる
-    std::vector<std::vector<double>> bbox_list;
+    std::vector<BBox> bbox_list;
 
 public:
-    void test_print();
+    void test_check_process(PointSet &, PointSet &, PointSet &);
 
     // void Load_json();
     void set_bbox(double, double, double, double);
