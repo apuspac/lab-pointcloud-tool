@@ -290,10 +290,10 @@ void PointOperation::capture_boxpoint()
 
 void PointOperation::capture_segmentation_point()
 {
-    std::cout << "capture segmentation point"
+    std::cout << "capture segmentation point" << std::endl;
 
-        std::cout
-              << "capture box point" << std::endl;
+    std::cout
+        << "capture box point" << std::endl;
     ObjectIO obj_io;
 
     // plypoint data load
@@ -310,7 +310,7 @@ void PointOperation::capture_segmentation_point()
 
     PointSet capture_ply("capture_segmentation_point");
     PointSet seg_point("segmentation_point");
-    capbox.capture_segmentation(ply_point, capture_ply, seg_point);
+    capbox.capture_segmentation(ply_point, capture_ply, segmentation_point);
 
     obj_io.output_ply(capture_ply, default_dir_path + "capture.ply");
     obj_io.output_ply(seg_point, default_dir_path + "seg_point.ply");

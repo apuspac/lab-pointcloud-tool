@@ -25,7 +25,7 @@ public:
 class CaptureBoxPoint
 {
 private:
-    // なんとか格納させる
+    // おそらく複数必要なので 格納させたほうがいい気がする。
     std::vector<BBox> bbox_list;
 
 public:

@@ -249,9 +249,29 @@ void CaptureBoxPoint::test_check_process(PointSet &plypoint, PointSet &capture_p
         << "d: " << d_1 << std::endl;
 }
 
-void capture_segmentation(PointSet &, PointSet &, PointSet &)
+void CaptureBoxPoint::capture_segmentation(PointSet &plypoint, PointSet &capture_point, PointSet &segmentation_point)
 {
     std::cout << "capture_segmentation_point" << std::endl;
+
+    segmentation_point.print();
+
+    auto calc_distance_to_line = [](Eigen::Vector3d ply_line, Eigen::Vector3d seg_line)
+    {
+        std::cout << ply_line.transpose() << std::endl
+                  << seg_line.transpose() << std::endl
+                  << std::endl;
+
+        Eigen::Matrix3d matrix_I = Eigen::Matrix3d::Identity();
+        auto normal_line = (matrix_I - (seg_line * seg_line.transpose())) * ply_line;
+
+        std::cout << normal_line << std::endl;
+        return normal_line.determinant();
+    };
+
+    for (auto target_point : plypoint.get_point_all())
+    {
+        calc_distance_to_line(target_point, segmentation_point.get_point(1));
+    }
 }
 
 // Eigen::Vector3d equirectangular_to_sphere(double u, double v, double img_width, double img_height)
