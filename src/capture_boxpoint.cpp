@@ -249,28 +249,95 @@ void CaptureBoxPoint::test_check_process(PointSet &plypoint, PointSet &capture_p
         << "d: " << d_1 << std::endl;
 }
 
-void CaptureBoxPoint::capture_segmentation(PointSet &plypoint, PointSet &capture_point, PointSet &segmentation_point)
+void CaptureBoxPoint::capture_segmentation(PointSet &plypoint, PointSet &capture_point, PointSet &segmentation_point, PointSet &segpoint_with_line)
 {
     std::cout << "capture_segmentation_point" << std::endl;
 
     segmentation_point.print();
 
-    auto calc_distance_to_line = [](Eigen::Vector3d ply_line, Eigen::Vector3d seg_line)
+    auto check_xy_region = [](Eigen::Vector3d point)
     {
-        std::cout << ply_line.transpose() << std::endl
-                  << seg_line.transpose() << std::endl
-                  << std::endl;
-
-        Eigen::Matrix3d matrix_I = Eigen::Matrix3d::Identity();
-        auto normal_line = (matrix_I - (seg_line * seg_line.transpose())) * ply_line;
-
-        std::cout << normal_line << std::endl;
-        return normal_line.determinant();
+        double x = point(0);
+        double y = point(1);
+        if (x > 0)
+        {
+            if (y > 0)
+            {
+                return 0;
+            }
+            else
+            {
+                return 1;
+            }
+        }
+        else
+        {
+            if (y > 0)
+            {
+                return 2;
+            }
+            else
+            {
+                return 3;
+            }
+        }
     };
 
-    for (auto target_point : plypoint.get_point_all())
+    auto calc_distance_to_line = [](Eigen::Vector3d point, Eigen::Vector3d line)
     {
-        calc_distance_to_line(target_point, segmentation_point.get_point(1));
+        Eigen::Matrix3d matrix_I = Eigen::Matrix3d::Identity();
+        auto normal_line = (matrix_I - (line * line.transpose())) * point;
+
+        // std::cout << plypoint.transpose() << std::endl
+        //           << line.transpose() << std::endl
+        //           << std::endl;
+        // std::cout << normal_line.squaredNorm() << std::endl;
+
+        return normal_line.squaredNorm();
+    };
+
+    auto add_edge = [&segpoint_with_line](Eigen::Vector3d edge_point)
+    {
+        // segpoint_with_line.add_point(edge_point);
+        Eigen::Vector3d tmp_normalize = edge_point.normalized();
+        double theta = std::acos(
+            tmp_normalize(2) /
+            std::sqrt(std::pow(tmp_normalize(0), 2.0) + std::pow(tmp_normalize(1), 2.0) + std::pow(tmp_normalize(2), 2.0)));
+
+        double phi = std::atan2(tmp_normalize(1), tmp_normalize(0));
+        double r = 20.0;
+
+        Eigen::Vector3d tmp_vec = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
+        segpoint_with_line.add_point(tmp_vec);
+
+        // 原点と結ぶ
+        long unsigned int i = 1;
+        std::array<int, 2> to_zero{0, static_cast<int>(segpoint_with_line.get_point_num() - i)};
+        segpoint_with_line.add_edge(to_zero);
+    };
+
+    Eigen::Vector3d zero = {0, 0, 0};
+    segpoint_with_line.add_point(zero);
+    add_edge(segmentation_point.get_point(1));
+
+    double allow_range = 0.001;
+
+    for (auto target_line : segmentation_point.get_point_all())
+    {
+        add_edge(target_line);
+        int region_line = check_xy_region(target_line);
+
+        for (auto target_point : plypoint.get_point_all())
+        {
+            if (check_xy_region(target_point) == region_line)
+            {
+                if (calc_distance_to_line(target_point, target_line) < allow_range)
+                {
+
+                    capture_point.add_point(target_point);
+                }
+            }
+        }
     }
 }
 

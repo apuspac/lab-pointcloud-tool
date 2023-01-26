@@ -298,8 +298,8 @@ void PointOperation::capture_segmentation_point()
 
     // plypoint data load
     PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
-    // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
+    // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
 
     // segmentation data load
     PointSet segmentation_point("corresp_imgpoint");
@@ -309,11 +309,11 @@ void PointOperation::capture_segmentation_point()
     CaptureBoxPoint capbox;
 
     PointSet capture_ply("capture_segmentation_point");
-    PointSet seg_point("segmentation_point");
-    capbox.capture_segmentation(ply_point, capture_ply, segmentation_point);
+    PointSet segline_point("segmentation_point");
+    capbox.capture_segmentation(ply_point, capture_ply, segmentation_point, segline_point);
 
     obj_io.output_ply(capture_ply, default_dir_path + "capture.ply");
-    obj_io.output_ply(seg_point, default_dir_path + "seg_point.ply");
+    obj_io.output_ply(segline_point, default_dir_path + "seg_point.ply");
 }
 
 /**

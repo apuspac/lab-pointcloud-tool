@@ -352,17 +352,43 @@ void ObjectIO::output_ply(PointSet &point_data, std::string out_path)
     // std::ios::out : 書き込み
     std::ofstream output_ply(out_path, std::ios::out);
 
-    output_ply << "ply" << std::endl
-               << "format ascii 1.0" << std::endl
-               << "element vertex " << point_data.get_point_num() << std::endl
-               << "property float x" << std::endl
-               << "property float y" << std::endl
-               << "property float z" << std::endl
-               << "end_header" << std::endl;
-
-    for (const Eigen::Vector3d &tmp : point_data.get_point_all())
+    if (point_data.get_edge_num() > 0)
     {
-        output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
+        output_ply << "ply" << std::endl
+                   << "format ascii 1.0" << std::endl
+                   << "element vertex " << point_data.get_point_num() << std::endl
+                   << "property float x" << std::endl
+                   << "property float y" << std::endl
+                   << "property float z" << std::endl
+                   << "element edge " << point_data.get_edge_num() << std::endl
+                   << "property int vertex1" << std::endl
+                   << "property int vertex2" << std::endl
+                   << "end_header" << std::endl;
+
+        for (const Eigen::Vector3d &tmp : point_data.get_point_all())
+        {
+            output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
+        }
+
+        for (const auto &tmp : point_data.get_edge_all())
+        {
+            output_ply << tmp.at(0) << " " << tmp.at(1) << std::endl;
+        }
+    }
+    else
+    {
+        output_ply << "ply" << std::endl
+                   << "format ascii 1.0" << std::endl
+                   << "element vertex " << point_data.get_point_num() << std::endl
+                   << "property float x" << std::endl
+                   << "property float y" << std::endl
+                   << "property float z" << std::endl
+                   << "end_header" << std::endl;
+
+        for (const Eigen::Vector3d &tmp : point_data.get_point_all())
+        {
+            output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
+        }
     }
 }
 
@@ -405,7 +431,7 @@ void ObjectIO::output_ply_with_line(PointSet &point_data, std::string out_path)
         output_ply << tmp_vec(0) << " " << tmp_vec(1) << " " << tmp_vec(2) << std::endl;
     }
 
-    //原点0と line を引くための点とでedgeを結ぶ
+    // 原点0と line を引くための点とでedgeを結ぶ
     for (long unsigned int i = point_data.get_point_num() + 1; i < point_data.get_point_num() * 2 + 1; i++)
     {
         output_ply << 0 << " " << i << std::endl;

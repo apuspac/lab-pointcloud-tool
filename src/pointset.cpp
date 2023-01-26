@@ -13,6 +13,10 @@ void PointSet::print()
         std::cout << std::setprecision(15) << tmp.transpose() << std::endl;
     }
     std::cout << std::endl;
+    for (const auto &tmp : edge2)
+    {
+        std::cout << tmp.at(0) << " " << tmp.at(1) << std::endl;
+    }
 }
 
 /**
