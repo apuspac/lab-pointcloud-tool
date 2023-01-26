@@ -249,6 +249,11 @@ void CaptureBoxPoint::test_check_process(PointSet &plypoint, PointSet &capture_p
         << "d: " << d_1 << std::endl;
 }
 
+void capture_segmentation(PointSet &, PointSet &, PointSet &)
+{
+    std::cout << "capture_segmentation_point" << std::endl;
+}
+
 // Eigen::Vector3d equirectangular_to_sphere(double u, double v, double img_width, double img_height)
 // {
 //     // 正規化

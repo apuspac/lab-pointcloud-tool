@@ -30,6 +30,7 @@ private:
 
 public:
     void test_check_process(PointSet &, PointSet &, PointSet &);
+    void capture_segmentation(PointSet &, PointSet &, PointSet &);
 
     // void Load_json();
     void set_bbox(double, double, double, double);

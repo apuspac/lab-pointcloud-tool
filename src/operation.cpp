@@ -273,13 +273,10 @@ void PointOperation::capture_boxpoint()
     // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
     obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
 
-    // ply_point.print();
-
     PointSet bbox_img_point("corresp_imgpoint");
     obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), bbox_img_point);
     bbox_img_point.print();
 
-    CalcPointSet calc;
     CaptureBoxPoint capbox;
 
     PointSet capture_ply("capture_boxpoint");
@@ -289,6 +286,34 @@ void PointOperation::capture_boxpoint()
     // capture_ply.print();
     obj_io.output_ply(capture_ply, default_dir_path + "capture.ply");
     obj_io.output_ply(bbox_point, default_dir_path + "bbox.ply");
+}
+
+void PointOperation::capture_segmentation_point()
+{
+    std::cout << "capture segmentation point"
+
+        std::cout
+              << "capture box point" << std::endl;
+    ObjectIO obj_io;
+
+    // plypoint data load
+    PointSet ply_point("plydata");
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
+    // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
+
+    // segmentation data load
+    PointSet segmentation_point("corresp_imgpoint");
+    obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), segmentation_point);
+    segmentation_point.print();
+
+    CaptureBoxPoint capbox;
+
+    PointSet capture_ply("capture_segmentation_point");
+    PointSet seg_point("segmentation_point");
+    capbox.capture_segmentation(ply_point, capture_ply, seg_point);
+
+    obj_io.output_ply(capture_ply, default_dir_path + "capture.ply");
+    obj_io.output_ply(seg_point, default_dir_path + "seg_point.ply");
 }
 
 /**

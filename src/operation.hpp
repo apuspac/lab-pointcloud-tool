@@ -50,6 +50,7 @@ public:
     void Rotation_point();
     void Rotation_point_simulation();
     void capture_boxpoint();
+    void capture_segmentation_point();
 };
 
 #endif

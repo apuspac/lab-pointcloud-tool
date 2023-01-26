@@ -1,0 +1,1 @@
+./Rotation --ply scene.ply --dir ../../ply_data/capture_box/ >! ../../ply_data/capture_box/out.dat
