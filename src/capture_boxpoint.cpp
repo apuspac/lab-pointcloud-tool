@@ -283,6 +283,10 @@ void CaptureBoxPoint::capture_segmentation(PointSet &plypoint, PointSet &capture
         }
     };
 
+    /**
+     * @brief 点と直線の距離を計算
+     *
+     */
     auto calc_distance_to_line = [](Eigen::Vector3d point, Eigen::Vector3d line)
     {
         Eigen::Matrix3d matrix_I = Eigen::Matrix3d::Identity();
@@ -290,27 +294,34 @@ void CaptureBoxPoint::capture_segmentation(PointSet &plypoint, PointSet &capture
 
         // std::cout << plypoint.transpose() << std::endl
         //           << line.transpose() << std::endl
+        //           << normal_line.squaredNorm() << std::endl
         //           << std::endl;
-        // std::cout << normal_line.squaredNorm() << std::endl;
 
         return normal_line.squaredNorm();
     };
 
+    /**
+     * @brief 原点との引数の点とのedge 直線をsegpoint_with_lineに追加する
+     * 原点が0番目に保存されていることが前提なので、 最初に追加しておく。
+     *
+     */
     auto add_edge = [&segpoint_with_line](Eigen::Vector3d edge_point)
     {
-        // segpoint_with_line.add_point(edge_point);
         Eigen::Vector3d tmp_normalize = edge_point.normalized();
+
+        // 極座標に変換
         double theta = std::acos(
             tmp_normalize(2) /
             std::sqrt(std::pow(tmp_normalize(0), 2.0) + std::pow(tmp_normalize(1), 2.0) + std::pow(tmp_normalize(2), 2.0)));
 
         double phi = std::atan2(tmp_normalize(1), tmp_normalize(0));
-        double r = 20.0;
 
+        // 距離rを伸ばしてpointを新たに格納
+        double r = 20.0;
         Eigen::Vector3d tmp_vec = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
         segpoint_with_line.add_point(tmp_vec);
 
-        // 原点と結ぶ
+        // 原点とのedgeを格納
         long unsigned int i = 1;
         std::array<int, 2> to_zero{0, static_cast<int>(segpoint_with_line.get_point_num() - i)};
         segpoint_with_line.add_edge(to_zero);
