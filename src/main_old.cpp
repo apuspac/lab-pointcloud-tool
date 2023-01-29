@@ -1,3 +1,8 @@
+/**
+ * @file main_old.cpp
+ * @brief クラス分けする前のプログラムファイル
+ *
+ */
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -21,6 +26,7 @@
 // 変数名の取得
 #define DTRACE(var) std::cout << #var << ": " << std::endl;
 
+// extern: 別ファイルのグローバル変数が使える
 extern char *optarg;
 extern int optind, opterr, optopt;
 

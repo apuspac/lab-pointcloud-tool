@@ -350,6 +350,8 @@ void CaptureBoxPoint::capture_segmentation(PointSet &plypoint, PointSet &capture
             }
         }
     }
+
+    std::cout << "uwaa";
 }
 
 // Eigen::Vector3d equirectangular_to_sphere(double u, double v, double img_width, double img_height)

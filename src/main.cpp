@@ -12,13 +12,13 @@ int main(int argc, char *argv[])
     PointOperation opt;
     ObjectIO::option_process(argc, argv, opt);
     opt.print();
-
+    opt.mode_select();
     // opt.transform_rotate();
     // opt.Rotation_point();
     // opt.Rotation_point_simulation();
     // opt.transform_rotate_simulation();
     // opt.capture_boxpoint();
-    opt.capture_segmentation_point();
+    // opt.capture_segmentation_point();
 
     return 0;
 }

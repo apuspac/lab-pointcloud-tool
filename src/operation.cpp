@@ -1,4 +1,22 @@
+/**
+ * @file operation.cpp
+ * @brief 処理部分の実装
+ */
 #include "operation.hpp"
+
+void PointOperation::mode_select()
+{
+    std::cout << "mode select";
+    switch_func[0] = std::bind(&PointOperation::transform_rotate, this);
+    switch_func[1] = std::bind(&PointOperation::transform_rotate_simulation, this);
+    switch_func[2] = std::bind(&PointOperation::Rotation_only, this);
+    switch_func[3] = std::bind(&PointOperation::Rotation_only_simulation, this);
+    switch_func[4] = std::bind(&PointOperation::capture_boxpoint, this);
+    switch_func[5] = std::bind(&PointOperation::capture_segmentation_point, this);
+    // switch_func[0] = transform_rotate;
+
+    switch_func[get_mode()]();
+}
 
 /**
  * @brief
@@ -159,7 +177,7 @@ void PointOperation::transform_rotate_simulation()
     // obj_io.output_ply(corresp_ply_point, default_dir_path + corresp_ply_point.get_name() + ".ply");
 }
 
-void PointOperation::Rotation_point()
+void PointOperation::Rotation_only()
 {
     std::cout << "Rotation Point" << std::endl;
     ObjectIO obj_io;
@@ -188,7 +206,7 @@ void PointOperation::Rotation_point()
     obj_io.output_ply(corresp_ply_point, default_dir_path + corresp_ply_point.get_name() + ".ply");
 }
 
-void PointOperation::Rotation_point_simulation()
+void PointOperation::Rotation_only_simulation()
 {
     // ./Rotation --ply_cp r0_0_1-d30.dat --ply_cp img.dat --dir ../../ply_data/check_1130/
     // ./Rotation --ply_cp t0_0_5.0.dat --ply_cp img.dat --dir ../../ply_data/check_1130/
@@ -300,6 +318,7 @@ void PointOperation::capture_segmentation_point()
     PointSet ply_point("plydata");
     // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
     obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
+    ply_point.print();
 
     // segmentation data load
     PointSet segmentation_point("corresp_imgpoint");
@@ -322,6 +341,9 @@ void PointOperation::capture_segmentation_point()
  */
 void PointOperation::print()
 {
+    std::cout << "mode:"
+              << mode << std::endl;
+
     std::cout << std::endl
               << "default_dir_path: "
               << default_dir_path << std::endl;
