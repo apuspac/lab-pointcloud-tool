@@ -29,8 +29,9 @@ private:
     std::vector<BBox> bbox_list;
 
 public:
-    void test_check_process(PointSet &, PointSet &, PointSet &);
-    void capture_segmentation(PointSet &, PointSet &, PointSet &, PointSet &);
+    void capture_bbox(PointSet &, PointSet &, PointSet &, PointSet &);
+    void capture_segmentation_distance(PointSet &, PointSet &, PointSet &, PointSet &);
+    void capture_segmentation_angle(PointSet &, PointSet &, PointSet &, PointSet &);
 
     // void Load_json();
     void set_bbox(double, double, double, double);

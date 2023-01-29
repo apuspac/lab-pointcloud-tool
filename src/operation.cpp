@@ -4,8 +4,14 @@
  */
 #include "operation.hpp"
 
+/**
+ * @brief modeの値によって処理を変える関数
+ *
+ */
 void PointOperation::mode_select()
 {
+    // switch case を使わない試み
+    // https://yutamano.hatenablog.com/entry/2013/11/18/161234
     std::cout << "mode select";
     switch_func[0] = std::bind(&PointOperation::transform_rotate, this);
     switch_func[1] = std::bind(&PointOperation::transform_rotate_simulation, this);
@@ -13,7 +19,6 @@ void PointOperation::mode_select()
     switch_func[3] = std::bind(&PointOperation::Rotation_only_simulation, this);
     switch_func[4] = std::bind(&PointOperation::capture_boxpoint, this);
     switch_func[5] = std::bind(&PointOperation::capture_segmentation_point, this);
-    // switch_func[0] = transform_rotate;
 
     switch_func[get_mode()]();
 }
@@ -286,26 +291,33 @@ void PointOperation::capture_boxpoint()
     std::cout << "capture box point" << std::endl;
     ObjectIO obj_io;
 
-    // load
+    // load plydata
     PointSet ply_point("plydata");
     // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
     obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
 
+    // bbox
     PointSet bbox_img_point("corresp_imgpoint");
     obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), bbox_img_point);
     bbox_img_point.print();
 
     CaptureBoxPoint capbox;
 
+    // 抽出したポイントを格納
     PointSet capture_ply("capture_boxpoint");
+    // バウンディングボックス描画用
     PointSet bbox_point("bbox");
-    capbox.test_check_process(ply_point, capture_ply, bbox_point);
+    capbox.capture_bbox(ply_point, capture_ply, bbox_img_point, bbox_point);
 
     // capture_ply.print();
     obj_io.output_ply(capture_ply, default_dir_path + "capture.ply");
     obj_io.output_ply(bbox_point, default_dir_path + "bbox.ply");
 }
 
+/**
+ * @brief 検出結果の画素値から 点群を抽出する処理。
+ *
+ */
 void PointOperation::capture_segmentation_point()
 {
     std::cout << "capture segmentation point" << std::endl;
@@ -318,18 +330,21 @@ void PointOperation::capture_segmentation_point()
     PointSet ply_point("plydata");
     // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
     obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
-    ply_point.print();
+    // ply_point.print();
 
     // segmentation data load
     PointSet segmentation_point("corresp_imgpoint");
     obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), segmentation_point);
-    segmentation_point.print();
+    // segmentation_point.print();
 
     CaptureBoxPoint capbox;
 
+    // 抽出point
     PointSet capture_ply("capture_segmentation_point");
+    // segmentation_line
     PointSet segline_point("segmentation_point");
-    capbox.capture_segmentation(ply_point, capture_ply, segmentation_point, segline_point);
+    // capbox.capture_segmentation_distance(ply_point, capture_ply, segmentation_point, segline_point);
+    capbox.capture_segmentation_angle(ply_point, capture_ply, segmentation_point, segline_point);
 
     obj_io.output_ply(capture_ply, default_dir_path + "capture.ply");
     obj_io.output_ply(segline_point, default_dir_path + "seg_point.ply");
