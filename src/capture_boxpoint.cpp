@@ -354,7 +354,7 @@ void CaptureBoxPoint::capture_segmentation_distance(PointSet &plypoint, PointSet
     Eigen::Vector3d zero = {0, 0, 0};
     segpoint_with_line.add_point(zero);
 
-    double allow_range = 0.001;
+    double allow_range = 0.0005;
 
     for (auto target_line : segmentation_point.get_point_all())
     {
@@ -397,10 +397,10 @@ void CaptureBoxPoint::capture_segmentation_angle(PointSet &plypoint, PointSet &c
      */
     auto calc_angle_to_line = [](Eigen::Vector3d point, Eigen::Vector3d line)
     {
-        double theta = std::acos(line.dot(point) / point.squaredNorm());
+        double theta = std::acos(line.dot(point) / point.norm());
 
-        std::cout << line.dot(point) / point.squaredNorm() << " : " << theta << std::endl;
-        return std::abs(theta);
+        std::cout << line.dot(point) << " : " << point.squaredNorm() << " : " << line.dot(point) / (line.squaredNorm() * point.squaredNorm()) << " : " << theta << std::endl;
+        return theta;
     };
 
     /**
@@ -434,24 +434,25 @@ void CaptureBoxPoint::capture_segmentation_angle(PointSet &plypoint, PointSet &c
     Eigen::Vector3d zero = {0, 0, 0};
     segpoint_with_line.add_point(zero);
 
-    double allow_angle = 45.0;
-    double allow_angle_radian = allow_angle * (M_PI / 180);
+    double allow_angle = 0.2;
+    double allow_angle_radian = allow_angle * (M_PI / 180.0);
     std::cout << "allow_angle_radian:" << allow_angle_radian << std::endl;
 
     for (auto target_line : segmentation_point.get_point_all())
     {
+        // target_line = segmentation_point.get_point(1);
         add_edge(target_line);
         int region_line = check_xy_region(target_line);
 
         for (auto target_point : plypoint.get_point_all())
         {
-            // if (check_xy_region(target_point) == region_line)
-            // {
-            if (calc_angle_to_line(target_point, target_line) < allow_angle_radian)
+            if (check_xy_region(target_point) == region_line)
             {
-                capture_point.add_point(target_point);
+                if (calc_angle_to_line(target_point, target_line) < allow_angle_radian)
+                {
+                    capture_point.add_point(target_point);
+                }
             }
-            // }
         }
     }
 }

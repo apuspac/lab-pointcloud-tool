@@ -346,8 +346,8 @@ void PointOperation::capture_segmentation_point()
     // capbox.capture_segmentation_distance(ply_point, capture_ply, segmentation_point, segline_point);
     capbox.capture_segmentation_angle(ply_point, capture_ply, segmentation_point, segline_point);
 
-    obj_io.output_ply(capture_ply, default_dir_path + "capture.ply");
-    obj_io.output_ply(segline_point, default_dir_path + "seg_point.ply");
+    obj_io.output_ply(capture_ply, default_dir_path + "capture_angle.ply");
+    obj_io.output_ply(segline_point, default_dir_path + "seg_point_angle.ply");
 }
 
 /**
