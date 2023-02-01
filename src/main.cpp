@@ -9,15 +9,11 @@ int main(int argc, char *argv[])
 
     // 有効桁数
     std::cout << std::setprecision(15);
+
     PointOperation opt;
     ObjectIO::option_process(argc, argv, opt);
     opt.print();
-
-    // opt.transform_rotate();
-    // opt.Rotation_point();
-    // opt.Rotation_point_simulation();
-    opt.transform_rotate_simulation();
-    // opt.capture_boxpoint();
+    opt.mode_select();
 
     return 0;
 }

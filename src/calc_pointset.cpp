@@ -8,9 +8,9 @@ void CalcPointSet::test_print()
 /**
  * @brief 回転行列の理論値を計算する。回転軸と角度を指定
  *
- * @param rotation_axis
- * @param degree
- * @return Eigen::Matrix3d
+ * @param rotation_axis 回転軸
+ * @param degree 回転角度
+ * @return Eigen::Matrix3d 回転行列
  */
 Eigen::Matrix3d CalcPointSet::calc_theory_value_Rotation_Matrix(Eigen::Vector3d rotation_axis, double degree)
 {
@@ -38,11 +38,11 @@ Eigen::Matrix3d CalcPointSet::calc_theory_value_Rotation_Matrix(Eigen::Vector3d 
 }
 
 /**
- * @brief img対応点とply対応点から vectorを作る
+ * @brief img対応点とply対応点から 基本行列計算のためのvectorを作る
  *
- * @param img_point
- * @param ply_point
- * @return std::vector<Eigen::Matrix<double, 9, 1>>
+ * @param img_point img対応点
+ * @param ply_point ply対応点
+ * @return std::vector<Eigen::Matrix<double, 9, 1>> xivector
  */
 std::vector<Eigen::Matrix<double, 9, 1>> CalcPointSet::create_xi_vector(PointSet &img_point, PointSet &ply_point)
 {
@@ -56,7 +56,7 @@ std::vector<Eigen::Matrix<double, 9, 1>> CalcPointSet::create_xi_vector(PointSet
         img_itr != img_point.get_point_all().end();
         ++img_itr, ++ply_itr)
     {
-        // TODO: いちいち呼び出さない方法はないですか？
+        // TODO: これいちいち呼び出さない方法はないですか？
         Eigen::Vector3d img = *img_itr;
         Eigen::Vector3d ply = *ply_itr;
 
@@ -89,7 +89,7 @@ std::vector<Eigen::Matrix<double, 9, 1>> CalcPointSet::create_xi_vector(PointSet
  * @brief 行列Mを計算する。
  *
  * @param vector_xi
- * @return Eigen::Matrix<double, 9, 9>
+ * @return Eigen::Matrix<double, 9, 9> martix_M
  */
 Eigen::Matrix<double, 9, 9> CalcPointSet::calc_matrix_M(std::vector<Eigen::Matrix<double, 9, 1>> &vector_xi)
 {
@@ -111,8 +111,8 @@ Eigen::Matrix<double, 9, 9> CalcPointSet::calc_matrix_M(std::vector<Eigen::Matri
 /**
  * @brief 行列Mを固有値分解し、 最小固有値に対する固有ベクトルを並べて、基本行列とする。
  *
- * @param matrix_M
- * @return Eigen::Matrix3d
+ * @param matrix_M 固有値分解する9×9の行列
+ * @return Eigen::Matrix3d 基本行列
  */
 Eigen::Matrix3d CalcPointSet::calc_essential_matrix(Eigen::Matrix<double, 9, 9> &matrix_M)
 {
@@ -162,8 +162,8 @@ Eigen::Matrix3d CalcPointSet::calc_essential_matrix(Eigen::Matrix<double, 9, 9> 
 /**
  * @brief スケールを除いた並進ベクトルtを基本行列Eから求める
  *
- * @param matrix_E
- * @return Eigen::Vector3d
+ * @param matrix_E 基本行列
+ * @return Eigen::Vector3d 並進ベクトル
  */
 Eigen::Vector3d CalcPointSet::calc_translation_t(Eigen::Matrix3d &matrix_E)
 {
@@ -205,13 +205,14 @@ Eigen::Vector3d CalcPointSet::calc_translation_t(Eigen::Matrix3d &matrix_E)
 }
 
 /**
- * @brief 並進tの符号が異なってないかチェック
+ * @brief 並進tの符号が異なってないかチェック。合ってなければ符号を変える。
+ * TODO: 処理が合っているか分かってない。
  *
- * @param img_point
- * @param ply_point
- * @param vector_t
- * @param matrix_e
- * @return Eigen::Vector3d
+ * @param img_point 画像点の方向ベクトル
+ * @param ply_point ply点群
+ * @param vector_t 並進ベクトルt
+ * @param matrix_e 基本行列E
+ * @return Eigen::Vector3d 符号チェック後の並進ベクトル
  */
 Eigen::Vector3d CalcPointSet::check_sign_translation_t(
     PointSet &img_point,
@@ -250,7 +251,7 @@ Eigen::Vector3d CalcPointSet::check_sign_translation_t(
         }
     };
 
-    // TODO なんか最初のアクセスだけおかしい値が出るよなぁ
+    // TODO 最初のアクセスだけおかしい値が出る。
     for (img_itr = img_point.get_point_all().begin() + 1, ply_itr = ply_point.get_point_all().begin() + 1;
          img_itr != img_point.get_point_all().end();
          ++img_itr, ++ply_itr)
@@ -260,13 +261,13 @@ Eigen::Vector3d CalcPointSet::check_sign_translation_t(
 
         bool print_check = is_vector_in_front(img, ply);
 
-        if (is_vector_in_front(img, ply))
-        {
-            auto Ex = matrix_e * ply;
-            auto cross_M = img.cross(Ex);
-            check_sign += vector_t.dot(cross_M);
-            std::cout << "check_sign_NUM :" << vector_t.dot(cross_M) << std::endl;
-        }
+        // if (is_vector_in_front(img, ply))
+        // {
+        auto Ex = matrix_e * ply;
+        auto cross_M = img.cross(Ex);
+        check_sign += vector_t.dot(cross_M);
+        std::cout << "check_sign_NUM :" << vector_t.dot(cross_M) << std::endl;
+        // }
     }
 
     std::cout << "translation:: check_sign_sam: " << std::endl
@@ -298,9 +299,9 @@ Eigen::Vector3d CalcPointSet::check_sign_translation_t(
 /**
  * @brief 基本行列Eと並進ベクトルtから 回転行列R
  *
- * @param matrix_e
- * @param vector_t
- * @return Eigen::Matrix3d
+ * @param matrix_e 基本行列
+ * @param vector_t 並進ベクトル
+ * @return Eigen::Matrix3d 回転行列
  */
 Eigen::Matrix3d CalcPointSet::calc_rotation_matrix_from_essential_matrix(Eigen::Matrix3d &matrix_e, Eigen::Vector3d &vector_t)
 {
@@ -371,6 +372,10 @@ double CalcPointSet::calc_scale_of_translation_t(
               << "matrix_R:" << std::endl
               << matrix_R << std::endl;
 
+    /**
+     * @brief 並進と方向が一緒の場合を除くためにチェック
+     *
+     */
     auto is_cross_product_clone_to_zero = [](double calc_cross)
     {
         /**
@@ -389,7 +394,6 @@ double CalcPointSet::calc_scale_of_translation_t(
         }
     };
 
-    // TODO ここも並進tの符号計算と同じようにアクセスがおかしい場合がある。
     for (
         img_itr = img_point.get_point_all().begin() + 1, ply_itr = ply_point.get_point_all().begin() + 1;
         img_itr != img_point.get_point_all().end();
@@ -409,25 +413,19 @@ double CalcPointSet::calc_scale_of_translation_t(
             scale_point_num++;
         }
         // /** check 用
-        std::cout << "point:" << i++ << " " << scale_hat << std::endl;
-        std::cout << "img: " << std::endl
-                  << img << std::endl
-                  << "ply:" << std::endl
-                  << ply << std::endl;
-        std::cout << "fraction top: " << (matrix_R * ply).cross(img).dot(img.cross(vector_t)) << std::endl;
-        std::cout << "fraction bottom:" << img.cross(vector_t).squaredNorm() << std::endl;
-        std::cout << "scale_s_progress: " << scale_s << std::endl
-                  << std::endl;
+        // std::cout << "point:" << i++ << " " << scale_hat << std::endl;
+        // std::cout << "img: " << std::endl
+        //           << img << std::endl
+        //           << "ply:" << std::endl
+        //           << ply << std::endl;
+        // std::cout << "fraction top: " << (matrix_R * ply).cross(img).dot(img.cross(vector_t)) << std::endl;
+        // std::cout << "fraction bottom:" << img.cross(vector_t).squaredNorm() << std::endl;
+        // std::cout << "scale_s_progress: " << scale_s << std::endl
+        //           << std::endl;
         // */
     }
 
     scale_s /= double(scale_point_num);
-
-    // 測定誤差を考慮しないとき
-    // Eigen::Vector3d rx_cross_m = (matrix_R * ply_point.get_point(1)).cross(img_point.get_point(1));
-    // Eigen::Vector3d m_cross_t = img_point.get_point(1).cross(vector_t);
-
-    // double scale_s = rx_cross_m.dot(m_cross_t) / img_point.get_point(1).cross(vector_t).squaredNorm();
 
     std::cout << "scale_s" << std::endl
               << scale_s << std::endl
@@ -441,7 +439,7 @@ double CalcPointSet::calc_scale_of_translation_t(
  *  x_p = Rx
  * @param x 座標を合わせる(回転行列をかけて回転させる)点群。 plyfile
  * @param x_p 座標を合わせられる点群。 imgfile
- * @param weight
+ * @param weight よく分かってない
  * @return Eigen::Matrix3d
  */
 Eigen::Matrix3d CalcPointSet::calc_correlation_C(
@@ -536,7 +534,7 @@ Eigen::Matrix3d CalcPointSet::calc_rotation_matrix_from_correlation_c(Eigen::Mat
 /**
  * @brief 回転行列から回転軸と回転角を計算する
  *
- * @param matrix_R
+ * @param matrix_R 回転行列
  */
 void CalcPointSet::calc_rotation_axis_from_matrix_R(Eigen::Matrix3d &matrix_R)
 {
@@ -582,6 +580,7 @@ void CalcPointSet::calc_rotation_axis_from_matrix_R(Eigen::Matrix3d &matrix_R)
     double ny = vector_t(1);
     double nz = vector_t(2);
 
+    // ロドリゲスの式がうんたらかんたら
     double theta_rad = (matrix_R(0, 0) + matrix_R(1, 1) + matrix_R(2, 2) - (std::pow(nx, 2.0) + std::pow(ny, 2.0) + std::pow(nz, 2.0))) /
                        (3 - (std::pow(nx, 2.0) + std::pow(ny, 2.0) + std::pow(nz, 2.0)));
 
@@ -648,6 +647,13 @@ PointSet CalcPointSet::conversion_ply_to_img_point(PointSet &point_data)
     return img_point_data;
 }
 
+/**
+ * @brief Get the rand range object
+ *
+ * @param min_val 乱数の最小値
+ * @param max_val 乱数の最大値
+ * @return uint64_t 生成した乱数
+ */
 uint64_t get_rand_range(uint64_t min_val, uint64_t max_val)
 {
     // 乱数生成器
@@ -660,6 +666,13 @@ uint64_t get_rand_range(uint64_t min_val, uint64_t max_val)
     return get_rand_uni_int(mt64);
 }
 
+/**
+ * @brief ランダムな点番号を保存したpoint_dataを読み込み
+ *
+ * @param file_name point_filename
+ * @param dir_path point_fileのディレクトリ
+ * @param pickdata point_fileをベクターに格納したもの
+ */
 void load_ramdom_data(std::string file_name, std::string dir_path, std::vector<int> &pickdata)
 {
     std::fstream data_file;
@@ -707,7 +720,17 @@ void save_ramdom_pickup(std::string out_path, int pick_num, int pick_limit)
     }
 }
 
-// TODO ランダム生成して保存する場合と 生成したやつを読み込むものに分けたい。
+/**
+ * @brief シミュレーションデータ用にランダムに点をピックアップする。
+ * ピックアップした後、点番号を保存する。
+ * default_dirに保存したpoint_fileがあれば、そのデータを使用、なければ新しくピックアップする。
+ *
+ * @param point_data
+ * @param point_data2
+ * @param pickup_data
+ * @param pickup_data2
+ * @param default_dir_path
+ */
 void CalcPointSet::pickup_corresp_point(
     PointSet &point_data, PointSet &point_data2,
     PointSet &pickup_data, PointSet &pickup_data2,
@@ -719,8 +742,7 @@ void CalcPointSet::pickup_corresp_point(
 
     std::cout << "pickup_file exists: " << is_file_exists << std::endl;
 
-    // bool is_file_exists = true;
-
+    // ファイルがない場合 point_fileを作る。
     if (is_file_exists == false)
     {
         std::cout << "no pickup file -> make_point_data" << std::endl;
@@ -732,21 +754,15 @@ void CalcPointSet::pickup_corresp_point(
         save_ramdom_pickup(out_path, pickup_num, pickup_limit);
     }
 
+    // ファイルを読み込む
     std::vector<int> ramdom_pickup;
     load_ramdom_data("pickup_num.dat", default_dir_path, ramdom_pickup);
 
-    // 読み込む場合
+    // 読み込んだ点を格納
     for (const auto pick_num : ramdom_pickup)
     {
         std::cout << point_data.get_point(pick_num).transpose() << " " << std::endl;
         pickup_data.add_point(point_data.get_point(pick_num));
         pickup_data2.add_point(point_data2.get_point(pick_num));
     }
-
-    // 読み込まない場合
-    // for (int pick_num = 1; pick_num < int(point_data.get_point_num()); pick_num++)
-    // {
-    //     pickup_data.add_point(point_data.get_point(pick_num));
-    //     pickup_data2.add_point(point_data2.get_point(pick_num));
-    // }
 }

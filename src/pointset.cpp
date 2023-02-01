@@ -1,3 +1,7 @@
+/**
+ * @file pointset.cpp
+ * @brief 点群を扱うpointsetの実装
+ */
 #include "pointset.hpp"
 
 /**
@@ -13,6 +17,10 @@ void PointSet::print()
         std::cout << std::setprecision(15) << tmp.transpose() << std::endl;
     }
     std::cout << std::endl;
+    for (const auto &tmp : edge2)
+    {
+        std::cout << tmp.at(0) << " " << tmp.at(1) << std::endl;
+    }
 }
 
 /**
@@ -42,9 +50,3 @@ void PointSet::transform(Eigen::Vector3d transform_vec)
         tmp = transform_vec + tmp;
     }
 }
-
-// void PointSet::output(std::string filename = name)
-// {
-//     output_ply(this, default_dir_paht + filename + ".ply");
-//     // obj_io.output_ply(corresp_ply_point, default_dir_path + ".ply");
-// }

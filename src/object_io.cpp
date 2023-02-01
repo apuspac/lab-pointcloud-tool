@@ -1,11 +1,15 @@
+/**
+ * @file object_io.cpp
+ * @brief plyファイル 点データのIOの実装
+ */
 #include "object_io.hpp"
 
 /**
  * @brief オプション処理
  *
- * @param argc int main()の引数のargc
- * @param argv char* main()の引数のargv
- * @return int 正常終了したか // TODO 正常終了したかのチェックを作っていない
+ * @param argc main()の引数のargcを指定
+ * @param argv main()の引数のcharを指定
+ * @param operation PointOperationクラスの参照を指定。オプション処理により取得したファイル名などを格納するため
  */
 void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
 {
@@ -17,7 +21,7 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
     // d: デフォルトdirpath
     // h: help
     // 複数入力をさせたいけど ちょっと面倒っぽいので、 2回指定するときは、2回とも入力する。
-    const char *opt_string = "m:x:p:d:i:h";
+    const char *opt_string = "m:x:p:d:i:h:o";
 
     // オプション処理のlong用
     // {*name,  has_arg,    *flag,  val},
@@ -30,6 +34,7 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
             {"ply", required_argument, 0, 'p'},
             {"img", required_argument, 0, 'i'},
             {"dir", required_argument, 0, 'd'},
+            {"mode", required_argument, 0, 'o'},
             {"help", no_argument, 0, 'h'},
 
         };
@@ -43,23 +48,26 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
         switch (opt)
         {
         case 'm':
-            operation.add_corresp_img_file_name(std::string(optarg));
+            operation.set_corresp_img_file_name(std::string(optarg));
             break;
 
         case 'x':
-            operation.add_corresp_ply_file_name(std::string(optarg));
+            operation.set_corresp_ply_file_name(std::string(optarg));
             break;
             ;
         case 'p':
-            operation.add_plyfile_name(std::string(optarg));
+            operation.set_plyfile_name(std::string(optarg));
             break;
 
         case 'i':
-            operation.add_img_file_path(std::string(optarg));
+            operation.set_img_file_path(std::string(optarg));
             break;
 
         case 'd':
             operation.set_default_dir_path(std::string(optarg));
+            break;
+        case 'o':
+            operation.set_mode(std::string(optarg));
             break;
         case 'h':
             std::cout << "help" << std::endl
@@ -76,12 +84,49 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
 }
 
 /**
- * @brief plyファイルと その対応点を作る。
+ * @brief プロパティの数と一行をセパレートした数が一致するか
+ * @param size vector,arrayのsize()
+ * @param prop_num パラメータのサイズ
  *
- * @param file_name 入力plyファイル名
- * @param dir_path 入力plyファイルのあるディレクトリ
- * @param property_num plyファイルのパラメータの数。// TODO#と空白で区切った数で入力しているので、もしheader部分がプロパティの個数と一緒の区切り方をしてたら変更する
- * @param loaded_point_data PointSetクラス
+ */
+auto is_property_count_same = [](long unsigned int size, int prop_num)
+{
+    if (int(size) == prop_num)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+};
+
+/**
+ * @brief 文字が"#"かどうか判定
+ * @param buf_str 判定する文字
+ */
+auto is_first_sharp = [](std::string buf_str)
+{
+    if (buf_str == "#")
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+};
+
+/**
+ * @brief plyファイルを読み込む
+ *
+ * 空白で区切った数で点データかどうか判定をしているので、もしheader部分で、プロパティの個数と一緒のプロパティ数があれば、変更する
+ *
+ *
+ * @param file_name plyファイル名
+ * @param dir_path plyファイルのあるディレクトリ
+ * @param property_num plyファイルのパラメータの数。
+ * @param loaded_point_data 格納するPointSetクラス
  */
 void ObjectIO::load_ply_point_file(std::string file_name, std::string dir_path, int property_num, PointSet &loaded_point_data)
 {
@@ -124,47 +169,13 @@ void ObjectIO::load_ply_point_file(std::string file_name, std::string dir_path, 
             offset = pos + separator_length;
         }
 
-        // TODO 本当はplyファイルのheaderを認識して "end_header"から入力をしたい
-
-        /**
-         * @brief プロパティの数と一行をセパレートした値が一致するか
-         * @param size  :vector,arrayのsize()
-         * @param prop_num int パラメータのサイズ
-         *
-         */
-        auto is_property_count_same = [](long unsigned int size, int prop_num)
-        {
-            if (int(size) == prop_num)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        };
-
-        /**
-         * @brief 文字が"#"かどうか判定
-         * @param buf_str std::string 判定する文字
-         */
-        auto is_first_sharp = [](std::string buf_str)
-        {
-            if (buf_str == "#")
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        };
+        // TODO plyファイルのheaderを認識して "end_header"の次の行から入力をしたい
 
         // 分割したものから xyzを取り出す。
         if (is_property_count_same(buf_list.size(), property_num))
         {
             int i = 0;
-            // 最初
+
             if (!(is_first_sharp(buf_list.at(0))))
             {
                 std::array<double, 3> vec_data;
@@ -191,27 +202,45 @@ void ObjectIO::load_ply_point_file(std::string file_name, std::string dir_path, 
     }
 }
 
+/**
+ * @brief Get the img width height
+ *
+ * @param img_path 画像の相対パス
+ * @return std::array<double, 2> 画像の幅, 画像の高さの順に取得
+ */
 std::array<double, 2> get_img_width_height(std::string img_path)
 {
-    // 画像サイズが欲しいので 取ってくる。;
+    // 画像を取得
     cv::Mat img = cv::imread(img_path);
     if (img.empty())
     {
         std::cout << "couldn't read the image." << std::endl;
     }
 
+    // サイズを調べ格納。
+    std::array<double, 2> img_size = {double(img.cols), double(img.rows)};
+
     std::cout << std::endl
               << "img_size:height width" << std::endl;
     std::cout << img.rows << " " << img.cols << std::endl;
 
-    std::array<double, 2> img_size = {double(img.cols), double(img.rows)};
     return img_size;
 }
 
 /**
- * @brief 正距円筒から球の座標への変換
- * pointgetterからは、左上が原点の U,V座標で出力
+ * @brief 正距円筒図法から球の座標への変換
+ * 左上が原点の U,V座標で出力されてる前提
  *
+ */
+
+/**
+ * @brief 正距円筒図法(360度画像)の画素値から単位球に投影したとき方向ベクトルへ変換する。左上が原点でのuv座標形式の画素値が入力される前提。緯度経度を計算し、xyzに変換する。
+ *
+ * @param u 画素値の横座標
+ * @param v 画素値の縦座標
+ * @param img_width 360度画像の横
+ * @param img_height 360度画像の縦
+ * @return Eigen::Vector3d 変換したベクトルを返す
  */
 Eigen::Vector3d equirectangular_to_sphere(double u, double v, double img_width, double img_height)
 {
@@ -223,19 +252,19 @@ Eigen::Vector3d equirectangular_to_sphere(double u, double v, double img_width, 
     double phi = u * 2 * M_PI;
     double theta = v * M_PI;
 
-    // 方向ベクトル
+    // 方向ベクトルに変換
     Eigen::Vector3d p = {abs(sin(theta)) * sin(phi), abs(sin(theta)) * cos(phi), cos(theta)};
 
     return p;
 }
 
 /**
- * @brief imgファイルからの対応点の読み込み。方向ベクトルの変換
+ * @brief imgファイルから点の読み込み。方向ベクトルの変換処理も一緒に行う
  *
- * @param file_name
- * @param dir_path
- * @param img_path
- * @param loaded_point_data
+ * @param file_name img点のファイル名
+ * @param dir_path img点のファイルがあるディレクトリパス
+ * @param img_path 画像のファイルパス
+ * @param loaded_point_data 取得したpointを格納するPointset
  */
 void ObjectIO::load_img_point_file(std::string file_name, std::string dir_path, std::string img_path, PointSet &loaded_point_data)
 {
@@ -248,7 +277,10 @@ void ObjectIO::load_img_point_file(std::string file_name, std::string dir_path, 
     std::string separator = std::string(" ");
     auto separator_length = separator.length();
 
+    // 画像の縦横サイズを取得
     std::array<double, 2> img_size = get_img_width_height(img_path);
+
+    // 点群の読み込みとほぼ同じことをしているので、 ほんとは一緒にしたいが、PointSetを画像点も扱えるようにしないといけない。
 
     // getlineで1行ずつ処理する
     while (std::getline(data_file, one_line_buffer))
@@ -277,43 +309,7 @@ void ObjectIO::load_img_point_file(std::string file_name, std::string dir_path, 
             offset = pos + separator_length;
         }
 
-        // TODO 本当はplyファイルのheaderを認識して "end_header"から入力をしたい
-
-        /**
-         * @brief プロパティの数と一行をセパレートした値が一致するか
-         * @param size  :vector,arrayのsize()
-         * @param prop_num int パラメータのサイズ
-         *
-         */
-        auto is_property_count_same = [](long unsigned int size, int prop_num)
-        {
-            if (int(size) == prop_num)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        };
-
-        /**
-         * @brief 文字が"#"かどうか判定
-         * @param buf_str std::string 判定する文字
-         */
-        auto is_first_sharp = [](std::string buf_str)
-        {
-            if (buf_str == "#")
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        };
-
-        // img ファイルは2
+        // img ファイルは2固定
         int property_num = 2;
 
         // 分割したものから xyzを取り出す。
@@ -340,109 +336,86 @@ void ObjectIO::load_img_point_file(std::string file_name, std::string dir_path, 
                         std::cout << "Out of range" << std::endl;
                     }
                 }
+                // 変換する処理をはさんで格納
                 loaded_point_data.add_point(equirectangular_to_sphere(vec_data.at(0), vec_data.at(1), img_size.at(0), img_size.at(1)));
             }
         }
     }
 }
 
+/**
+ * @brief PointSetをplyファイルに書き込み、出力する
+ *
+ * @param point_data 出力するpointsetオブジェクト
+ * @param out_path 出力する場所のパス
+ */
 void ObjectIO::output_ply(PointSet &point_data, std::string out_path)
 {
     // std::ios::app : 追記
     // std::ios::out : 書き込み
     std::ofstream output_ply(out_path, std::ios::out);
 
-    output_ply << "ply" << std::endl
-               << "format ascii 1.0" << std::endl
-               << "element vertex " << point_data.get_point_num() << std::endl
-               << "property float x" << std::endl
-               << "property float y" << std::endl
-               << "property float z" << std::endl
-               << "end_header" << std::endl;
-
-    for (const Eigen::Vector3d &tmp : point_data.get_point_all())
+    if (point_data.get_edge_num() > 0)
     {
-        output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
+        // edgeがある場合
+        output_ply << "ply" << std::endl
+                   << "format ascii 1.0" << std::endl
+                   << "element vertex " << point_data.get_point_num() << std::endl
+                   << "property float x" << std::endl
+                   << "property float y" << std::endl
+                   << "property float z" << std::endl
+                   << "element edge " << point_data.get_edge_num() << std::endl
+                   << "property int vertex1" << std::endl
+                   << "property int vertex2" << std::endl
+                   << "end_header" << std::endl;
+
+        for (const Eigen::Vector3d &tmp : point_data.get_point_all())
+        {
+            output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
+        }
+
+        for (const auto &tmp : point_data.get_edge_all())
+        {
+            output_ply << tmp.at(0) << " " << tmp.at(1) << std::endl;
+        }
     }
-}
-
-void ObjectIO::output_ply_with_line(PointSet &point_data, std::string out_path)
-{
-    // std::ios::app : 追記
-    // std::ios::out : 書き込み
-    std::ofstream output_ply(out_path, std::ios::out);
-
-    output_ply << "ply" << std::endl
-               << "format ascii 1.0" << std::endl
-               << "element vertex " << point_data.get_point_num() * 2 + 1 << std::endl
-               << "property float x" << std::endl
-               << "property float y" << std::endl
-               << "property float z" << std::endl
-               << "element edge " << point_data.get_point_num() << std::endl
-               << "property int vertex1" << std::endl
-               << "property int vertex2" << std::endl
-               << "end_header" << std::endl
-               << "0 0 0" << std::endl;
-
-    for (const Eigen::Vector3d &tmp : point_data.get_point_all())
+    else
     {
-        output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
-    }
+        // edgeがない場合
+        output_ply << "ply" << std::endl
+                   << "format ascii 1.0" << std::endl
+                   << "element vertex " << point_data.get_point_num() << std::endl
+                   << "property float x" << std::endl
+                   << "property float y" << std::endl
+                   << "property float z" << std::endl
+                   << "end_header" << std::endl;
 
-    // lineを引くための点を追加
-    for (const Eigen::Vector3d &tmp : point_data.get_point_all())
-    {
-        Eigen::Vector3d tmp_normalize = tmp.normalized();
-        double theta = std::acos(
-            tmp_normalize(2) /
-            std::sqrt(std::pow(tmp_normalize(0), 2.0) + std::pow(tmp_normalize(1), 2.0) + std::pow(tmp_normalize(2), 2.0)));
-
-        double phi = std::atan2(tmp_normalize(1), tmp_normalize(0));
-        double r = 20.0;
-
-        Eigen::Vector3d tmp_vec = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
-
-        output_ply << tmp_vec(0) << " " << tmp_vec(1) << " " << tmp_vec(2) << std::endl;
-    }
-
-    //原点0と line を引くための点とでedgeを結ぶ
-    for (long unsigned int i = point_data.get_point_num() + 1; i < point_data.get_point_num() * 2 + 1; i++)
-    {
-        output_ply << 0 << " " << i << std::endl;
+        for (const Eigen::Vector3d &tmp : point_data.get_point_all())
+        {
+            output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
+        }
     }
 }
 
 /**
- *     Eigen::Vector3d origin = {0, 0, 0};
-    plot_point.push_back(origin);
-
-    for (Eigen::Vector3d &tmp_point : point_data)
-    {
-        // rだけ変化させればいいかなと思うので、極座標を扱う。
-        // 極角, 方位角を先に出す。
-        Eigen::Vector3d tmp_normalize;
-        tmp_normalize = tmp_point.normalized();
-
-        double theta = std::acos(
-            tmp_normalize(2) /
-            std::sqrt(std::pow(tmp_normalize(0), 2.0) + std::pow(tmp_normalize(1), 2.0) + std::pow(tmp_normalize(2), 2.0)));
-
-        double phi = std::atan2(tmp_normalize(1), tmp_normalize(0));
-
-        // rを変化させながらplot
-        // 原点はplotしてある
-        double r_init = 0.15;
-        double r_limit = 10.0;
-        double r_step = 0.15;
-        for (double r = 0.15; r < r_limit; r += r_step)
-        {
-            Eigen::Vector3d tmp = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
-            plot_point.push_back(tmp);
-        }
-    }
+ * @brief 原点から距離を伸ばした位置の点を計算
+ * 極座標変換をし、距離rから 伸ばした距離の位置を計算。
  *
+ * @param point 計算する点
+ * @param range 原点からの距離
+ * @return Eigen::Vector3d
  */
-void ObjectIO::print()
+Eigen::Vector3d ObjectIO::extend_distance_from_point_and_origin(Eigen::Vector3d point, double range)
 {
-    std::cout << "operation load" << std::endl;
+    Eigen::Vector3d tmp_normalize = point.normalized();
+
+    double theta = std::acos(
+        tmp_normalize(2) /
+        std::sqrt(std::pow(tmp_normalize(0), 2.0) + std::pow(tmp_normalize(1), 2.0) + std::pow(tmp_normalize(2), 2.0)));
+    double phi = std::atan2(tmp_normalize(1), tmp_normalize(0));
+    double r = range;
+
+    Eigen::Vector3d extend_point = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
+
+    return extend_point;
 }

@@ -1,0 +1,1 @@
+./Rotation --ply scene.ply --img_cp img.dat --img ../../img/kyoiku.JPG --dir ../../ply_data/capture_segmentation/ >! ../../ply_data/capture_segmentation/out.dat
