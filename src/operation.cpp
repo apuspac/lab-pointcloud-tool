@@ -318,10 +318,10 @@ void PointOperation::Rotation_only_simulation()
     calc.calc_rotation_axis_from_matrix_R(matrix_R);
 
     // 求めた回転並進を適用
-    ply_point.rotate(matrix_R);
+    corresp_ply_point.rotate(matrix_R);
 
     // 出力
-    obj_io.output_ply(ply_point, default_dir_path + ply_point.get_name() + ".ply");
+    obj_io.output_ply(corresp_ply_point, default_dir_path + corresp_ply_point.get_name() + ".ply");
 }
 
 /**
@@ -404,7 +404,7 @@ void PointOperation::capture_segmentation_point()
     capbox.capture_segmentation_angle(ply_point, capture_ply, segmentation_point, segline_point);
 
     obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
-    obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
+    obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
 }
 
 /**
