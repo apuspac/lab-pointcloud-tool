@@ -1,5 +1,17 @@
 #include "capture_boxpoint.hpp"
 
+/**
+ * @brief 対象点がpointが3角形の中に入っているかどうかを判定する。 内外判定
+ * https://shikousakugo.wordpress.com/2012/06/27/ray-intersection-2/
+ * (使っていない)
+ *
+ * @param target_point
+ * @param tri_0
+ * @param tri_1
+ * @param tri_2
+ * @return true
+ * @return false
+ */
 bool check_point_in_polygon(Eigen::Vector3d target_point, Eigen::Vector3d tri_0, Eigen::Vector3d tri_1, Eigen::Vector3d tri_2)
 {
     // Eigen::Vector3d target_point = {2, 2, 2};
@@ -75,6 +87,14 @@ bool check_point_in_polygon(Eigen::Vector3d target_point, Eigen::Vector3d tri_0,
     return flag;
 }
 
+/**
+ * @brief バウンディングボックスを追加。 TODO: Setbboxはbboxクラスに実装すべき
+ *
+ * @param xmin
+ * @param ymin
+ * @param xmax
+ * @param ymax
+ */
 void CaptureBoxPoint::set_bbox(double xmin, double ymin, double xmax, double ymax)
 {
     // "xmin":62.5458488464 "ymin":135.1288757324, "xmax":206.3257598877, "ymax":380.7976074219,
@@ -87,7 +107,7 @@ void CaptureBoxPoint::set_bbox(double xmin, double ymin, double xmax, double yma
 
 /**
  * @brief バウンディングボックス内の点群を抽出する
- * TODO: バウンディングボックスのクラスを使ってない。
+
  *
  * @param plypoint 抽出対象の点群
  * @param capture_point 抽出した点群を格納する
@@ -100,53 +120,10 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
 
     std::cout << bbox_point_with_line.get_name() << std::endl;
 
-    // Eigen::Vector3d target_point_1 = {2, 2, 2};
-    // Eigen::Vector3d tri_0_1 = {1, 0, 0};
-    // Eigen::Vector3d tri_1_1 = {0, 1, 0};
-    // Eigen::Vector3d tri_2_1 = {0, 0, 1};
-    // std::cout << check_point_in_polygon(target_point_1, tri_0_1, tri_1_1, tri_2_1) << std::endl;
-
-    // ここから別
-
     // BBOX
     std::vector<Eigen::Vector3d> box;
 
-    // test
-    // Eigen::Vector3d box_0 = {1.0, 0, 0};
-    // Eigen::Vector3d box_1 = {0, 1.0, 0};
-    // Eigen::Vector3d box_2 = {1.0, 0, 1.0};
-    // Eigen::Vector3d box_3 = {0, 1.0, 1.0};
-
-    // Eigen::Vector3d box_0 = {-5.104841, -0.264854, -0.432836};
-    // Eigen::Vector3d box_1 = {-5.250792, -2.375239, -0.737240};
-    // Eigen::Vector3d box_2 = {-5.079898, -0.111731, 1.998436};
-    // Eigen::Vector3d box_3 = {-5.252830, -2.340908, 1.711119};
-
-    // Eigen::Vector3d box_0 = {0.0180694246632902, -0.989178343801835, 0.145601167735005};
-    // Eigen::Vector3d box_1 = {0.200924346436544, -0.969558093056052, 0.139951817417851};
-    // Eigen::Vector3d box_2 = {0.020467338986129, -0.896302221800321, 0.442971122343923};
-    // Eigen::Vector3d box_3 = {0.188935604690031, -0.87640168989441, 0.442971122343923};
-
-    /**
-0.0180694246632902 -0.989178343801835  0.145601167735005
- 0.200924346436544 -0.969558093056052  0.139951817417851
- 0.020467338986129 -0.896302221800321  0.442971122343923
-0.188935604690031 -0.87640168989441 0.442971122343923
-
-  0.90092454372665 -0.433681410566534  0.015981259022634
- 0.987333027171734 -0.156840374815621 0.0239706129165579
- 0.861291266136286 -0.417027770092863  0.290284677254462
- 0.933123850478427 -0.164656951975056  0.319637244129339
-
- -0.989208551514083, 0.0701305152071164,  0.128639622388256
- -0.98087710188616, -0.139782275846257,  0.135429045461631
--0.888296004751992, 0.0609382953025009,   0.45521064586329
--0.881478072948008, -0.125617175595506 ,  0.45521064586329
-
--0.989327229032126, 0.0565305750745415,  0.134297907568797
- -0.989431308208918, -0.0599367711367848,   0.132035108216282
-     */
-
+    // TODO: バウンディングボックスのクラスを使ってない
     Eigen::Vector3d box_0 = {-0.989327229032126, 0.0565305750745415, 0.134297907568797};
     Eigen::Vector3d box_1 = {-0.989431308208918, -0.0599367711367848, 0.132035108216282};
     Eigen::Vector3d box_2 = {-0.914145863707222, 0.0553762054667961, 0.401585377890028};
