@@ -64,7 +64,12 @@
         "optional": "cpp",
         "cinttypes": "cpp",
         "svd": "cpp",
-        "codecvt": "cpp"
+        "codecvt": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "bitset": "cpp",
+        "forward_list": "cpp",
+        "regex": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled",
     "cmake.configureOnOpen": false
