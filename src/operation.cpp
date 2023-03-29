@@ -12,7 +12,7 @@ void PointOperation::mode_select()
 {
     // switch case を使わない試み
     // https://yutamano.hatenablog.com/entry/2013/11/18/161234
-    std::cout << "mode select";
+    std::cout << "mode select" << std::endl;
     switch_func[0] = std::bind(&PointOperation::transform_rotate, this);
     switch_func[1] = std::bind(&PointOperation::transform_rotate_simulation, this);
     switch_func[2] = std::bind(&PointOperation::Rotation_only, this);
@@ -36,6 +36,7 @@ void PointOperation::mode_select()
  *              --ply_cp plyfile.dat
  *              --img_cp img.dat
  *              --ply plyname.ply
+ *              --img ../../img/kyoiku.JPG
  *              --dir ../../ply_data/transform_rotate/
  *              >! ../../ply_data/transform_rotate/out.dat
  *
@@ -108,7 +109,7 @@ void PointOperation::transform_rotate()
     ply_point.rotate(matrix_R);
     ply_point.transform(translation_vector);
 
-    obj_io.output_ply(ply_point, default_dir_path + ply_point.get_name() + ".ply");
+    obj_io.output_ply(ply_point, default_dir_path + "match-" + ply_point.get_name() + ".ply");
 }
 
 /**
@@ -124,6 +125,7 @@ void PointOperation::transform_rotate()
  *              --ply_cp plyfile.dat
  *              --ply_cp img.dat
  *              --ply plyname.ply
+ *              --img ../../img/kyoiku.JPG
  *              --dir ../../ply_data/transform_rotate_sim/
  *              >! ../../ply_data/transform_rotate_sim/out.dat
  *
@@ -223,6 +225,7 @@ void PointOperation::transform_rotate_simulation()
  *              --ply_cp plyfile.dat
  *              --ply_cp img.dat
  *              --ply plyname.ply
+ *              --img ../../img/kyoiku.JPG
  *              --dir ../../ply_data/rotate/
  *              >! ../../ply_data/rotate/out.dat
  *
@@ -279,6 +282,7 @@ void PointOperation::Rotation_only()
  *              --ply_cp plyfile.dat
  *              --ply_cp img.dat
  *              --ply plyname.ply
+ *              --img ../../img/kyoiku.JPG
  *              --dir ../../ply_data/transform_rotate_sim/
  *              >! ../../ply_data/transform_rotate_sim/out.dat
  *
@@ -332,6 +336,7 @@ void PointOperation::Rotation_only_simulation()
  * ./Rotation   --mode 4
  *              --img_cp img.dat
  *              --ply ply_data_name.ply
+ *              --img ../../img/kyoiku.JPG
  *              --dir ../../ply_data/capture_bbox/
  *              >! ../../ply_data/capture_bbox/out.dat
  *
@@ -345,7 +350,7 @@ void PointOperation::capture_boxpoint()
     // load plydata
     PointSet ply_point("plydata");
     // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
 
     // load bbox
     PointSet bbox_img_point("corresp_imgpoint");
@@ -355,7 +360,7 @@ void PointOperation::capture_boxpoint()
     CaptureBoxPoint capbox;
 
     // 抽出したポイントを格納
-    PointSet capture_ply("capture_boxpoint");
+    PointSet capture_ply("capture_bbox_point");
     // バウンディングボックス描画用
     PointSet bbox_point("bbox");
     capbox.capture_bbox(ply_point, capture_ply, bbox_img_point, bbox_point);
@@ -388,7 +393,7 @@ void PointOperation::capture_segmentation_point()
     // load plypoint
     PointSet ply_point("plydata");
     // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
 
     // load segmentation data
     PointSet segmentation_point("corresp_imgpoint");
