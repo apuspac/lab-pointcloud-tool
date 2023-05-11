@@ -1,1 +1,0 @@
- ./Rotation --ply_cp lidar.dat --ply_cp img.dat --dir ../../ply_data/cube-t230-r001d30/ >! ../../ply_data/cube-t230-r001d30/out.dat

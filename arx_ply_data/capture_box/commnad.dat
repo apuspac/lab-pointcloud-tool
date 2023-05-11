@@ -1,0 +1,2 @@
+./Rotation --ply scene.ply --dir ../../ply_data/capture_box/ >! ../../ply_data/capture_box/out.dat
+./Rotation --ply kyoiku.ply --img_cp img.dat --img ../../img/kyoiku.JPG --dir ../../ply_data/capture_box/ >! ../../ply_data/capture_box/out.dat

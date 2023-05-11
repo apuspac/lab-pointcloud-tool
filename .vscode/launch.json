@@ -9,7 +9,19 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/src/build/Rotation",
-            "args": [],
+            "args": [
+                // デバッグするときはここにオプションを書いて、実行する。
+                "--img_cp",
+                "img.dat",
+                "--ply_cp",
+                "ply.dat",
+                "--ply",
+                "kyoiku.ply",
+                "--img",
+                "../../img/kyoiku.JPG",
+                "--dir",
+                "../../ply_data/test_idou/"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

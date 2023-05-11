@@ -1,0 +1,225 @@
+
+default_dir_path: ../../ply_data/less_grid_3/
+
+corresp_img_file_name: 
+
+corresp_ply_file_name: 
+s10-t550-r001-d30.dat
+s10.dat
+
+img_file_path: 
+
+ply_file_path: 
+transform_rotate_simulation::
+Point: corresp_plypoint
+-1.83012701892219 -6.83012701892219               -10
+-1.83012701892219 -6.83012701892219                 0
+-1.83012701892219 -6.83012701892219                10
+-6.83012701892219  1.83012701892219               -10
+-6.83012701892219  1.83012701892219                 0
+-6.83012701892219  1.83012701892219                10
+-11.8301270189222  10.4903810567666               -10
+-11.8301270189222  10.4903810567666                 0
+-11.8301270189222  10.4903810567666                10
+ 6.83012701892219 -1.83012701892219               -10
+ 6.83012701892219 -1.83012701892219                 0
+ 6.83012701892219 -1.83012701892219                10
+1.83012701892219 6.83012701892219              -10
+1.83012701892219 6.83012701892219               10
+-3.16987298107781  15.4903810567666               -10
+-3.16987298107781  15.4903810567666                 0
+-3.16987298107781  15.4903810567666                10
+15.4903810567666 3.16987298107781              -10
+15.4903810567666 3.16987298107781                0
+15.4903810567666 3.16987298107781               10
+10.4903810567666 11.8301270189222              -10
+10.4903810567666 11.8301270189222                0
+10.4903810567666 11.8301270189222               10
+5.49038105676658 20.4903810567666              -10
+5.49038105676658 20.4903810567666                0
+5.49038105676658 20.4903810567666               10
+
+Point: corresp_imgpoint
+-10 -10 -10
+-10 -10   0
+-10 -10  10
+-10   0 -10
+-10   0   0
+-10   0  10
+-10  10 -10
+-10  10   0
+-10  10  10
+  0 -10 -10
+  0 -10   0
+  0 -10  10
+  0   0 -10
+ 0  0 10
+  0  10 -10
+ 0 10  0
+ 0 10 10
+ 10 -10 -10
+ 10 -10   0
+ 10 -10  10
+ 10   0 -10
+10  0  0
+10  0 10
+ 10  10 -10
+10 10  0
+10 10 10
+
+pickup point :
+Point: pickup_img
+
+Point: pickup_ply
+
+Point: conversion_unit_sphere
+
+理論値
+0.866025403784439                 0               0.5
+                0                 1                 0
+             -0.5                 0 0.866025403784439
+
+create xi:
+Point: conversion_unit_sphere
+
+vector_xi.transpose() :
+
+----calc_matrix_M
+Matrix_M:
+1 0 0 0 0 0 0 0 0
+0 1 0 0 0 0 0 0 0
+0 0 1 0 0 0 0 0 0
+0 0 0 1 0 0 0 0 0
+0 0 0 0 1 0 0 0 0
+0 0 0 0 0 1 0 0 0
+0 0 0 0 0 0 1 0 0
+0 0 0 0 0 0 0 1 0
+0 0 0 0 0 0 0 0 1
+
+Essential_Matrix:: Matrix M Eigenvalue :
+1
+1
+1
+1
+1
+1
+1
+1
+1
+
+Essential_Matrix:: Matrix M EigenVector: 
+1 0 0 0 0 0 0 0 0
+0 1 0 0 0 0 0 0 0
+0 0 1 0 0 0 0 0 0
+0 0 0 1 0 0 0 0 0
+0 0 0 0 1 0 0 0 0
+0 0 0 0 0 1 0 0 0
+0 0 0 0 0 0 1 0 0
+0 0 0 0 0 0 0 1 0
+0 0 0 0 0 0 0 0 1
+
+Essential_Matrix:: min_eigen
+1
+
+Essential_Matrix:: min_eigenvector
+1
+0
+0
+0
+0
+0
+0
+0
+0
+
+Essential Matrix:
+1 0 0
+0 0 0
+0 0 0
+
+
+Translation:: E * E.t Eigenvalue :
+0
+0
+1
+
+Translation:: E * E.t Eigenvec :
+0 0 1
+1 0 0
+0 1 0
+
+Translation:: E * E.t min_eigen
+0
+
+Translation:: E * E.t min_eigenvector
+0
+1
+0
+
+Translation:: diff scale
+0
+1
+0
+
+-----check sign translation t
+translation:: check_sign: 
+0
+
+translation:: change_sign
+-0
+-1
+-0
+
+translation_t_cross: 
+ 0  0 -1
+-0  0  0
+ 1 -0  0
+
+Matrix_R calc from matrix_E: 
+ 0  0  1
+ 0  1  0
+-1  0  0
+
+calc scale: 
+vector_t: 
+-0
+-1
+-0
+matrix_R:
+ 0  0  1
+ 0  1  0
+-1  0  0
+scale_s
+-nan
+
+----RESULT
+Essential Matrix:
+1 0 0
+0 0 0
+0 0 0
+
+Rotation Matrix:
+ 0  0  1
+ 0  1  0
+-1  0  0
+
+scale
+-nan
+
+translation Vector: 
+-nan
+-nan
+-nan
+
+Rotation_axis
+0
+1
+0
+
+Rotation_degree: 
+90
+
+corresp_plypoint point_rotated: 0  0  1
+ 0  1  0
+-1  0  0
+corresp_plypoint point_transformed:-nan -nan -nan
