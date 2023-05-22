@@ -73,5 +73,5 @@
     },
     "C_Cpp.errorSquiggles": "Disabled",
     "cmake.configureOnOpen": false,
-    "cmake.sourceDirectory": "/media/cafelatte/Lab1/workspace/coordinate_transform/src"
+    "cmake.sourceDirectory": "/home/cafe/workspace/coordinate-transform/src"
 }

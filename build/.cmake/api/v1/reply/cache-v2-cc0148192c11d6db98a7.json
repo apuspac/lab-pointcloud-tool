@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/media/cafelatte/Lab1/workspace/coordinate_transform/build"
+			"value" : "/home/cafe/workspace/coordinate-transform/build"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -79,7 +79,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "22"
+			"value" : "16"
 		},
 		{
 			"name" : "CMAKE_CACHE_PATCH_VERSION",
@@ -91,7 +91,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "1"
+			"value" : "3"
 		},
 		{
 			"name" : "CMAKE_COLOR_MAKEFILE",
@@ -175,7 +175,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/usr/bin/gcc-ar-11"
+			"value" : "/usr/bin/gcc-ar-9"
 		},
 		{
 			"name" : "CMAKE_CXX_COMPILER_RANLIB",
@@ -191,7 +191,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/usr/bin/gcc-ranlib-11"
+			"value" : "/usr/bin/gcc-ranlib-9"
 		},
 		{
 			"name" : "CMAKE_CXX_FLAGS",
@@ -303,7 +303,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/usr/bin/gcc-ar-11"
+			"value" : "/usr/bin/gcc-ar-9"
 		},
 		{
 			"name" : "CMAKE_C_COMPILER_RANLIB",
@@ -319,7 +319,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/usr/bin/gcc-ranlib-11"
+			"value" : "/usr/bin/gcc-ranlib-9"
 		},
 		{
 			"name" : "CMAKE_C_FLAGS",
@@ -514,6 +514,10 @@
 			"properties" : 
 			[
 				{
+					"name" : "ADVANCED",
+					"value" : "1"
+				},
+				{
 					"name" : "HELPSTRING",
 					"value" : "No help, variable specified on the command line."
 				}
@@ -591,7 +595,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/media/cafelatte/Lab1/workspace/coordinate_transform/src"
+			"value" : "/home/cafe/workspace/coordinate-transform/src"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -647,7 +651,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/usr/bin/gmake"
+			"value" : "/usr/bin/make"
 		},
 		{
 			"name" : "CMAKE_MODULE_LINKER_FLAGS",
@@ -879,7 +883,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/usr/share/cmake-3.22"
+			"value" : "/usr/share/cmake-3.16"
 		},
 		{
 			"name" : "CMAKE_SHARED_LINKER_FLAGS",
@@ -1118,78 +1122,6 @@
 			"value" : "FALSE"
 		},
 		{
-			"name" : "FETCHCONTENT_BASE_DIR",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Directory under which to collect all populated content"
-				}
-			],
-			"type" : "PATH",
-			"value" : "/media/cafelatte/Lab1/workspace/coordinate_transform/build/_deps"
-		},
-		{
-			"name" : "FETCHCONTENT_FULLY_DISCONNECTED",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Disables all attempts to download or update content and assumes source dirs already exist"
-				}
-			],
-			"type" : "BOOL",
-			"value" : "OFF"
-		},
-		{
-			"name" : "FETCHCONTENT_QUIET",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Enables QUIET option for all content population"
-				}
-			],
-			"type" : "BOOL",
-			"value" : "ON"
-		},
-		{
-			"name" : "FETCHCONTENT_SOURCE_DIR_RAPIDJSON",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "When not empty, overrides where to find pre-populated content for rapidjson"
-				}
-			],
-			"type" : "PATH",
-			"value" : ""
-		},
-		{
-			"name" : "FETCHCONTENT_UPDATES_DISCONNECTED",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Enables UPDATE_DISCONNECTED behavior for all content population"
-				}
-			],
-			"type" : "BOOL",
-			"value" : "OFF"
-		},
-		{
-			"name" : "FETCHCONTENT_UPDATES_DISCONNECTED_RAPIDJSON",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Enables UPDATE_DISCONNECTED behavior just for population of rapidjson"
-				}
-			],
-			"type" : "BOOL",
-			"value" : "OFF"
-		},
-		{
 			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_OpenCV",
 			"properties" : 
 			[
@@ -1199,23 +1131,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "[/usr][v4.5.4()]"
-		},
-		{
-			"name" : "GIT_EXECUTABLE",
-			"properties" : 
-			[
-				{
-					"name" : "ADVANCED",
-					"value" : "1"
-				},
-				{
-					"name" : "HELPSTRING",
-					"value" : "Git command line client"
-				}
-			],
-			"type" : "FILEPATH",
-			"value" : "/usr/bin/git"
+			"value" : "[/usr][v4.2.0()]"
 		},
 		{
 			"name" : "OpenCV_DIR",
@@ -1239,19 +1155,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/media/cafelatte/Lab1/workspace/coordinate_transform/build"
-		},
-		{
-			"name" : "Rotation_IS_TOP_LEVEL",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Value Computed by CMake"
-				}
-			],
-			"type" : "STATIC",
-			"value" : "ON"
+			"value" : "/home/cafe/workspace/coordinate-transform/build"
 		},
 		{
 			"name" : "Rotation_SOURCE_DIR",
@@ -1263,7 +1167,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/media/cafelatte/Lab1/workspace/coordinate_transform/src"
+			"value" : "/home/cafe/workspace/coordinate-transform/src"
 		}
 	],
 	"kind" : "cache",

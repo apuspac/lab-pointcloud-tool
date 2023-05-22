@@ -6,7 +6,6 @@
 			[
 				{
 					"build" : ".",
-					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
 					"minimumCMakeVersion" : 
 					{
 						"string" : "3.1"
@@ -39,7 +38,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "Rotation::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-Rotation-Debug-3703b350cd9eb62145c6.json",
+					"jsonFile" : "target-Rotation-Debug-295983b91ce22e88491b.json",
 					"name" : "Rotation",
 					"projectIndex" : 0
 				}
@@ -49,12 +48,12 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "/media/cafelatte/Lab1/workspace/coordinate_transform/build",
-		"source" : "/media/cafelatte/Lab1/workspace/coordinate_transform/src"
+		"build" : "/home/cafe/workspace/coordinate-transform/build",
+		"source" : "/home/cafe/workspace/coordinate-transform/src"
 	},
 	"version" : 
 	{
 		"major" : 2,
-		"minor" : 3
+		"minor" : 0
 	}
 }
