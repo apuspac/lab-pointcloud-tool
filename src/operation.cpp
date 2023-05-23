@@ -19,7 +19,7 @@ void PointOperation::mode_select()
     switch_func[3] = std::bind(&PointOperation::Rotation_only_simulation, this);
     switch_func[4] = std::bind(&PointOperation::capture_boxpoint, this);
     switch_func[5] = std::bind(&PointOperation::capture_segmentation_point, this);
-
+    switch_func[6] = std::bind(&PointOperation::capture_pointset, this);
     switch_func[get_mode()]();
 }
 
@@ -412,6 +412,40 @@ void PointOperation::capture_segmentation_point()
     obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
 }
 
+void PointOperation::capture_pointset()
+{
+    std::cout << "capture boxpoint" << std::endl;
+    ObjectIO obj_io;
+
+    // load plydata
+    PointSet ply_point("plydata");
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
+
+    // load bbox ここにjsonファイルのクラスのインスタンスを宣言
+    // objectIOに jsonデータ格納のプログラムを作る
+    BBox bbox_sample(1.0, 2.0, 3.0, 4.0);
+    bbox_sample.set_class_name("box_front");
+    BBoxData bbox_img;
+    bbox_img.set_bbox(bbox_sample);
+
+    DetectionData detect;
+    detect.set_bbox_data(bbox_img);
+
+    // img print
+    BBoxData test_print = detect.get_bbox_data().at(0);
+    BBox test_print_bbox = test_print.get_bbox_all().at(0);
+    test_print_bbox.print();
+
+    CaptureBoxPoint capbox;
+
+    // 抽出したポイントを格納 (とりあえず、別々に出力)
+    PointSet capture_ply("capture_bbox_point");
+    PointSet bbox_point("bbox");
+
+    // capbox.capture_bbox(ply_point, capture_ply, bbox_point, bbox_point);
+
+    // バウンディングボックス 描画用
+}
 /**
  * @brief 読み込むファイル名, pathをprintする
  *

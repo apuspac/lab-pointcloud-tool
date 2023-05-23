@@ -1,5 +1,20 @@
 #include "capture_boxpoint.hpp"
 
+void BBox::print()
+{
+    // std::cout << class_num << " " << class_name << std::endl;
+    std::cout << class_name << std::endl;
+    std::cout << xmin << " " << ymin << " " << xmax << " " << ymax << std::endl;
+}
+
+void Mask::print()
+{
+    for (const auto uv : mask_uv)
+    {
+        std::cout << uv.at(0) << " " << uv.at(1) << std::endl;
+    }
+}
+
 /**
  * @brief 対象点がpointが3角形の中に入っているかどうかを判定する。 内外判定
  * https://shikousakugo.wordpress.com/2012/06/27/ray-intersection-2/

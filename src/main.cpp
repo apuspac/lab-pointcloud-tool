@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     PointOperation opt;
     ObjectIO::option_process(argc, argv, opt);
     opt.print();
-    // opt.mode_select();
+    opt.mode_select();
 
     // jsonファイル読みこみ
     FILE *fp = fopen("data/detections.json", "r");
@@ -50,12 +50,12 @@ int main(int argc, char *argv[])
 
     for (const auto &detect_img : merge_data.GetArray())
     {
-        std::cout << detect_img["file_name"].GetString() << std::endl;
+        // std::cout << detect_img["file_name"].GetString() << std::endl;
         const rapidjson::Value &bbox_info = detect_img["bbox_info"].GetArray();
 
         for (const auto &bbox : bbox_info.GetArray())
         {
-            std::cout << bbox["xmin"].GetDouble() << std::endl;
+            // std::cout << bbox["xmin"].GetDouble() << std::endl;
         }
     }
 

@@ -72,6 +72,7 @@ public:
     void Rotation_only_simulation();
     void capture_boxpoint();
     void capture_segmentation_point();
+    void capture_pointset();
 
     // switch文回避のための map
     // typedef void (PointOperation::*mode_func)();
