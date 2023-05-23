@@ -175,28 +175,43 @@ void ObjectIO::load_ply_point_file(std::string file_name, std::string dir_path, 
         if (is_property_count_same(buf_list.size(), property_num))
         {
             int i = 0;
+            bool not_string_flag = true;
 
             if (!(is_first_sharp(buf_list.at(0))))
             {
                 std::array<double, 3> vec_data;
                 for (auto one_point_data : buf_list)
                 {
+                    double num;
+
                     try
                     {
                         // vec_data.push_back(std::stod(e));
-                        vec_data[i++] = std::stod(one_point_data);
+                        num = std::stod(one_point_data);
                     }
                     catch (const std::invalid_argument &e)
                     {
                         std::cout << "invalid argument" << std::endl;
+                        not_string_flag = false;
                     }
                     catch (const std::out_of_range &e)
                     {
                         std::cout << "Out of range" << std::endl;
+                        not_string_flag = false;
+                    }
+
+                    // std::cout << not_string_flag << std::endl;
+                    if (not_string_flag == true)
+                    {
+                        vec_data[i++] = num;
                     }
                 }
-                Eigen::Vector3d tmp = {vec_data.at(0), vec_data.at(1), vec_data.at(2)};
-                loaded_point_data.add_point(tmp);
+
+                if (not_string_flag == true)
+                {
+                    Eigen::Vector3d tmp = {vec_data.at(0), vec_data.at(1), vec_data.at(2)};
+                    loaded_point_data.add_point(tmp);
+                }
             }
         }
     }

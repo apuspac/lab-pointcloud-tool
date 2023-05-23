@@ -123,21 +123,11 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
     // BBOX
     std::vector<Eigen::Vector3d> box;
 
-    // TODO: バウンディングボックスのクラスを使ってない
-    Eigen::Vector3d box_0 = {-0.989327229032126, 0.0565305750745415, 0.134297907568797};
-    Eigen::Vector3d box_1 = {-0.989431308208918, -0.0599367711367848, 0.132035108216282};
-    Eigen::Vector3d box_2 = {-0.914145863707222, 0.0553762054667961, 0.401585377890028};
-    Eigen::Vector3d box_3 = {-0.913352210360464, -0.0532354562838329, 0.403675272990442};
-
-    box.push_back(box_0);
-    box.push_back(box_1);
-    box.push_back(box_2);
-    box.push_back(box_3);
-
-    bbox_point.add_point(box_0);
-    bbox_point.add_point(box_1);
-    bbox_point.add_point(box_2);
-    bbox_point.add_point(box_3);
+    // TODO: 複数のbboxにできるよう対応させようね。
+    for (auto box_tmp : bbox_point.get_point_all())
+    {
+        box.push_back(box_tmp);
+    }
 
     std::cout << "box:" << std::endl
               << box.at(0).transpose() << std::endl
@@ -168,7 +158,7 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
     {
         double tmp = normal(0) * point(0) + normal(1) * point(1) + normal(2) * point(2) + d;
 
-        std::cout << "point_upper:" << tmp << std::endl;
+        // std::cout << "point_upper:" << tmp << std::endl;
 
         if (tmp > 0)
         {
@@ -185,11 +175,14 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
 
     Eigen::Vector3d origin = {0, 0, 0};
 
+    // 4つの平面を定義するために、原点originとbboxとで三角形を作る。
+    // 4角錐の各平面の面法線を求め,平面の方程式を作る。
+
     // 1つ目
     std::vector<Eigen::Vector3d> triangle_1;
     triangle_1.push_back(origin);
-    triangle_1.push_back(box_0);
-    triangle_1.push_back(box_1);
+    triangle_1.push_back(box.at(0));
+    triangle_1.push_back(box.at(1));
 
     Eigen::Vector3d normal_1 = calc_plane_normal(triangle_1);
     double d_1 = calc_d(normal_1, triangle_1.at(1));
@@ -197,8 +190,8 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
     // 2つ目
     std::vector<Eigen::Vector3d> triangle_2;
     triangle_2.push_back(origin);
-    triangle_2.push_back(box_2);
-    triangle_2.push_back(box_0);
+    triangle_2.push_back(box.at(2));
+    triangle_2.push_back(box.at(0));
 
     Eigen::Vector3d normal_2 = calc_plane_normal(triangle_2);
     double d_2 = calc_d(normal_2, triangle_2.at(1));
@@ -206,8 +199,8 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
     // 3つ目
     std::vector<Eigen::Vector3d> triangle_3;
     triangle_3.push_back(origin);
-    triangle_3.push_back(box_1);
-    triangle_3.push_back(box_3);
+    triangle_3.push_back(box.at(1));
+    triangle_3.push_back(box.at(3));
 
     Eigen::Vector3d normal_3 = calc_plane_normal(triangle_3);
     double d_3 = calc_d(normal_3, triangle_3.at(1));
@@ -215,15 +208,16 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
     // 4つ目
     std::vector<Eigen::Vector3d> triangle_4;
     triangle_4.push_back(origin);
-    triangle_4.push_back(box_3);
-    triangle_4.push_back(box_2);
+    triangle_4.push_back(box.at(3));
+    triangle_4.push_back(box.at(2));
 
     Eigen::Vector3d normal_4 = calc_plane_normal(triangle_4);
     double d_4 = calc_d(normal_4, triangle_4.at(1));
 
     for (auto target_point : plypoint.get_point_all())
     {
-
+        // 各平面の方程式に 点を代入し、0より大きければ、平面の上側とみなす。
+        // TODO: これおそらくマイナスの位置だとうまく動かない気がするよ。
         if (is_point_upper_side_of_plane(target_point, normal_1, d_1) && is_point_upper_side_of_plane(target_point, normal_2, d_2) && is_point_upper_side_of_plane(target_point, normal_3, d_3) && is_point_upper_side_of_plane(target_point, normal_4, d_4))
         {
             capture_point.add_point(target_point);
@@ -233,6 +227,61 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
     std::cout
         << "plane_normal: " << normal_1.transpose() << std::endl
         << "d: " << d_1 << std::endl;
+
+    // TODO:edgeの処理をなんとか作る。
+
+    // /**
+    //  * @brief 原点との引数の点とのedge 直線をsegpoint_with_lineに追加する
+    //  * 原点が0番目に保存されていることが前提なので、 最初に追加しておく。
+    //  *
+    //  */
+    // auto add_edge = [&bbox_point_with_line](Eigen::Vector3d edge_point)
+    // {
+    //     Eigen::Vector3d tmp_normalize = edge_point.normalized();
+
+    //     // 極座標に変換
+    //     double theta = std::acos(
+    //         tmp_normalize(2) /
+    //         std::sqrt(std::pow(tmp_normalize(0), 2.0) + std::pow(tmp_normalize(1), 2.0) + std::pow(tmp_normalize(2), 2.0)));
+
+    //     double phi = std::atan2(tmp_normalize(1), tmp_normalize(0));
+
+    //     // 距離rを伸ばしてpointを新たに格納
+    //     double r = 20.0;
+    //     Eigen::Vector3d tmp_vec = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
+    //     bbox_point_with_line.add_point(tmp_vec);
+
+    //     // 原点とのedgeを格納
+    //     long unsigned int i = 1;
+    //     std::array<int, 2> to_zero{0, static_cast<int>(bbox_point_with_line.get_point_num() - i)};
+    //     bbox_point_with_line.add_edge(to_zero);
+    // };
+
+    // // 原点とのedgeを作る用に 原点を追加
+    // Eigen::Vector3d zero = {0, 0, 0};
+    // bbox_point_with_line.add_point(zero);
+
+    // double allow_angle = 0.2;
+    // double allow_angle_radian = allow_angle * (M_PI / 180.0);
+    // std::cout << "allow_angle_radian:" << allow_angle_radian << std::endl;
+
+    // for (auto target_line : segmentation_point.get_point_all())
+    // {
+    //     // target_line = segmentation_point.get_point(1);
+    //     add_edge(target_line);
+    //     int region_line = check_xy_region(target_line);
+
+    //     for (auto target_point : plypoint.get_point_all())
+    //     {
+    //         if (check_xy_region(target_point) == region_line)
+    //         {
+    //             if (calc_angle_to_line(target_point, target_line) < allow_angle_radian)
+    //             {
+    //                 capture_point.add_point(target_point);
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 /**
@@ -414,6 +463,8 @@ void CaptureBoxPoint::capture_segmentation_angle(PointSet &plypoint, PointSet &c
     double allow_angle = 0.2;
     double allow_angle_radian = allow_angle * (M_PI / 180.0);
     std::cout << "allow_angle_radian:" << allow_angle_radian << std::endl;
+
+    // CRSを実装してみる
 
     for (auto target_line : segmentation_point.get_point_all())
     {

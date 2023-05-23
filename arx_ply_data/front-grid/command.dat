@@ -1,0 +1,1 @@
+./Rotation --ply_cp grid1-grid2-m-t005-r001d30.dat --ply_cp grid1-grid2-m.dat --dir ../../ply_data/front-grid/ >! ./output/out-front-grid.dat

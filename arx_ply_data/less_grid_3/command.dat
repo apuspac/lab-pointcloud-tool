@@ -1,0 +1,1 @@
+./Rotation --ply_cp .dat --ply_cp s10.dat --dir ../../ply_data/less_grid_3/ >! ../../ply_data/less_grid_3/out-less_grid_3.dat

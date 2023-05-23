@@ -260,14 +260,15 @@ Eigen::Vector3d CalcPointSet::check_sign_translation_t(
         Eigen::Vector3d ply = *ply_itr;
 
         bool print_check = is_vector_in_front(img, ply);
+        std::cout << "print_check: " << print_check << std::endl;
 
-        // if (is_vector_in_front(img, ply))
-        // {
-        auto Ex = matrix_e * ply;
-        auto cross_M = img.cross(Ex);
-        check_sign += vector_t.dot(cross_M);
-        std::cout << "check_sign_NUM :" << vector_t.dot(cross_M) << std::endl;
-        // }
+        if (is_vector_in_front(img, ply))
+        {
+            auto Ex = matrix_e * ply;
+            auto cross_M = img.cross(Ex);
+            check_sign += vector_t.dot(cross_M);
+            std::cout << "check_sign_NUM :" << vector_t.dot(cross_M) << std::endl;
+        }
     }
 
     std::cout << "translation:: check_sign_sam: " << std::endl
@@ -363,7 +364,6 @@ double CalcPointSet::calc_scale_of_translation_t(
     std::vector<Eigen::Vector3d>::const_iterator img_itr, ply_itr;
 
     double scale_s = 0.0;
-    int i = 1;
 
     int scale_point_num = 0;
 
