@@ -18,12 +18,15 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
     // x: plyの対応点 .dat
     // p: plyファイル .ply
     // i: imgファイル .jpg,png
+    // j: jsonファイル .json
     // d: デフォルトdirpath
+    // o: mode 選択
     // h: help
     // 複数入力をさせたいけど ちょっと面倒っぽいので、 2回指定するときは、2回とも入力する。
-    const char *opt_string = "m:x:p:d:i:h:o";
+    const char *opt_string = "m:x:p:d:j:i:h:o";
 
     // オプション処理のlong用
+    // 長い文字列-> 一文字(opt_string)ように変えてる。
     // {*name,  has_arg,    *flag,  val},
     // has_argは 引数が必要なら has_arg, 必要なかったらno_arg どっちでもよいときはoptional_arg
     // flag 0 のときは valが返される
@@ -33,6 +36,7 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
             {"ply_cp", required_argument, 0, 'x'},
             {"ply", required_argument, 0, 'p'},
             {"img", required_argument, 0, 'i'},
+            {"json", required_argument, 0, 'j'},
             {"dir", required_argument, 0, 'd'},
             {"mode", required_argument, 0, 'o'},
             {"help", no_argument, 0, 'h'},
@@ -61,6 +65,10 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
 
         case 'i':
             operation.set_img_file_path(std::string(optarg));
+            break;
+
+        case 'j':
+            operation.set_json_path(std::string(optarg));
             break;
 
         case 'd':

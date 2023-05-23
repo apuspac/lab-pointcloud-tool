@@ -426,6 +426,10 @@ void PointOperation::print()
               << default_dir_path << std::endl;
 
     std::cout << std::endl
+              << "jsonfile_path: "
+              << json_file_path << std::endl;
+
+    std::cout << std::endl
               << "corresp_img_file_name: " << std::endl;
     for (auto tmp : corresp_img_file_name)
     {

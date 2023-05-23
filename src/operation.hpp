@@ -34,6 +34,8 @@ private:
     std::vector<std::string> img_file_path;
     // デフォルトdir(1つのフォルダに上のplyファイルをまとめる)
     std::string default_dir_path;
+    // jsonファイル名
+    std::string json_file_path;
 
 public:
     PointOperation(std::string _mode = "0") : mode(_mode) {}
@@ -45,6 +47,7 @@ public:
     std::string get_ply_file_path(int number) { return ply_file_name.at(number); }
     std::string get_img_file_path(int number) { return img_file_path.at(number); }
     std::string get_default_dir_path() { return default_dir_path; }
+    std::string get_json_path() { return json_file_path; }
 
     // モード取得
     int get_mode() { return std::stoi(mode); }
@@ -56,6 +59,7 @@ public:
     void set_plyfile_name(std::string name) { ply_file_name.push_back(name); }
     void set_img_file_path(std::string name) { img_file_path.push_back(name); }
     void set_default_dir_path(std::string name) { default_dir_path = name; }
+    void set_json_path(std::string name) { json_file_path = name; }
     void set_mode(std::string mode_) { mode = mode_; }
 
     // ファイル名を出力
