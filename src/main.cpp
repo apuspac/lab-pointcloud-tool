@@ -20,26 +20,20 @@ int main(int argc, char *argv[])
     // opt.mode_select();
 
     // jsonファイル読みこみ
-    const std::string jsonFilePath = "../../data/detection.json";
-
-    std::ifstream jsonFile(jsonFilePath);
-    if (!jsonFile.is_open())
+    FILE *fp = fopen("data/detections.json", "r");
+    if (!fp)
     {
-        std::cerr << "Failed to open the jsonfile" << std::endl;
+        std::cerr << "Failed to open the JSONFILE" << std::endl;
+
         return 1;
     }
 
-    // ファイル内容を文字列として読み込む
-    std::string jsonContent(
-        std::istreambuf_iterator<char>(jsonFile),
-        std::istreambuf_iterator<char>());
-
-    // jsonファイルを閉じる
-    jsonFile.close();
+    char readBuffer[65536];
+    rapidjson::FileReadStream jsonfile(fp, readBuffer, std::size(readBuffer));
 
     // パース
     rapidjson::Document doc;
-    doc.Parse(jsonContent.c_str());
+    doc.ParseStream(jsonfile);
 
     // errcheck
     if (doc.HasParseError())
@@ -48,10 +42,28 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // 読み込むときはこれ
+    std::cout << doc["input_path"].GetString() << std::endl;
+
+    // 配列で読み込む場合これ
+    const rapidjson::Value &merge_data = doc["merged_data"].GetArray();
+
+    for (const auto &detect_img : merge_data.GetArray())
+    {
+        std::cout << detect_img["file_name"].GetString() << std::endl;
+        const rapidjson::Value &bbox_info = detect_img["bbox_info"].GetArray();
+
+        for (const auto &bbox : bbox_info.GetArray())
+        {
+            std::cout << bbox["xmin"].GetDouble() << std::endl;
+        }
+    }
+
     // std::cout << doc["xmin"].GetDouble() << std::endl;
     // std::cout << doc["ymin"].GetDouble() << std::endl;
-    std::cout << doc["inputpath"].GetString() << std::endl;
     // std::cout << doc["class"].GetInt() << std::endl;
+
+    fclose(fp);
 
     return 0;
 }
