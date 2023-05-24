@@ -363,7 +363,7 @@ void PointOperation::capture_boxpoint()
     PointSet capture_ply("capture_bbox_point");
     // バウンディングボックス描画用
     PointSet bbox_point("bbox");
-    capbox.capture_bbox(ply_point, capture_ply, bbox_img_point, bbox_point);
+    // capbox.capture_bbox(ply_point, capture_ply, bbox_img_point, bbox_point);
 
     // capture_ply.print();
     obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
@@ -424,7 +424,7 @@ void PointOperation::capture_pointset()
     // load bbox ここにjsonファイルのクラスのインスタンスを宣言
     // objectIOに jsonデータ格納のプログラムを作る
     DetectionData detect;
-    obj_io.load_detection_json_file(json_file_path, detect);
+    obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
 
     // BBox bbox_sample(1.0, 2.0, 3.0, 4.0);
     // bbox_sample.set_class_name("box_front");
@@ -445,9 +445,15 @@ void PointOperation::capture_pointset()
     PointSet capture_ply("capture_bbox_point");
     PointSet bbox_point("bbox");
 
-    // capbox.capture_bbox(ply_point, capture_ply, bbox_point, bbox_point);
+    detect.get_bbox_data().at(0).get_bbox_all().at(0).print();
 
-    // バウンディングボックス 描画用
+    BBoxData one_img_bbox = detect.get_bbox_data().at(0);
+    capbox.capture_bbox(ply_point, capture_ply, one_img_bbox);
+
+    /// バウンディングボックス 描画用
+    // capture_ply.print();
+    // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
+    // obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
 }
 /**
  * @brief 読み込むファイル名, pathをprintする

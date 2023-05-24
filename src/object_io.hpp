@@ -33,7 +33,7 @@ public:
     void load_img_point_file(std::string, std::string, std::string, PointSet &);
     static void output_ply(PointSet &, std::string);
     Eigen::Vector3d extend_distance_from_point_and_origin(Eigen::Vector3d, double);
-    int load_detection_json_file(std::string, DetectionData &);
+    int load_detection_json_file(std::string, DetectionData &, std::string);
 };
 
 #endif

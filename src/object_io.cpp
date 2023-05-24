@@ -443,17 +443,20 @@ Eigen::Vector3d ObjectIO::extend_distance_from_point_and_origin(Eigen::Vector3d 
     return extend_point;
 }
 
-int ObjectIO::load_detection_json_file(std::string filepath, DetectionData &detect)
+int ObjectIO::load_detection_json_file(std::string filepath, DetectionData &detect, std::string img_path)
 {
     std::cout << "load_detection_jsonfile" << std::endl;
     std::cout << "filename: " << filepath << std::endl;
+
+    // 画像の縦横サイズを取得
+    std::array<double, 2> img_size = get_img_width_height(img_path);
 
     // jsonファイル読み込み
     FILE *fp = fopen(filepath.c_str(), "r");
     if (!fp)
     {
         std::cerr << "Failed to open the JSONFILE" << std::endl;
-
+        fclose(fp);
         return 1;
     }
 
@@ -471,22 +474,74 @@ int ObjectIO::load_detection_json_file(std::string filepath, DetectionData &dete
         return 1;
     }
 
-    BBoxData bboxdata;
-
     // 読み込むときはこれ
     std::cout << doc["input_path"].GetString() << std::endl;
 
-    // 配列で読み込む場合これ
+    // 配列がある場合は getArray
     const rapidjson::Value &merge_data = doc["merged_data"].GetArray();
 
     for (const auto &detect_img : merge_data.GetArray())
     {
-        std::cout << detect_img["file_name"].GetString() << std::endl;
-        const rapidjson::Value &bbox_info = detect_img["bbox_info"].GetArray();
+        BBoxData bboxdata;
+        MaskData maskdata;
 
-        for (const auto &bbox : bbox_info.GetArray())
+        // file_name
+        bboxdata.set_img_name(detect_img["file_name"].GetString());
+        maskdata.set_img_name(detect_img["file_name"].GetString());
+
+        // bbox set
+        if (detect_img.HasMember("bbox_info"))
         {
-            std::cout << bbox["xmin"].GetDouble() << std::endl;
+            const rapidjson::Value &bbox_info = detect_img["bbox_info"].GetArray();
+
+            for (const auto &bbox : bbox_info.GetArray())
+            {
+                BBox bbox_tmp(
+                    bbox["xmin"].GetDouble(),
+                    bbox["ymin"].GetDouble(),
+                    bbox["xmax"].GetDouble(),
+                    bbox["ymax"].GetDouble());
+                bbox_tmp.set_class_name(bbox["name"].GetString());
+                bbox_tmp.set_class_num(bbox["class"].GetInt());
+                bbox_tmp.set_confidence(bbox["confidence"].GetDouble());
+
+                bbox_tmp.equirectangular_to_sphere(img_size.at(0), img_size.at(1));
+                bboxdata.add_bbox(bbox_tmp);
+            }
+
+            detect.set_bbox_data(bboxdata);
+        }
+
+        // mask set
+        if (detect_img.HasMember("mask_info"))
+        {
+            const rapidjson::Value &mask_info = detect_img["mask_info"].GetArray();
+            for (const auto &mask : mask_info.GetArray())
+            {
+                Mask mask_data;
+
+                mask_data.set_class_name(mask["class_name"].GetString());
+                const rapidjson::Value &one_mask = mask["contour"].GetArray();
+
+                // bboxと違って ちょっと入れ子になるので注意。
+                for (const auto &pixel : one_mask.GetArray())
+                {
+                    const rapidjson::Value &pixel_mask = pixel.GetArray();
+
+                    for (const auto &pixel_tmp : pixel_mask.GetArray())
+                    {
+                        mask_data.add_mask(pixel_tmp[0].GetInt(), pixel_tmp[1].GetInt());
+                    }
+                }
+                mask_data.equirectangular_to_sphere(img_size.at(0), img_size.at(1));
+                maskdata.set_mask_data(mask_data);
+            }
+
+            detect.set_mask_data(maskdata);
         }
     }
+
+    fclose(fp);
+
+    return 0;
 }

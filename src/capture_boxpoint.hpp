@@ -19,7 +19,12 @@ private:
     double xmax; // 右下のx
     double ymax; // 右下のy
 
+    // equirectangular から変更したもの
+    // leftup, rightup, leftdown, rightdown
+    std::vector<Eigen::Vector3d> sphere_xyz;
+
     int class_num;
+    double confidence;
     std::string class_name;
 
 public:
@@ -28,11 +33,15 @@ public:
 
     void set_BBox(double x_min, double y_min, double x_max, double y_max) { xmin = x_min, ymin = y_min, xmax = x_max, ymax = y_max; }
     void set_class_name(std::string name) { class_name = name; }
-    void set_class_name(int num) { class_num = num; }
+    void set_class_num(int num) { class_num = num; }
+    void set_confidence(double num) { confidence = num; }
+    void equirectangular_to_sphere(double, double);
 
     // こんな感じで分解できる
     // auto [a, b, c, d] = get_bbox();
     std::tuple<double, double, double, double> get_bbox() { return {xmin, ymin, xmax, ymax}; }
+    std::tuple<Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d> get_minmax_xyz() { return {sphere_xyz.at(0), sphere_xyz.at(1), sphere_xyz.at(2), sphere_xyz.at(3)}; }
+    std::vector<Eigen::Vector3d> get_xyz() { return sphere_xyz; }
     void print();
 };
 
@@ -52,6 +61,7 @@ public:
     // だいたいbbox全体をloopで回すと思うので、 get_bboxで取得するようにしよう
     std::vector<BBox> get_bbox_all() { return bbox; }
     void set_bbox(BBox bbox_one_instance) { bbox.push_back(bbox_one_instance); }
+    void set_img_name(std::string name) { img_name = name; }
 };
 
 class Mask
@@ -60,6 +70,7 @@ private:
     // bboxと違ってここでも もう一階層あるのに注意。
     std::vector<std::array<int, 2>> mask_uv;
 
+    std::vector<Eigen::Vector3d> mask_xyz;
     int class_num;
     std::string class_name;
 
@@ -71,7 +82,11 @@ public:
     }
 
     std::vector<std::array<int, 2>> get_mask() { return mask_uv; }
+    void set_class_name(std::string name) { class_name = name; }
+    std::vector<Eigen::Vector3d> get_mask_xyz() { return mask_xyz; }
     void print();
+
+    void equirectangular_to_sphere(double, double);
 };
 
 /**
@@ -88,6 +103,7 @@ private:
 public:
     std::vector<Mask> get_mask_data_all() { return mask_data; }
     void set_mask_data(Mask mask_one_instance) { mask_data.push_back(mask_one_instance); }
+    void set_img_name(std::string name) { img_name = name; }
 };
 
 /**
@@ -120,7 +136,7 @@ private:
     std::vector<BBox> bbox_list;
 
 public:
-    void capture_bbox(PointSet &, PointSet &, PointSet &, PointSet &);
+    void capture_bbox(PointSet &, PointSet &, BBoxData &);
     void capture_segmentation_distance(PointSet &, PointSet &, PointSet &, PointSet &);
     void capture_segmentation_angle(PointSet &, PointSet &, PointSet &, PointSet &);
 
