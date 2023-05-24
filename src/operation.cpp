@@ -423,18 +423,21 @@ void PointOperation::capture_pointset()
 
     // load bbox ここにjsonファイルのクラスのインスタンスを宣言
     // objectIOに jsonデータ格納のプログラムを作る
-    BBox bbox_sample(1.0, 2.0, 3.0, 4.0);
-    bbox_sample.set_class_name("box_front");
-    BBoxData bbox_img;
-    bbox_img.set_bbox(bbox_sample);
-
     DetectionData detect;
-    detect.set_bbox_data(bbox_img);
+    obj_io.load_detection_json_file(json_file_path, detect);
 
-    // img print
-    BBoxData test_print = detect.get_bbox_data().at(0);
-    BBox test_print_bbox = test_print.get_bbox_all().at(0);
-    test_print_bbox.print();
+    // BBox bbox_sample(1.0, 2.0, 3.0, 4.0);
+    // bbox_sample.set_class_name("box_front");
+    // BBoxData bbox_img;
+    // bbox_img.set_bbox(bbox_sample);
+
+    // DetectionData detect_test;
+    // detect_test.set_bbox_data(bbox_img);
+
+    // // img print
+    // BBoxData test_print = detect_test.get_bbox_data().at(0);
+    // BBox test_print_bbox = test_print.get_bbox_all().at(0);
+    // test_print_bbox.print();
 
     CaptureBoxPoint capbox;
 

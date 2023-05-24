@@ -442,3 +442,51 @@ Eigen::Vector3d ObjectIO::extend_distance_from_point_and_origin(Eigen::Vector3d 
 
     return extend_point;
 }
+
+int ObjectIO::load_detection_json_file(std::string filepath, DetectionData &detect)
+{
+    std::cout << "load_detection_jsonfile" << std::endl;
+    std::cout << "filename: " << filepath << std::endl;
+
+    // jsonファイル読み込み
+    FILE *fp = fopen(filepath.c_str(), "r");
+    if (!fp)
+    {
+        std::cerr << "Failed to open the JSONFILE" << std::endl;
+
+        return 1;
+    }
+
+    char readBuffer[65536];
+    rapidjson::FileReadStream jsonfile(fp, readBuffer, std::size(readBuffer));
+
+    // parse
+    rapidjson::Document doc;
+    doc.ParseStream(jsonfile);
+
+    // errcheck
+    if (doc.HasParseError())
+    {
+        std::cerr << "Failed to parse the JSON content." << std::endl;
+        return 1;
+    }
+
+    BBoxData bboxdata;
+
+    // 読み込むときはこれ
+    std::cout << doc["input_path"].GetString() << std::endl;
+
+    // 配列で読み込む場合これ
+    const rapidjson::Value &merge_data = doc["merged_data"].GetArray();
+
+    for (const auto &detect_img : merge_data.GetArray())
+    {
+        std::cout << detect_img["file_name"].GetString() << std::endl;
+        const rapidjson::Value &bbox_info = detect_img["bbox_info"].GetArray();
+
+        for (const auto &bbox : bbox_info.GetArray())
+        {
+            std::cout << bbox["xmin"].GetDouble() << std::endl;
+        }
+    }
+}
