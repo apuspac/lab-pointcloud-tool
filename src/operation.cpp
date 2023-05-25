@@ -412,6 +412,38 @@ void PointOperation::capture_segmentation_point()
     obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
 }
 
+// TODO: あとで作り直す
+void show_sphere()
+{
+    auto sphere = open3d::geometry::TriangleMesh::CreateSphere(1.0);
+    sphere->ComputeVertexNormals();
+    sphere->PaintUniformColor({0.0, 1.0, 0.0});
+
+    open3d::visualization::Visualizer vis;
+    vis.CreateVisualizerWindow("OKOK");
+    vis.AddGeometry(sphere);
+
+    // Change view
+    open3d::visualization::ViewControl &view_control = vis.GetViewControl();
+    auto view_params = open3d::visualization::ViewParameters();
+    view_control.ConvertToViewParameters(view_params);
+
+    view_params.front_ = Eigen::Vector3d(0, -1, 0);
+    view_params.lookat_ = Eigen::Vector3d(0, 0, 0);
+    view_params.up_ = Eigen::Vector3d(0, 0, 1);
+    // view_params.zoom_ = 1.0;
+    view_control.ConvertFromViewParameters(view_params);
+
+    // PollEventsはウィンドウが閉じられるときにfalseを返す
+    while (vis.PollEvents() == true)
+    {
+        vis.UpdateGeometry();
+        vis.UpdateRender();
+    }
+
+    vis.DestroyVisualizerWindow();
+}
+
 void PointOperation::capture_pointset()
 {
     std::cout << "capture boxpoint" << std::endl;
@@ -426,19 +458,6 @@ void PointOperation::capture_pointset()
     DetectionData detect;
     obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
 
-    // BBox bbox_sample(1.0, 2.0, 3.0, 4.0);
-    // bbox_sample.set_class_name("box_front");
-    // BBoxData bbox_img;
-    // bbox_img.set_bbox(bbox_sample);
-
-    // DetectionData detect_test;
-    // detect_test.set_bbox_data(bbox_img);
-
-    // // img print
-    // BBoxData test_print = detect_test.get_bbox_data().at(0);
-    // BBox test_print_bbox = test_print.get_bbox_all().at(0);
-    // test_print_bbox.print();
-
     CaptureBoxPoint capbox;
 
     // 抽出したポイントを格納 (とりあえず、別々に出力)
@@ -452,7 +471,7 @@ void PointOperation::capture_pointset()
 
     /// バウンディングボックス 描画用
     // capture_ply.print();
-    // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
+    obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
 }
 /**

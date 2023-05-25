@@ -5,7 +5,11 @@ void BBox::print()
     // std::cout << class_num << " " << class_name << std::endl;
     std::cout << class_name << std::endl;
     std::cout << xmin << " " << ymin << " " << xmax << " " << ymax << std::endl;
-    std::cout << sphere_xyz.at(0).transpose() << " " << sphere_xyz.at(0).transpose() << std::endl;
+    std::cout << sphere_xyz.at(0).transpose() << std::endl
+              << sphere_xyz.at(1).transpose() << std::endl
+              << sphere_xyz.at(2).transpose() << std::endl
+              << sphere_xyz.at(3).transpose() << std::endl
+              << std::endl;
 }
 
 void Mask::print()
@@ -175,7 +179,7 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
 {
 
     // 面法線を求める
-    auto calc_plane_normal = [](std::vector<Eigen::Vector3d> triangle)
+    auto calc_plane_normal = [](std::array<Eigen::Vector3d, 3> triangle)
     {
         Eigen::Vector3d v0v1 = triangle.at(1) - triangle.at(0);
         Eigen::Vector3d v0v2 = triangle.at(2) - triangle.at(0);
@@ -186,7 +190,8 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
         return plane_normal;
     };
 
-    // dも求める
+    // 平面の法線と平面にある一点から 平面の方程式が出せる。
+    // 係数dを求める
     auto calc_d = [](Eigen::Vector3d normal, Eigen::Vector3d point)
     {
         return (-(normal(0) * point(0) + normal(1) * point(1) + normal(2) * point(2)));
@@ -214,6 +219,7 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
 
     // bbox_pointをdetectionDataから取り出す
     detect_bbox.get_bbox_all().at(0).print();
+    std::cout << "img_name:::" << detect_bbox.get_img_name() << std::endl;
 
     // 一個一個のbboxを処理
     for (auto bbox_data : detect_bbox.get_bbox_all())
@@ -226,67 +232,43 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
                   << box.at(1).transpose() << std::endl
                   << box.at(2).transpose() << std::endl
                   << box.at(3).transpose() << std::endl;
-        // double d = -(plane_normal(0) * triangle_1.at(1)(0) + plane_normal(1) * triangle_1.at(1)(1) + plane_normal(2) * triangle_1.at(1)(2));
 
         Eigen::Vector3d origin = {0, 0, 0};
 
         // 4つの平面を定義するために、原点originとbboxとで三角形を作る。
         // 4角錐の各平面の面法線を求め,平面の方程式を作る。
+        std::array<std::array<Eigen::Vector3d, 3>, 4> triangle_vec;
+        std::array<Eigen::Vector3d, 4> normal_vec;
+        std::array<double, 4> distance;
 
-        std::array<std::array<Eigen::Vector3d, 3> 4> triangle;
+        // 四角錐定義
+        triangle_vec.at(0) = {origin, box.at(0), box.at(2)};
+        triangle_vec.at(1) = {origin, box.at(0), box.at(1)};
+        triangle_vec.at(2) = {origin, box.at(2), box.at(3)};
+        triangle_vec.at(3) = {origin, box.at(1), box.at(3)};
 
-        triangle.at(0)
+        // 四角錐の平面の面法線を計算
+        // ax+by+cz+d = 0 の dを求める
 
-            // 1つ目
-            std::vector<Eigen::Vector3d>
-                triangle_1;
-        triangle_1.push_back(origin);
-        triangle_1.push_back(box.at(0));
-        triangle_1.push_back(box.at(1));
-
-        Eigen::Vector3d normal_1 = calc_plane_normal(triangle_1);
-        double d_1 = calc_d(normal_1, triangle_1.at(1));
-
-        // 2つ目
-        std::vector<Eigen::Vector3d> triangle_2;
-        triangle_2.push_back(origin);
-        triangle_2.push_back(box.at(2));
-        triangle_2.push_back(box.at(0));
-
-        Eigen::Vector3d normal_2 = calc_plane_normal(triangle_2);
-        double d_2 = calc_d(normal_2, triangle_2.at(1));
-
-        // 3つ目
-        std::vector<Eigen::Vector3d> triangle_3;
-        triangle_3.push_back(origin);
-        triangle_3.push_back(box.at(1));
-        triangle_3.push_back(box.at(3));
-
-        Eigen::Vector3d normal_3 = calc_plane_normal(triangle_3);
-        double d_3 = calc_d(normal_3, triangle_3.at(1));
-
-        // 4つ目
-        std::vector<Eigen::Vector3d> triangle_4;
-        triangle_4.push_back(origin);
-        triangle_4.push_back(box.at(3));
-        triangle_4.push_back(box.at(2));
-
-        Eigen::Vector3d normal_4 = calc_plane_normal(triangle_4);
-        double d_4 = calc_d(normal_4, triangle_4.at(1));
+        for (int i = 0; i < 4; i++)
+        {
+            normal_vec.at(i) = calc_plane_normal(triangle_vec.at(i));
+            distance.at(i) = calc_d(normal_vec.at(i), box.at(i));
+        }
 
         for (auto target_point : plypoint.get_point_all())
         {
             // 各平面の方程式に 点を代入し、0より大きければ、平面の上側とみなす。
             // TODO: これおそらくマイナスの位置だとうまく動かない気がするよ。
-            if (is_point_upper_side_of_plane(target_point, normal_1, d_1) && is_point_upper_side_of_plane(target_point, normal_2, d_2) && is_point_upper_side_of_plane(target_point, normal_3, d_3) && is_point_upper_side_of_plane(target_point, normal_4, d_4))
+            if (is_point_upper_side_of_plane(target_point, normal_vec.at(0), distance.at(0)) && is_point_upper_side_of_plane(target_point, normal_vec.at(1), distance.at(1)) && is_point_upper_side_of_plane(target_point, normal_vec.at(2), distance.at(2)) && is_point_upper_side_of_plane(target_point, normal_vec.at(3), distance.at(3)))
             {
                 capture_point.add_point(target_point);
             }
         }
 
         std::cout
-            << "plane_normal: " << normal_1.transpose() << std::endl
-            << "d: " << d_1 << std::endl;
+            << "plane_normal: " << normal_vec.at(0).transpose() << std::endl
+            << "d: " << distance.at(0) << std::endl;
     }
     // TODO:edgeの処理をなんとか作る。
 

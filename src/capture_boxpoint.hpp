@@ -60,6 +60,7 @@ public:
 
     // だいたいbbox全体をloopで回すと思うので、 get_bboxで取得するようにしよう
     std::vector<BBox> get_bbox_all() { return bbox; }
+    std::string get_img_name() { return img_name; }
     void set_bbox(BBox bbox_one_instance) { bbox.push_back(bbox_one_instance); }
     void set_img_name(std::string name) { img_name = name; }
 };
@@ -102,6 +103,7 @@ private:
 
 public:
     std::vector<Mask> get_mask_data_all() { return mask_data; }
+    std::string get_img_name() { return img_name; }
     void set_mask_data(Mask mask_one_instance) { mask_data.push_back(mask_one_instance); }
     void set_img_name(std::string name) { img_name = name; }
 };
