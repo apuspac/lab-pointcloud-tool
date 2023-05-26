@@ -453,17 +453,29 @@ std::shared_ptr<open3d::geometry::LineSet> show_axes()
     std::vector<Eigen::Vector3d> line_color;
 
     line_point.push_back({0.0, 0.0, 0});
+
     line_point.push_back({10.0, 0.0, 0});
     line_point.push_back({0, 10.0, 0});
     line_point.push_back({0, 0.0, 10.0});
 
+    line_point.push_back({-10.0, 0.0, 0});
+    line_point.push_back({0, -10.0, 0});
+    line_point.push_back({0, 0.0, -10.0});
+
     line_line.push_back({0, 1});
     line_line.push_back({0, 2});
     line_line.push_back({0, 3});
+    line_line.push_back({0, 4});
+    line_line.push_back({0, 5});
+    line_line.push_back({0, 6});
 
     line_color.push_back({0.9, 0.1, 0.1});
     line_color.push_back({0.1, 0.9, 0.1});
     line_color.push_back({0.1, 0.1, 0.9});
+
+    line_color.push_back({0.75, 0.75, 0.75});
+    line_color.push_back({0.75, 0.75, 0.75});
+    line_color.push_back({0.75, 0.75, 0.75});
 
     std::shared_ptr<open3d::geometry::LineSet> lineset = std::make_shared<open3d::geometry::LineSet>();
     lineset->points_ = line_point;
@@ -522,6 +534,10 @@ std::shared_ptr<open3d::geometry::Geometry> make_geometry_pointset(std::vector<E
     {
         color = {0.1, 0.1, 0.9};
     }
+    else if (color_preset == 3)
+    {
+        color = {0.75, 0.75, 0.75};
+    }
 
     for (int i = 0; i < int(pointset.size()); i++)
     {
@@ -565,12 +581,19 @@ void PointOperation::capture_pointset()
     std::cout << ply_point.get_point_all().at(0) << std::endl;
 
     /// バウンディングボックス 描画
-    std::shared_ptr<open3d::geometry::Geometry> ply_point_geo = make_geometry_pointset(ply_point.get_point_all(), 0);
+    // 元のply
+    std::shared_ptr<open3d::geometry::Geometry> ply_point_geo = make_geometry_pointset(ply_point.get_point_all(), 3);
+    // 切り出したbboxの中の点群
+    std::shared_ptr<open3d::geometry::Geometry> capture_bbox_geo = make_geometry_pointset(capture_ply.get_point_all(), 0);
+    // bboxそのもの
     std::shared_ptr<open3d::geometry::Geometry> bbox_geo = make_geometry_pointset(one_img_bbox.get_bbox_all().at(0).get_xyz(), 1);
+    // bboxと原点とのline
     std::shared_ptr<open3d::geometry::Geometry> bbox_to_line_geo = make_line_origin(bbox_point.get_point_all());
+    // 座標軸
     std::shared_ptr<open3d::geometry::Geometry> axes = show_axes();
 
-    open3d::visualization::DrawGeometries({bbox_geo, axes, bbox_to_line_geo});
+    // open3d::visualization::DrawGeometries({axes, ply_point_geo});
+    open3d::visualization::DrawGeometries({bbox_geo, axes, bbox_to_line_geo, capture_bbox_geo});
 
     // ここからsegmentation
     // 抽出したポイントを格納
@@ -586,9 +609,13 @@ void PointOperation::capture_pointset()
 
     capbox.capture_segmentation_distance(ply_point, capture_ply_seg, one_mask, segline_point);
 
+    // maskで切り出したpoint
+    std::shared_ptr<open3d::geometry::Geometry> capture_mask_geo = make_geometry_pointset(capture_ply_seg.get_point_all(), 0);
+    // maskの点
     std::shared_ptr<open3d::geometry::Geometry> mask_geo = make_geometry_pointset(segline_point.get_point_all(), 1);
+    // maskと原点をつなぐline
     std::shared_ptr<open3d::geometry::Geometry> mask_to_origin_line = make_line_origin(segline_point.get_point_all());
-    open3d::visualization::DrawGeometries({mask_geo, axes, mask_to_origin_line});
+    open3d::visualization::DrawGeometries({mask_geo, axes, mask_to_origin_line, capture_mask_geo});
 
     // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");

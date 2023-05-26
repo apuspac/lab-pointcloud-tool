@@ -40,7 +40,7 @@
                 "--ply",
                 "plyfile.ply",
                 "--img",
-                "img/kyoiku.JPG",
+                "img/PIC_point1.jpg",
                 "--dir",
                 "data/test/",
                 "--json",

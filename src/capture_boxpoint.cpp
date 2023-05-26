@@ -191,7 +191,7 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
     };
 
     // 平面の法線と平面にある一点から 平面の方程式が出せる。
-    // 係数dを求める
+    // 係数dを求められるが、dは 平面と原点との距離である。今回の平面はすべて原点を通る平面なので、関係ない。
     auto calc_d = [](Eigen::Vector3d normal, Eigen::Vector3d point)
     {
         return (-(normal(0) * point(0) + normal(1) * point(1) + normal(2) * point(2)));
@@ -200,9 +200,15 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
     // 点を代入したときの距離が 0より上かどうかを判定する
     auto is_point_upper_side_of_plane = [](Eigen::Vector3d point, Eigen::Vector3d normal, double d)
     {
+        // これは点と平面の距離
+        // double flac_up = normal(0) * point(0) + normal(1) * point(1) + normal(2) * point(2) + d;
+        // double flac_down = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0) std::pow(point(2), 2.0));
+        // double tmp = std::abs(flac_up) / flac_down;
+
         double tmp = normal(0) * point(0) + normal(1) * point(1) + normal(2) * point(2) + d;
 
-        // std::cout << "point_upper:" << tmp << std::endl;
+        std::cout
+            << "point_upper_check:" << tmp << std::endl;
 
         if (tmp > 0)
         {
@@ -245,9 +251,9 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
         std::array<double, 4> distance;
 
         // 四角錐定義
-        triangle_vec.at(0) = {origin, box.at(0), box.at(2)};
+        triangle_vec.at(0) = {origin, box.at(2), box.at(0)};
         triangle_vec.at(1) = {origin, box.at(0), box.at(1)};
-        triangle_vec.at(2) = {origin, box.at(2), box.at(3)};
+        triangle_vec.at(2) = {origin, box.at(3), box.at(2)};
         triangle_vec.at(3) = {origin, box.at(1), box.at(3)};
 
         // 四角錐の平面の面法線を計算
@@ -311,7 +317,7 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
                 add_edge(box.at(i));
             }
 
-            flag = false;
+            // flag = false;
         }
     }
     // TODO:edgeの処理をなんとか作る。
@@ -466,7 +472,7 @@ void CaptureBoxPoint::capture_segmentation_distance(PointSet &plypoint, PointSet
     Eigen::Vector3d zero = {0, 0, 0};
     segpoint_with_line.add_point(zero);
 
-    double allow_range = 0.0005;
+    double allow_range = 0.5;
 
     for (auto target_line : segmentation_point.get_point_all())
     {
