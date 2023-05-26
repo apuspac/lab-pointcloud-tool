@@ -11,6 +11,8 @@
 #include "calc_pointset.hpp"
 #include "capture_boxpoint.hpp"
 
+#include "open3d/Open3D.h"
+
 // 相互依存
 class ObjectIO;
 

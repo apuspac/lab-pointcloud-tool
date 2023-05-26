@@ -413,6 +413,7 @@ void PointOperation::capture_segmentation_point()
 }
 
 // TODO: あとで作り直す
+// これは、VisualizerWindowを使ったやり方。 機能を自分で作らなければいけない分 ちょっとめんどう。
 void show_sphere()
 {
     auto sphere = open3d::geometry::TriangleMesh::CreateSphere(1.0);
@@ -444,6 +445,97 @@ void show_sphere()
     vis.DestroyVisualizerWindow();
 }
 
+std::shared_ptr<open3d::geometry::LineSet> show_axes()
+{
+
+    std::vector<Eigen::Vector3d> line_point;
+    std::vector<Eigen::Vector2i> line_line;
+    std::vector<Eigen::Vector3d> line_color;
+
+    line_point.push_back({0.0, 0.0, 0});
+    line_point.push_back({10.0, 0.0, 0});
+    line_point.push_back({0, 10.0, 0});
+    line_point.push_back({0, 0.0, 10.0});
+
+    line_line.push_back({0, 1});
+    line_line.push_back({0, 2});
+    line_line.push_back({0, 3});
+
+    line_color.push_back({0.9, 0.1, 0.1});
+    line_color.push_back({0.1, 0.9, 0.1});
+    line_color.push_back({0.1, 0.1, 0.9});
+
+    std::shared_ptr<open3d::geometry::LineSet> lineset = std::make_shared<open3d::geometry::LineSet>();
+    lineset->points_ = line_point;
+    lineset->lines_ = line_line;
+    lineset->colors_ = line_color;
+
+    return lineset;
+}
+
+std::shared_ptr<open3d::geometry::LineSet> make_line_origin(std::vector<Eigen::Vector3d> pointset)
+{
+
+    std::vector<Eigen::Vector3d> line_point;
+    std::vector<Eigen::Vector2i> line_line;
+    std::vector<Eigen::Vector3d> line_color;
+
+    for (const auto &point_xyz : pointset)
+    {
+        line_point.push_back(point_xyz);
+    }
+
+    for (int i = 1; i < pointset.size(); i++)
+    {
+        line_line.push_back({0, i});
+    }
+
+    for (int i = 1; i < pointset.size(); i++)
+    {
+        line_color.push_back({0.9, 0.6, 0.1});
+    }
+
+    std::shared_ptr<open3d::geometry::LineSet> lineset = std::make_shared<open3d::geometry::LineSet>();
+    lineset->points_ = line_point;
+    lineset->lines_ = line_line;
+    lineset->colors_ = line_color;
+
+    return lineset;
+}
+
+std::shared_ptr<open3d::geometry::Geometry> make_geometry_pointset(std::vector<Eigen::Vector3d> pointset, int color_preset)
+{
+
+    std::shared_ptr<open3d::geometry::PointCloud> pointcloud = std::make_shared<open3d::geometry::PointCloud>();
+    std::vector<Eigen::Vector3d> test_color;
+    Eigen::Vector3d color;
+
+    if (color_preset == 0)
+    {
+        color = {0.9, 0.1, 0.1};
+    }
+    else if (color_preset == 1)
+    {
+        color = {0.1, 0.9, 0.1};
+    }
+    else if (color_preset == 2)
+    {
+        color = {0.1, 0.1, 0.9};
+    }
+
+    for (int i = 0; i < pointset.size(); i++)
+    {
+        test_color.push_back(color);
+    }
+
+    pointcloud->points_ = pointset;
+    pointcloud->colors_ = test_color;
+
+    return pointcloud;
+    // std::cout << "OK" << std::endl;
+    // open3d::visualization::DrawGeometries({pointcloud});
+}
+
 void PointOperation::capture_pointset()
 {
     std::cout << "capture boxpoint" << std::endl;
@@ -451,7 +543,7 @@ void PointOperation::capture_pointset()
 
     // load plydata
     PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
 
     // load bbox ここにjsonファイルのクラスのインスタンスを宣言
     // objectIOに jsonデータ格納のプログラムを作る
@@ -466,12 +558,43 @@ void PointOperation::capture_pointset()
 
     detect.get_bbox_data().at(0).get_bbox_all().at(0).print();
 
+    // とりあえず 最初の1つだけ取り出す。
     BBoxData one_img_bbox = detect.get_bbox_data().at(0);
-    capbox.capture_bbox(ply_point, capture_ply, one_img_bbox);
+    capbox.capture_bbox(ply_point, capture_ply, one_img_bbox, bbox_point);
 
-    /// バウンディングボックス 描画用
+    std::cout << ply_point.get_point_all().at(0) << std::endl;
+
+    /// バウンディングボックス 描画
+    std::shared_ptr<open3d::geometry::Geometry> ply_point_geo = make_geometry_pointset(ply_point.get_point_all(), 0);
+    std::shared_ptr<open3d::geometry::Geometry> bbox_geo = make_geometry_pointset(one_img_bbox.get_bbox_all().at(0).get_xyz(), 1);
+    std::shared_ptr<open3d::geometry::Geometry> bbox_to_line_geo = make_line_origin(bbox_point.get_point_all());
+    std::shared_ptr<open3d::geometry::Geometry> axes = show_axes();
+
+    open3d::visualization::DrawGeometries({bbox_geo, axes, bbox_to_line_geo});
+
+    // ここからsegmentation
+    // 抽出したポイントを格納
+    PointSet capture_ply_seg("capture_segmentation_point");
+    // segmentation_lineを格納
+    PointSet segline_point("segmentation_point");
+    //
+
+    // とりあえず 最初の1つだけ取り出す。
+    Mask one_img_mask = detect.get_mask_data().at(0).get_mask_data_all().at(0);
+    PointSet one_mask("segmask_point");
+    one_mask.add_point(one_img_mask.get_mask_xyz().at(0));
+
+    capbox.capture_segmentation_distance(ply_point, capture_ply_seg, one_mask, segline_point);
+
+    std::shared_ptr<open3d::geometry::Geometry> mask_geo = make_geometry_pointset(segline_point.get_point_all(), 1);
+    std::shared_ptr<open3d::geometry::Geometry> mask_to_origin_line = make_line_origin(segline_point.get_point_all());
+    open3d::visualization::DrawGeometries({mask_geo, axes, mask_to_origin_line});
+
+    // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
+    // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
+
     // capture_ply.print();
-    obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
+    // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
 }
 /**

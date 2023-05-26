@@ -19,35 +19,11 @@ int main(int argc, char *argv[])
     PointOperation opt;
     ObjectIO::option_process(argc, argv, opt);
     opt.print();
-    // opt.mode_select();
+    opt.mode_select();
 
     auto sphere = open3d::geometry::TriangleMesh::CreateSphere(1.0);
     sphere->ComputeVertexNormals();
     sphere->PaintUniformColor({0.0, 1.0, 0.0});
-
-    open3d::visualization::Visualizer vis;
-    vis.CreateVisualizerWindow("OKOK");
-    vis.AddGeometry(sphere);
-
-    // Change view
-    open3d::visualization::ViewControl &view_control = vis.GetViewControl();
-    auto view_params = open3d::visualization::ViewParameters();
-    view_control.ConvertToViewParameters(view_params);
-
-    view_params.front_ = Eigen::Vector3d(0, -1, 0);
-    view_params.lookat_ = Eigen::Vector3d(0, 0, 0);
-    view_params.up_ = Eigen::Vector3d(0, 0, 1);
-    // view_params.zoom_ = 1.0;
-    view_control.ConvertFromViewParameters(view_params);
-
-    // PollEventsはウィンドウが閉じられるときにfalseを返す
-    while (vis.PollEvents() == true)
-    {
-        vis.UpdateGeometry();
-        vis.UpdateRender();
-    }
-
-    vis.DestroyVisualizerWindow();
 
     std::shared_ptr<open3d::geometry::PointCloud> pointcloud = std::make_shared<open3d::geometry::PointCloud>();
     std::vector<Eigen::Vector3d> test_point, test_color;
@@ -60,10 +36,39 @@ int main(int argc, char *argv[])
     pointcloud->colors_ = test_color;
 
     // std::cout << "OK" << std::endl;
-    open3d::visualization::DrawGeometries({pointcloud});
+    // open3d::visualization::DrawGeometries({pointcloud});
+    //
+
+    // grid
+    // auto coodinate_frame = open3d::geometry::TriangleMesh::CreateCoordinateFrame(10000.0);
+    // coodinate_frame->ComputeVertexNormals();
+    // coodinate_frame->PaintUniformColor({0.0, 1.0, 0.0});
+
+    // line_set
+    // std::vector<eigen::vector3d> line_point;
+    // std::vector<eigen::vector2i> line_line;
+    // std::vector<eigen::vector3d> line_color;
+
+    // line_point.push_back({0.0, 0.0, 0});
+    // line_point.push_back({100.0, 0.0, 0});
+    // line_point.push_back({0, 100.0, 0});
+    // line_point.push_back({0, 0.0, 100.0});
+
+    // line_line.push_back({0, 1});
+    // line_line.push_back({0, 2});
+    // line_line.push_back({0, 3});
+
+    // line_color.push_back({0.9, 0.1, 0.1});
+    // line_color.push_back({0.1, 0.9, 0.1});
+    // line_color.push_back({0.1, 0.1, 0.9});
+
+    // auto lineset = open3d::geometry::lineset();
+    // lineset.points_ = line_point;
+    // lineset.lines_ = line_line;
+    // lineset.colors_ = line_color;
 
     // 終わってから 次に行く。
-    open3d::visualization::DrawGeometries({sphere});
+    // open3d::visualization::DrawGeometries({pointcloud, std::make_shared<open3d::geometry::LineSet>(lineset)});
 
     return 0;
 }

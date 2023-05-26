@@ -69,7 +69,10 @@
         "hash_set": "cpp",
         "bitset": "cpp",
         "forward_list": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "unordered_set": "cpp",
+        "shared_mutex": "cpp",
+        "cfenv": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled",
     "cmake.configureOnOpen": false,

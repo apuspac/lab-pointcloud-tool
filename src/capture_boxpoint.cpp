@@ -175,7 +175,7 @@ void CaptureBoxPoint::set_bbox(double xmin, double ymin, double xmax, double yma
  * @param bbox_point バウンディングボックスの点
  * @param bbox_point_with_line バウンディングボックスと直線を描画する用
  */
-void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, BBoxData &detect_bbox)
+void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, BBoxData &detect_bbox, PointSet &bboxpoint_forPrint)
 {
 
     // 面法線を求める
@@ -269,6 +269,41 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
         std::cout
             << "plane_normal: " << normal_vec.at(0).transpose() << std::endl
             << "d: " << distance.at(0) << std::endl;
+        /**
+         * @brief 原点との引数の点とのedge 直線をsegpoint_with_lineに追加する
+         * 原点が0番目に保存されていることが前提なので、 最初に追加しておく。
+         *
+         */
+        auto add_edge = [&bboxpoint_forPrint](Eigen::Vector3d edge_point)
+        {
+            Eigen::Vector3d tmp_normalize = edge_point.normalized();
+
+            // 極座標に変換
+            double theta = std::acos(
+                tmp_normalize(2) /
+                std::sqrt(std::pow(tmp_normalize(0), 2.0) + std::pow(tmp_normalize(1), 2.0) + std::pow(tmp_normalize(2), 2.0)));
+
+            double phi = std::atan2(tmp_normalize(1), tmp_normalize(0));
+
+            // 距離rを伸ばしてpointを新たに格納
+            double r = 20.0;
+            Eigen::Vector3d tmp_vec = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
+            bboxpoint_forPrint.add_point(tmp_vec);
+
+            // 原点とのedgeを格納
+            long unsigned int i = 1;
+            std::array<int, 2> to_zero{0, static_cast<int>(bboxpoint_forPrint.get_point_num() - i)};
+            bboxpoint_forPrint.add_edge(to_zero);
+        };
+
+        // 原点とのedgeを作る用に 原点を追加
+        Eigen::Vector3d zero = {0, 0, 0};
+        bboxpoint_forPrint.add_point(zero);
+
+        for (int i = 0; i < 4; i++)
+        {
+            add_edge(box.at(i));
+        }
     }
     // TODO:edgeの処理をなんとか作る。
 
