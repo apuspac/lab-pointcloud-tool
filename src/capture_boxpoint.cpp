@@ -221,6 +221,9 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
     detect_bbox.get_bbox_all().at(0).print();
     std::cout << "img_name:::" << detect_bbox.get_img_name() << std::endl;
 
+    // TODO：一回だけ用のflag
+    bool flag = true;
+
     // 一個一個のbboxを処理
     for (auto bbox_data : detect_bbox.get_bbox_all())
     {
@@ -296,13 +299,19 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
             bboxpoint_forPrint.add_edge(to_zero);
         };
 
-        // 原点とのedgeを作る用に 原点を追加
-        Eigen::Vector3d zero = {0, 0, 0};
-        bboxpoint_forPrint.add_point(zero);
-
-        for (int i = 0; i < 4; i++)
+        if (flag == true)
         {
-            add_edge(box.at(i));
+            // TODO:とりあえず 一個だけを出力してる TODOというか注意しとけの意味
+            //  原点とのedgeを作る用に 原点を追加
+            Eigen::Vector3d zero = {0, 0, 0};
+            bboxpoint_forPrint.add_point(zero);
+
+            for (int i = 0; i < 4; i++)
+            {
+                add_edge(box.at(i));
+            }
+
+            flag = false;
         }
     }
     // TODO:edgeの処理をなんとか作る。

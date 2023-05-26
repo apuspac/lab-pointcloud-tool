@@ -485,12 +485,12 @@ std::shared_ptr<open3d::geometry::LineSet> make_line_origin(std::vector<Eigen::V
         line_point.push_back(point_xyz);
     }
 
-    for (int i = 1; i < pointset.size(); i++)
+    for (int i = 1; i < int(pointset.size()); i++)
     {
         line_line.push_back({0, i});
     }
 
-    for (int i = 1; i < pointset.size(); i++)
+    for (int i = 1; i < int(pointset.size()); i++)
     {
         line_color.push_back({0.9, 0.6, 0.1});
     }
@@ -523,7 +523,7 @@ std::shared_ptr<open3d::geometry::Geometry> make_geometry_pointset(std::vector<E
         color = {0.1, 0.1, 0.9};
     }
 
-    for (int i = 0; i < pointset.size(); i++)
+    for (int i = 0; i < int(pointset.size()); i++)
     {
         test_color.push_back(color);
     }
