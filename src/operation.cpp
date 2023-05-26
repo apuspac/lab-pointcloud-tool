@@ -559,7 +559,7 @@ void PointOperation::capture_pointset()
 
     // load plydata
     PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
 
     // load bbox ここにjsonファイルのクラスのインスタンスを宣言
     // objectIOに jsonデータ格納のプログラムを作る
@@ -592,8 +592,8 @@ void PointOperation::capture_pointset()
     // 座標軸
     std::shared_ptr<open3d::geometry::Geometry> axes = show_axes();
 
-    // open3d::visualization::DrawGeometries({axes, ply_point_geo});
-    open3d::visualization::DrawGeometries({bbox_geo, axes, bbox_to_line_geo, capture_bbox_geo});
+    open3d::visualization::DrawGeometries({axes, ply_point_geo});
+    open3d::visualization::DrawGeometries({ply_point_geo, bbox_geo, axes, bbox_to_line_geo, capture_bbox_geo});
 
     // ここからsegmentation
     // 抽出したポイントを格納
@@ -615,7 +615,7 @@ void PointOperation::capture_pointset()
     std::shared_ptr<open3d::geometry::Geometry> mask_geo = make_geometry_pointset(segline_point.get_point_all(), 1);
     // maskと原点をつなぐline
     std::shared_ptr<open3d::geometry::Geometry> mask_to_origin_line = make_line_origin(segline_point.get_point_all());
-    open3d::visualization::DrawGeometries({mask_geo, axes, mask_to_origin_line, capture_mask_geo});
+    open3d::visualization::DrawGeometries({ply_point_geo, mask_geo, axes, mask_to_origin_line, capture_mask_geo});
 
     // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");

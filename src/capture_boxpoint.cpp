@@ -207,8 +207,8 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
 
         double tmp = normal(0) * point(0) + normal(1) * point(1) + normal(2) * point(2) + d;
 
-        std::cout
-            << "point_upper_check:" << tmp << std::endl;
+        // std::cout
+        // << "point_upper_check:" << tmp << std::endl;
 
         if (tmp > 0)
         {
@@ -472,7 +472,7 @@ void CaptureBoxPoint::capture_segmentation_distance(PointSet &plypoint, PointSet
     Eigen::Vector3d zero = {0, 0, 0};
     segpoint_with_line.add_point(zero);
 
-    double allow_range = 0.5;
+    double allow_range = 0.005;
 
     for (auto target_line : segmentation_point.get_point_all())
     {

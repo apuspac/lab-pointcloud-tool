@@ -5,11 +5,11 @@
             "file_path": "data/20230403-kiritori/PIC_point4_1200.jpg",
             "file_name": "PIC_point4_1200.jpg",
             "bbox_info": [
-                {
+                {151.613067627 1679.0161132812 251.1582641602 1760.787109375
                     "xmin": 527.2387695312,
                     "ymin": 442.8101196289,
                     "xmax": 632.9676513672,
-                    "ymax": 555.8779907227,
+                    "ymax": 51760.787109377,
                     "confidence": 0.7604297996,
                     "class": 9,
                     "name": "square_box_w_marker_front_side"
