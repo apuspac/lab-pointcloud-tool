@@ -492,7 +492,7 @@ int ObjectIO::load_detection_json_file(std::string filepath, DetectionData &dete
         // bbox set
         if (detect_img.HasMember("bbox_info"))
         {
-            const rapidjson::Value &bbox_info = detect_img["bbox_info"].GetArray();
+            const rapidjson::Value &bbox_info = detect_img["bbox_info"];
 
             for (const auto &bbox : bbox_info.GetArray())
             {
@@ -515,18 +515,18 @@ int ObjectIO::load_detection_json_file(std::string filepath, DetectionData &dete
         // mask set
         if (detect_img.HasMember("mask_info"))
         {
-            const rapidjson::Value &mask_info = detect_img["mask_info"].GetArray();
+            const rapidjson::Value &mask_info = detect_img["mask_info"];
             for (const auto &mask : mask_info.GetArray())
             {
                 Mask mask_data;
 
                 mask_data.set_class_name(mask["class_name"].GetString());
-                const rapidjson::Value &one_mask = mask["contour"].GetArray();
+                const rapidjson::Value &one_mask = mask["contour"];
 
                 // bboxと違って ちょっと入れ子になるので注意。
                 for (const auto &pixel : one_mask.GetArray())
                 {
-                    const rapidjson::Value &pixel_mask = pixel.GetArray();
+                    const rapidjson::Value &pixel_mask = pixel;
 
                     for (const auto &pixel_tmp : pixel_mask.GetArray())
                     {

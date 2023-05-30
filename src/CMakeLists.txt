@@ -6,8 +6,8 @@ project(Rotation)
 
 find_package(OpenCV REQUIRED)
 
-cmake_policy(SET CMP0074 NEW)
-set(Open3D_DIR "${HOME}/open3d_install")
+# cmake_policy(SET CMP0074 NEW)
+# set(Open3D_DIR "${HOME}/open3d_install")
 find_package(Open3D REQUIRED)
 
 # cppファイルを追加
