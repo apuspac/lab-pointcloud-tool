@@ -14,6 +14,7 @@
 #include "open3d/Open3D.h"
 
 // 相互依存
+// HACK: これ書いておく必要ある？
 class ObjectIO;
 
 /**

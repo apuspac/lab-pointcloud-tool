@@ -452,6 +452,8 @@ std::shared_ptr<open3d::geometry::LineSet> show_axes()
     std::vector<Eigen::Vector2i> line_line;
     std::vector<Eigen::Vector3d> line_color;
 
+    // 原点と各軸の延ばした点を使って 座標軸を表示する
+    // ほかに表示する方法もあるらしい
     line_point.push_back({0.0, 0.0, 0});
 
     line_point.push_back({10.0, 0.0, 0});
@@ -462,6 +464,7 @@ std::shared_ptr<open3d::geometry::LineSet> show_axes()
     line_point.push_back({0, -10.0, 0});
     line_point.push_back({0, 0.0, -10.0});
 
+    // lineの定義
     line_line.push_back({0, 1});
     line_line.push_back({0, 2});
     line_line.push_back({0, 3});
@@ -469,7 +472,7 @@ std::shared_ptr<open3d::geometry::LineSet> show_axes()
     line_line.push_back({0, 5});
     line_line.push_back({0, 6});
 
-    line_color.push_back({0.9, 0.1, 0.1});
+        line_color.push_back({0.9, 0.1, 0.1});
     line_color.push_back({0.1, 0.9, 0.1});
     line_color.push_back({0.1, 0.1, 0.9});
 
