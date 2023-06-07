@@ -583,8 +583,24 @@ void PointOperation::capture_pointset()
 
     std::cout << ply_point.get_point_all().at(0) << std::endl;
 
+    Viewer3D check_ply("plyfile");
+    check_ply.add_axes();
+    check_ply.add_geometry_pointset(ply_point.get_point_all(), 0);
+
+    check_ply.show_using_drawgeometries();
+
+    // ここからsegmentation
+    // 抽出したポイントを格納
+    PointSet capture_ply_seg("capture_segmentation_point");
+    // segmentation_lineを格納
+    PointSet segline_point("segmentation_point");
+
     Viewer3D check_window("open3d");
 
+    // ply_point: 元のply
+    // capture_ply: 切り出したbboxの中の点群
+    // one_img_bbox: bboxそのもの
+    // bbox_point: bboxと原点とのline
     check_window.add_axes();
     check_window.add_geometry_pointset(ply_point.get_point_all(), 3);
     check_window.add_geometry_pointset(capture_ply.get_point_all(), 0);
@@ -593,28 +609,6 @@ void PointOperation::capture_pointset()
 
     check_window.show_using_drawgeometries();
 
-    /// バウンディングボックス 描画
-    // 元のply
-    std::shared_ptr<open3d::geometry::Geometry> ply_point_geo = make_geometry_pointset(ply_point.get_point_all(), 3);
-    // 切り出したbboxの中の点群
-    std::shared_ptr<open3d::geometry::Geometry> capture_bbox_geo = make_geometry_pointset(capture_ply.get_point_all(), 0);
-    // bboxそのもの
-    std::shared_ptr<open3d::geometry::Geometry> bbox_geo = make_geometry_pointset(one_img_bbox.get_bbox_all().at(0).get_xyz(), 1);
-    // bboxと原点とのline
-    std::shared_ptr<open3d::geometry::Geometry> bbox_to_line_geo = make_line_origin(bbox_point.get_point_all());
-    // 座標軸
-    std::shared_ptr<open3d::geometry::Geometry> axes = show_axes();
-
-    open3d::visualization::DrawGeometries({axes, ply_point_geo});
-    open3d::visualization::DrawGeometries({ply_point_geo, bbox_geo, axes, bbox_to_line_geo, capture_bbox_geo});
-
-    // ここからsegmentation
-    // 抽出したポイントを格納
-    PointSet capture_ply_seg("capture_segmentation_point");
-    // segmentation_lineを格納
-    PointSet segline_point("segmentation_point");
-    //
-
     // とりあえず 最初の1つだけ取り出す。
     Mask one_img_mask = detect.get_mask_data().at(0).get_mask_data_all().at(0);
     PointSet one_mask("segmask_point");
@@ -622,13 +616,26 @@ void PointOperation::capture_pointset()
 
     capbox.capture_segmentation_distance(ply_point, capture_ply_seg, one_mask, segline_point);
 
-    // maskで切り出したpoint
-    std::shared_ptr<open3d::geometry::Geometry> capture_mask_geo = make_geometry_pointset(capture_ply_seg.get_point_all(), 0);
-    // maskの点
-    std::shared_ptr<open3d::geometry::Geometry> mask_geo = make_geometry_pointset(segline_point.get_point_all(), 1);
-    // maskと原点をつなぐline
-    std::shared_ptr<open3d::geometry::Geometry> mask_to_origin_line = make_line_origin(segline_point.get_point_all());
-    open3d::visualization::DrawGeometries({ply_point_geo, mask_geo, axes, mask_to_origin_line, capture_mask_geo});
+    Viewer3D check_mask("mask");
+
+    // plypoint:切り出し元のファイル
+    // capture_ply_seg: maskで切り出したpoint
+    // segline_point: maskpointと原点をつなぐline
+    check_mask.add_axes();
+    check_mask.add_geometry_pointset(ply_point.get_point_all(), 0);
+    check_mask.add_geometry_pointset(capture_ply_seg.get_point_all(), 0);
+    check_mask.add_geometry_pointset(segline_point.get_point_all(), 3);
+    check_mask.add_line_origin(segline_point.get_point_all(), 1);
+
+    check_mask.show_using_drawgeometries();
+
+    // // maskで切り出したpoint
+    // std::shared_ptr<open3d::geometry::Geometry> capture_mask_geo = make_geometry_pointset(capture_ply_seg.get_point_all(), 0);
+    // // maskの点
+    // std::shared_ptr<open3d::geometry::Geometry> mask_geo = make_geometry_pointset(segline_point.get_point_all(), 1);
+    // // maskと原点をつなぐline
+    // std::shared_ptr<open3d::geometry::Geometry> mask_to_origin_line = make_line_origin(segline_point.get_point_all());
+    // open3d::visualization::DrawGeometries({ply_point_geo, mask_geo, axes, mask_to_origin_line, capture_mask_geo});
 
     // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");

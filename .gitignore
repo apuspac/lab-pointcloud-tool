@@ -37,6 +37,8 @@
 ./src/build/cmake_install.cmake
 ./src/build/Makefile
 
+# exeFile
+./src/build/Rotation
 
 # Created by https://www.toptal.com/developers/gitignore/api/cmake
 # Edit at https://www.toptal.com/developers/gitignore?templates=cmake
