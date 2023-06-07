@@ -413,38 +413,6 @@ void PointOperation::capture_segmentation_point()
 }
 
 // TODO: あとで作り直す
-// これは、VisualizerWindowを使ったやり方。 機能を自分で作らなければいけない分 ちょっとめんどう。
-void show_sphere()
-{
-    auto sphere = open3d::geometry::TriangleMesh::CreateSphere(1.0);
-    sphere->ComputeVertexNormals();
-    sphere->PaintUniformColor({0.0, 1.0, 0.0});
-
-    open3d::visualization::Visualizer vis;
-    vis.CreateVisualizerWindow("OKOK");
-    vis.AddGeometry(sphere);
-
-    // Change view
-    open3d::visualization::ViewControl &view_control = vis.GetViewControl();
-    auto view_params = open3d::visualization::ViewParameters();
-    view_control.ConvertToViewParameters(view_params);
-
-    view_params.front_ = Eigen::Vector3d(0, -1, 0);
-    view_params.lookat_ = Eigen::Vector3d(0, 0, 0);
-    view_params.up_ = Eigen::Vector3d(0, 0, 1);
-    // view_params.zoom_ = 1.0;
-    view_control.ConvertFromViewParameters(view_params);
-
-    // PollEventsはウィンドウが閉じられるときにfalseを返す
-    while (vis.PollEvents() == true)
-    {
-        vis.UpdateGeometry();
-        vis.UpdateRender();
-    }
-
-    vis.DestroyVisualizerWindow();
-}
-
 std::shared_ptr<open3d::geometry::LineSet> show_axes()
 {
 
@@ -472,7 +440,7 @@ std::shared_ptr<open3d::geometry::LineSet> show_axes()
     line_line.push_back({0, 5});
     line_line.push_back({0, 6});
 
-        line_color.push_back({0.9, 0.1, 0.1});
+    line_color.push_back({0.9, 0.1, 0.1});
     line_color.push_back({0.1, 0.9, 0.1});
     line_color.push_back({0.1, 0.1, 0.9});
 

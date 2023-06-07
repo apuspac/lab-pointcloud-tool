@@ -13,9 +13,23 @@
 class Viewer3D
 {
 private:
+    std::vector<std::shared_ptr<open3d::geometry::Geometry>> geometry_obj;
+    std::string window_name;
+
 public:
-    void show_sphere();
-    std::shared_ptr<open3d::geometry::LineSet> show_axes();
+    Viewer3D(std::string _name = "Open3D") : window_name(_name) {}
+    ~Viewer3D() {}
+
+    void set_window_name(std::string name) { window_name = name; }
+    void add_geometry_obj(std::shared_ptr<open3d::geometry::Geometry> obj){geometry_obj.push_back(obj)};
+
+    void add_sphere();
+    void add_axes();
+    void add_line_origin(std::vector<Eigen::Vector3d>);
+    void add_geometry_pointset(std::vector<Eigen::Vector3d>);
+
+    void show_using_custom_visualizer();
+    void show_using_drawgeometries()
 }
 
 #endif
