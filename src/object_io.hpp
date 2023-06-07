@@ -8,11 +8,15 @@
 
 #include "pointset.hpp"
 #include "operation.hpp"
+#include "capture_boxpoint.hpp"
 #include <fstream>
 #include <unistd.h>
 #include <getopt.h>
 #include <opencv2/opencv.hpp>
 
+#include "rapidjson/document.h"
+#include "rapidjson/filereadstream.h"
+#include <cstdio>
 // 相互依存?
 class PointOperation;
 
@@ -29,6 +33,7 @@ public:
     void load_img_point_file(std::string, std::string, std::string, PointSet &);
     static void output_ply(PointSet &, std::string);
     Eigen::Vector3d extend_distance_from_point_and_origin(Eigen::Vector3d, double);
+    int load_detection_json_file(std::string, DetectionData &, std::string);
 };
 
 #endif

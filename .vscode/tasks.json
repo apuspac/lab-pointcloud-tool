@@ -38,11 +38,15 @@
                 "--ply_cp",
                 "ply.dat",
                 "--ply",
-                "kyoiku.ply",
+                "plyfile.ply",
                 "--img",
-                "../../img/kyoiku.JPG",
+                "img/PIC_point1.jpg",
                 "--dir",
-                "../../ply_data/test_idou/"
+                "data/test/",
+                "--json",
+                "data/detections_test.json",
+                "--mode",
+                "6",
             ],
         }
     ],

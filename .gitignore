@@ -58,4 +58,11 @@ _deps
 # External projects
 *-prefix/
 
+
+# dataファイルは追跡
+!data/
+
+# それ以外のjsonファイルは追跡しない
+*.json
+
 # End of https://www.toptal.com/developers/gitignore/api/cmake

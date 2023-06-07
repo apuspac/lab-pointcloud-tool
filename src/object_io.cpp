@@ -18,12 +18,15 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
     // x: plyの対応点 .dat
     // p: plyファイル .ply
     // i: imgファイル .jpg,png
+    // j: jsonファイル .json
     // d: デフォルトdirpath
+    // o: mode 選択
     // h: help
     // 複数入力をさせたいけど ちょっと面倒っぽいので、 2回指定するときは、2回とも入力する。
-    const char *opt_string = "m:x:p:d:i:h:o";
+    const char *opt_string = "m:x:p:d:j:i:h:o";
 
     // オプション処理のlong用
+    // 長い文字列-> 一文字(opt_string)ように変えてる。
     // {*name,  has_arg,    *flag,  val},
     // has_argは 引数が必要なら has_arg, 必要なかったらno_arg どっちでもよいときはoptional_arg
     // flag 0 のときは valが返される
@@ -33,6 +36,7 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
             {"ply_cp", required_argument, 0, 'x'},
             {"ply", required_argument, 0, 'p'},
             {"img", required_argument, 0, 'i'},
+            {"json", required_argument, 0, 'j'},
             {"dir", required_argument, 0, 'd'},
             {"mode", required_argument, 0, 'o'},
             {"help", no_argument, 0, 'h'},
@@ -61,6 +65,10 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
 
         case 'i':
             operation.set_img_file_path(std::string(optarg));
+            break;
+
+        case 'j':
+            operation.set_json_path(std::string(optarg));
             break;
 
         case 'd':
@@ -433,4 +441,107 @@ Eigen::Vector3d ObjectIO::extend_distance_from_point_and_origin(Eigen::Vector3d 
     Eigen::Vector3d extend_point = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
 
     return extend_point;
+}
+
+int ObjectIO::load_detection_json_file(std::string filepath, DetectionData &detect, std::string img_path)
+{
+    std::cout << "load_detection_jsonfile" << std::endl;
+    std::cout << "filename: " << filepath << std::endl;
+
+    // 画像の縦横サイズを取得
+    std::array<double, 2> img_size = get_img_width_height(img_path);
+
+    // jsonファイル読み込み
+    FILE *fp = fopen(filepath.c_str(), "r");
+    if (!fp)
+    {
+        std::cerr << "Failed to open the JSONFILE" << std::endl;
+        fclose(fp);
+        return 1;
+    }
+
+    char readBuffer[65536];
+    rapidjson::FileReadStream jsonfile(fp, readBuffer, std::size(readBuffer));
+
+    // parse
+    rapidjson::Document doc;
+    doc.ParseStream(jsonfile);
+
+    // errcheck
+    if (doc.HasParseError())
+    {
+        std::cerr << "Failed to parse the JSON content." << std::endl;
+        return 1;
+    }
+
+    // 読み込むときはこれ
+    std::cout << doc["input_path"].GetString() << std::endl;
+
+    // 配列がある場合は getArray
+    const rapidjson::Value &merge_data = doc["merged_data"].GetArray();
+
+    for (const auto &detect_img : merge_data.GetArray())
+    {
+        BBoxData bboxdata;
+        MaskData maskdata;
+
+        // file_name
+        bboxdata.set_img_name(detect_img["file_name"].GetString());
+        maskdata.set_img_name(detect_img["file_name"].GetString());
+
+        // bbox set
+        if (detect_img.HasMember("bbox_info"))
+        {
+            const rapidjson::Value &bbox_info = detect_img["bbox_info"];
+
+            for (const auto &bbox : bbox_info.GetArray())
+            {
+                BBox bbox_tmp(
+                    bbox["xmin"].GetDouble(),
+                    bbox["ymin"].GetDouble(),
+                    bbox["xmax"].GetDouble(),
+                    bbox["ymax"].GetDouble());
+                bbox_tmp.set_class_name(bbox["name"].GetString());
+                bbox_tmp.set_class_num(bbox["class"].GetInt());
+                bbox_tmp.set_confidence(bbox["confidence"].GetDouble());
+
+                bbox_tmp.equirectangular_to_sphere(img_size.at(0), img_size.at(1));
+                bboxdata.add_bbox(bbox_tmp);
+            }
+
+            detect.set_bbox_data(bboxdata);
+        }
+
+        // mask set
+        if (detect_img.HasMember("mask_info"))
+        {
+            const rapidjson::Value &mask_info = detect_img["mask_info"];
+            for (const auto &mask : mask_info.GetArray())
+            {
+                Mask mask_data;
+
+                mask_data.set_class_name(mask["class_name"].GetString());
+                const rapidjson::Value &one_mask = mask["contour"];
+
+                // bboxと違って ちょっと入れ子になるので注意。
+                for (const auto &pixel : one_mask.GetArray())
+                {
+                    const rapidjson::Value &pixel_mask = pixel;
+
+                    for (const auto &pixel_tmp : pixel_mask.GetArray())
+                    {
+                        mask_data.add_mask(pixel_tmp[0].GetInt(), pixel_tmp[1].GetInt());
+                    }
+                }
+                mask_data.equirectangular_to_sphere(img_size.at(0), img_size.at(1));
+                maskdata.set_mask_data(mask_data);
+            }
+
+            detect.set_mask_data(maskdata);
+        }
+    }
+
+    fclose(fp);
+
+    return 0;
 }

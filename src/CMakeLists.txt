@@ -6,28 +6,9 @@ project(Rotation)
 
 find_package(OpenCV REQUIRED)
 
-# find_package(rapidjson REQUIRED)
-# find_package(Eigen3 3.4.0 REQUIRED NO_MODULE)
-
-# # Fetch rapidjson
-# include(FetchContent)
-
-# # contents 宣言
-# FetchContent_Declare(
-# rapidjson
-# GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
-# GIT_TAG        v1.1.0
-# )
-
-# FetchContent_GetProperties(rapidjson)
-# if(NOT rapidjson_POPULATED)
-# FetchContent_Populate(rapidjson)
-# endif()
-
-# include_directories(${rapidjson_SOURCE_DIR}/include)
-
-# find_package(rapidjson)
-# FetchContent_MakeAvailable(rapidjson)
+# cmake_policy(SET CMP0074 NEW)
+# set(Open3D_DIR "${HOME}/open3d_install")
+find_package(Open3D REQUIRED)
 
 # cppファイルを追加
 add_executable(
@@ -41,7 +22,7 @@ add_executable(
 )
 
 # ここeigenはなんでリンクしなくていいのかよくわからん
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${rapidjson})
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${rapidjson} Open3D::Open3D)
 
 # target_link_libraries(DisplayImage Eigen3::Eigen)
 

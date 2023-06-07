@@ -1,5 +1,66 @@
 #include "capture_boxpoint.hpp"
 
+void BBox::print()
+{
+    // std::cout << class_num << " " << class_name << std::endl;
+    std::cout << class_name << std::endl;
+    std::cout << xmin << " " << ymin << " " << xmax << " " << ymax << std::endl;
+    std::cout << sphere_xyz.at(0).transpose() << std::endl
+              << sphere_xyz.at(1).transpose() << std::endl
+              << sphere_xyz.at(2).transpose() << std::endl
+              << sphere_xyz.at(3).transpose() << std::endl
+              << std::endl;
+}
+
+void Mask::print()
+{
+    for (const auto uv : mask_uv)
+    {
+        std::cout << uv.at(0) << " " << uv.at(1) << std::endl;
+    }
+}
+/**
+ * @brief 正距円筒図法(360度画像)の画素値から単位球に投影したとき方向ベクトルへ変換する。左上が原点でのuv座標形式の画素値が入力される前提。緯度経度を計算し、xyzに変換する。
+ *
+ * @param u 画素値の横座標
+ * @param v 画素値の縦座標
+ * @param img_width 360度画像の横
+ * @param img_height 360度画像の縦
+ * @return Eigen::Vector3d 変換したベクトルを返す
+ */
+Eigen::Vector3d equirec_to_sphere(double u, double v, double width, double height)
+{
+    // 正規化
+    u /= width;
+    v /= height;
+
+    // 緯度経度計算
+    double phi = u * 2 * M_PI;
+    double theta = v * M_PI;
+
+    // 方向ベクトルに変換
+    Eigen::Vector3d p = {abs(sin(theta)) * sin(phi), abs(sin(theta)) * cos(phi), cos(theta)};
+
+    return p;
+}
+
+void BBox::equirectangular_to_sphere(double img_width, double img_height)
+{
+    sphere_xyz.push_back(equirec_to_sphere(xmin, ymin, img_width, img_height));
+    sphere_xyz.push_back(equirec_to_sphere(xmax, ymin, img_width, img_height));
+    sphere_xyz.push_back(equirec_to_sphere(xmin, ymax, img_width, img_height));
+    sphere_xyz.push_back(equirec_to_sphere(xmax, ymax, img_width, img_height));
+}
+
+void Mask::equirectangular_to_sphere(double img_width, double img_height)
+{
+    for (auto uv : get_mask())
+    {
+        Eigen::Vector3d p = equirec_to_sphere(uv.at(0), uv.at(1), img_width, img_height);
+        mask_xyz.push_back(p);
+    }
+}
+
 /**
  * @brief 対象点がpointが3角形の中に入っているかどうかを判定する。 内外判定
  * https://shikousakugo.wordpress.com/2012/06/27/ray-intersection-2/
@@ -114,29 +175,11 @@ void CaptureBoxPoint::set_bbox(double xmin, double ymin, double xmax, double yma
  * @param bbox_point バウンディングボックスの点
  * @param bbox_point_with_line バウンディングボックスと直線を描画する用
  */
-void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, PointSet &bbox_point, PointSet &bbox_point_with_line)
+void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, BBoxData &detect_bbox, PointSet &bboxpoint_forPrint)
 {
-    std::cout << "capture_boxpoint" << std::endl;
-
-    std::cout << bbox_point_with_line.get_name() << std::endl;
-
-    // BBOX
-    std::vector<Eigen::Vector3d> box;
-
-    // TODO: 複数のbboxにできるよう対応させようね。
-    for (auto box_tmp : bbox_point.get_point_all())
-    {
-        box.push_back(box_tmp);
-    }
-
-    std::cout << "box:" << std::endl
-              << box.at(0).transpose() << std::endl
-              << box.at(1).transpose() << std::endl
-              << box.at(2).transpose() << std::endl
-              << box.at(3).transpose() << std::endl;
 
     // 面法線を求める
-    auto calc_plane_normal = [](std::vector<Eigen::Vector3d> triangle)
+    auto calc_plane_normal = [](std::array<Eigen::Vector3d, 3> triangle)
     {
         Eigen::Vector3d v0v1 = triangle.at(1) - triangle.at(0);
         Eigen::Vector3d v0v2 = triangle.at(2) - triangle.at(0);
@@ -147,7 +190,8 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
         return plane_normal;
     };
 
-    // 一応dも求める
+    // 平面の法線と平面にある一点から 平面の方程式が出せる。
+    // 係数dを求められるが、dは 平面と原点との距離である。今回の平面はすべて原点を通る平面なので、関係ない。
     auto calc_d = [](Eigen::Vector3d normal, Eigen::Vector3d point)
     {
         return (-(normal(0) * point(0) + normal(1) * point(1) + normal(2) * point(2)));
@@ -156,9 +200,15 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
     // 点を代入したときの距離が 0より上かどうかを判定する
     auto is_point_upper_side_of_plane = [](Eigen::Vector3d point, Eigen::Vector3d normal, double d)
     {
+        // これは点と平面の距離
+        // double flac_up = normal(0) * point(0) + normal(1) * point(1) + normal(2) * point(2) + d;
+        // double flac_down = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0) std::pow(point(2), 2.0));
+        // double tmp = std::abs(flac_up) / flac_down;
+
         double tmp = normal(0) * point(0) + normal(1) * point(1) + normal(2) * point(2) + d;
 
-        // std::cout << "point_upper:" << tmp << std::endl;
+        // std::cout
+        // << "point_upper_check:" << tmp << std::endl;
 
         if (tmp > 0)
         {
@@ -171,63 +221,105 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
         return false;
     };
 
-    // double d = -(plane_normal(0) * triangle_1.at(1)(0) + plane_normal(1) * triangle_1.at(1)(1) + plane_normal(2) * triangle_1.at(1)(2));
+    std::cout << "------capture_boxpoint" << std::endl;
 
-    Eigen::Vector3d origin = {0, 0, 0};
+    // bbox_pointをdetectionDataから取り出す
+    detect_bbox.get_bbox_all().at(0).print();
+    std::cout << "img_name:::" << detect_bbox.get_img_name() << std::endl;
 
-    // 4つの平面を定義するために、原点originとbboxとで三角形を作る。
-    // 4角錐の各平面の面法線を求め,平面の方程式を作る。
+    // TODO：一回だけ用のflag
+    bool flag = true;
 
-    // 1つ目
-    std::vector<Eigen::Vector3d> triangle_1;
-    triangle_1.push_back(origin);
-    triangle_1.push_back(box.at(0));
-    triangle_1.push_back(box.at(1));
-
-    Eigen::Vector3d normal_1 = calc_plane_normal(triangle_1);
-    double d_1 = calc_d(normal_1, triangle_1.at(1));
-
-    // 2つ目
-    std::vector<Eigen::Vector3d> triangle_2;
-    triangle_2.push_back(origin);
-    triangle_2.push_back(box.at(2));
-    triangle_2.push_back(box.at(0));
-
-    Eigen::Vector3d normal_2 = calc_plane_normal(triangle_2);
-    double d_2 = calc_d(normal_2, triangle_2.at(1));
-
-    // 3つ目
-    std::vector<Eigen::Vector3d> triangle_3;
-    triangle_3.push_back(origin);
-    triangle_3.push_back(box.at(1));
-    triangle_3.push_back(box.at(3));
-
-    Eigen::Vector3d normal_3 = calc_plane_normal(triangle_3);
-    double d_3 = calc_d(normal_3, triangle_3.at(1));
-
-    // 4つ目
-    std::vector<Eigen::Vector3d> triangle_4;
-    triangle_4.push_back(origin);
-    triangle_4.push_back(box.at(3));
-    triangle_4.push_back(box.at(2));
-
-    Eigen::Vector3d normal_4 = calc_plane_normal(triangle_4);
-    double d_4 = calc_d(normal_4, triangle_4.at(1));
-
-    for (auto target_point : plypoint.get_point_all())
+    // 一個一個のbboxを処理
+    for (auto bbox_data : detect_bbox.get_bbox_all())
     {
-        // 各平面の方程式に 点を代入し、0より大きければ、平面の上側とみなす。
-        // TODO: これおそらくマイナスの位置だとうまく動かない気がするよ。
-        if (is_point_upper_side_of_plane(target_point, normal_1, d_1) && is_point_upper_side_of_plane(target_point, normal_2, d_2) && is_point_upper_side_of_plane(target_point, normal_3, d_3) && is_point_upper_side_of_plane(target_point, normal_4, d_4))
+        // 画素値から球投影の座標変換したものを格納
+        std::vector<Eigen::Vector3d> box = bbox_data.get_xyz();
+
+        std::cout << "box:" << std::endl
+                  << box.at(0).transpose() << std::endl
+                  << box.at(1).transpose() << std::endl
+                  << box.at(2).transpose() << std::endl
+                  << box.at(3).transpose() << std::endl;
+
+        Eigen::Vector3d origin = {0, 0, 0};
+
+        // 4つの平面を定義するために、原点originとbboxとで三角形を作る。
+        // 4角錐の各平面の面法線を求め,平面の方程式を作る。
+        std::array<std::array<Eigen::Vector3d, 3>, 4> triangle_vec;
+        std::array<Eigen::Vector3d, 4> normal_vec;
+        std::array<double, 4> distance;
+
+        // 四角錐定義
+        triangle_vec.at(0) = {origin, box.at(2), box.at(0)};
+        triangle_vec.at(1) = {origin, box.at(0), box.at(1)};
+        triangle_vec.at(2) = {origin, box.at(3), box.at(2)};
+        triangle_vec.at(3) = {origin, box.at(1), box.at(3)};
+
+        // 四角錐の平面の面法線を計算
+        // ax+by+cz+d = 0 の dを求める
+
+        for (int i = 0; i < 4; i++)
         {
-            capture_point.add_point(target_point);
+            normal_vec.at(i) = calc_plane_normal(triangle_vec.at(i));
+            distance.at(i) = calc_d(normal_vec.at(i), box.at(i));
+        }
+
+        for (auto target_point : plypoint.get_point_all())
+        {
+            // 各平面の方程式に 点を代入し、0より大きければ、平面の上側とみなす。
+            // TODO: これおそらくマイナスの位置だとうまく動かない気がするよ。
+            if (is_point_upper_side_of_plane(target_point, normal_vec.at(0), distance.at(0)) && is_point_upper_side_of_plane(target_point, normal_vec.at(1), distance.at(1)) && is_point_upper_side_of_plane(target_point, normal_vec.at(2), distance.at(2)) && is_point_upper_side_of_plane(target_point, normal_vec.at(3), distance.at(3)))
+            {
+                capture_point.add_point(target_point);
+            }
+        }
+
+        std::cout
+            << "plane_normal: " << normal_vec.at(0).transpose() << std::endl
+            << "d: " << distance.at(0) << std::endl;
+        /**
+         * @brief 原点との引数の点とのedge 直線をsegpoint_with_lineに追加する
+         * 原点が0番目に保存されていることが前提なので、 最初に追加しておく。
+         *
+         */
+        auto add_edge = [&bboxpoint_forPrint](Eigen::Vector3d edge_point)
+        {
+            Eigen::Vector3d tmp_normalize = edge_point.normalized();
+
+            // 極座標に変換
+            double theta = std::acos(
+                tmp_normalize(2) /
+                std::sqrt(std::pow(tmp_normalize(0), 2.0) + std::pow(tmp_normalize(1), 2.0) + std::pow(tmp_normalize(2), 2.0)));
+
+            double phi = std::atan2(tmp_normalize(1), tmp_normalize(0));
+
+            // 距離rを伸ばしてpointを新たに格納
+            double r = 20.0;
+            Eigen::Vector3d tmp_vec = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
+            bboxpoint_forPrint.add_point(tmp_vec);
+
+            // 原点とのedgeを格納
+            long unsigned int i = 1;
+            std::array<int, 2> to_zero{0, static_cast<int>(bboxpoint_forPrint.get_point_num() - i)};
+            bboxpoint_forPrint.add_edge(to_zero);
+        };
+
+        if (flag == true)
+        {
+            // TODO:とりあえず 一個だけを出力してる TODOというか注意しとけの意味
+            //  原点とのedgeを作る用に 原点を追加
+            Eigen::Vector3d zero = {0, 0, 0};
+            bboxpoint_forPrint.add_point(zero);
+
+            for (int i = 0; i < 4; i++)
+            {
+                add_edge(box.at(i));
+            }
+
+            // flag = false;
         }
     }
-
-    std::cout
-        << "plane_normal: " << normal_1.transpose() << std::endl
-        << "d: " << d_1 << std::endl;
-
     // TODO:edgeの処理をなんとか作る。
 
     // /**
@@ -380,7 +472,7 @@ void CaptureBoxPoint::capture_segmentation_distance(PointSet &plypoint, PointSet
     Eigen::Vector3d zero = {0, 0, 0};
     segpoint_with_line.add_point(zero);
 
-    double allow_range = 0.0005;
+    double allow_range = 0.005;
 
     for (auto target_line : segmentation_point.get_point_all())
     {
