@@ -10,7 +10,7 @@
  */
 void PointOperation::mode_select()
 {
-    // switch case を使わない試み
+
     // https://yutamano.hatenablog.com/entry/2013/11/18/161234
     std::cout << "mode select" << std::endl;
     switch_func[0] = std::bind(&PointOperation::transform_rotate, this);
@@ -413,6 +413,38 @@ void PointOperation::capture_segmentation_point()
 }
 
 // TODO: あとで作り直す
+// これは、VisualizerWindowを使ったやり方。 機能を自分で作らなければいけない分 ちょっとめんどう。
+void show_sphere()
+{
+    auto sphere = open3d::geometry::TriangleMesh::CreateSphere(1.0);
+    sphere->ComputeVertexNormals();
+    sphere->PaintUniformColor({0.0, 1.0, 0.0});
+
+    open3d::visualization::Visualizer vis;
+    vis.CreateVisualizerWindow("OKOK");
+    vis.AddGeometry(sphere);
+
+    // Change view
+    open3d::visualization::ViewControl &view_control = vis.GetViewControl();
+    auto view_params = open3d::visualization::ViewParameters();
+    view_control.ConvertToViewParameters(view_params);
+
+    view_params.front_ = Eigen::Vector3d(0, -1, 0);
+    view_params.lookat_ = Eigen::Vector3d(0, 0, 0);
+    view_params.up_ = Eigen::Vector3d(0, 0, 1);
+    // view_params.zoom_ = 1.0;
+    view_control.ConvertFromViewParameters(view_params);
+
+    // PollEventsはウィンドウが閉じられるときにfalseを返す
+    while (vis.PollEvents() == true)
+    {
+        vis.UpdateGeometry();
+        vis.UpdateRender();
+    }
+
+    vis.DestroyVisualizerWindow();
+}
+
 std::shared_ptr<open3d::geometry::LineSet> show_axes()
 {
 
@@ -550,6 +582,16 @@ void PointOperation::capture_pointset()
     capbox.capture_bbox(ply_point, capture_ply, one_img_bbox, bbox_point);
 
     std::cout << ply_point.get_point_all().at(0) << std::endl;
+
+    Viewer3D check_window("open3d");
+
+    check_window.add_axes();
+    check_window.add_geometry_pointset(ply_point.get_point_all(), 3);
+    check_window.add_geometry_pointset(capture_ply.get_point_all(), 0);
+    check_window.add_geometry_pointset(one_img_bbox.get_bbox_all().at(0).get_xyz(), 1);
+    check_window.add_line_origin(bbox_point.get_point_all(), 2);
+
+    check_window.show_using_drawgeometries();
 
     /// バウンディングボックス 描画
     // 元のply

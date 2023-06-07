@@ -10,6 +10,7 @@
 #include "object_io.hpp"
 #include "calc_pointset.hpp"
 #include "capture_boxpoint.hpp"
+#include "viewer.hpp"
 
 #include "open3d/Open3D.h"
 

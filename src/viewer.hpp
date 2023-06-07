@@ -9,11 +9,12 @@
 #define VIEWER_HPP_INCLUDE_GUARD
 
 #include "open3d/Open3D.h"
+#include "pointset.hpp"
 
 class Viewer3D
 {
 private:
-    std::vector<std::shared_ptr<open3d::geometry::Geometry>> geometry_obj;
+    std::vector<std::shared_ptr<const open3d::geometry::Geometry>> geometry_obj;
     std::string window_name;
 
 public:
@@ -21,15 +22,17 @@ public:
     ~Viewer3D() {}
 
     void set_window_name(std::string name) { window_name = name; }
-    void add_geometry_obj(std::shared_ptr<open3d::geometry::Geometry> obj){geometry_obj.push_back(obj)};
+    void add_geometry_obj(std::shared_ptr<open3d::geometry::Geometry> obj) { geometry_obj.push_back(obj); }
+    std::vector<std::shared_ptr<const open3d::geometry::Geometry>> get_geometry_obj() { return geometry_obj; }
 
     void add_sphere();
     void add_axes();
-    void add_line_origin(std::vector<Eigen::Vector3d>);
-    void add_geometry_pointset(std::vector<Eigen::Vector3d>);
+    void add_line_origin(std::vector<Eigen::Vector3d>, int);
+    void add_geometry_pointset(std::vector<Eigen::Vector3d>, int);
 
     void show_using_custom_visualizer();
-    void show_using_drawgeometries()
-}
+    void show_using_drawgeometries();
+    Eigen::Vector3d color_preset(int);
+};
 
 #endif
