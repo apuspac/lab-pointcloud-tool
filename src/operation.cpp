@@ -20,6 +20,7 @@ void PointOperation::mode_select()
     switch_func[4] = std::bind(&PointOperation::capture_boxpoint, this);
     switch_func[5] = std::bind(&PointOperation::capture_segmentation_point, this);
     switch_func[6] = std::bind(&PointOperation::capture_pointset, this);
+    switch_func[9] = std::bind(&PointOperation::test_location, this);
     switch_func[get_mode()]();
 }
 
@@ -595,7 +596,14 @@ void PointOperation::capture_pointset()
     // segmentation_lineを格納
     PointSet segline_point("segmentation_point");
 
-    Viewer3D check_window("open3d");
+    // とりあえず 最初の1つだけ取り出す。
+    Mask one_img_mask = detect.get_mask_data().at(0).get_mask_data_all().at(0);
+    PointSet one_mask("segmask_point");
+    one_mask.add_point(one_img_mask.get_mask_xyz().at(0));
+
+    capbox.capture_segmentation_distance(ply_point, capture_ply_seg, one_mask, segline_point);
+
+    Viewer3D check_window("bbox");
 
     // ply_point: 元のply
     // capture_ply: 切り出したbboxの中の点群
@@ -608,13 +616,6 @@ void PointOperation::capture_pointset()
     check_window.add_line_origin(bbox_point.get_point_all(), 2);
 
     check_window.show_using_drawgeometries();
-
-    // とりあえず 最初の1つだけ取り出す。
-    Mask one_img_mask = detect.get_mask_data().at(0).get_mask_data_all().at(0);
-    PointSet one_mask("segmask_point");
-    one_mask.add_point(one_img_mask.get_mask_xyz().at(0));
-
-    capbox.capture_segmentation_distance(ply_point, capture_ply_seg, one_mask, segline_point);
 
     Viewer3D check_mask("mask");
 
@@ -629,14 +630,6 @@ void PointOperation::capture_pointset()
 
     check_mask.show_using_drawgeometries();
 
-    // // maskで切り出したpoint
-    // std::shared_ptr<open3d::geometry::Geometry> capture_mask_geo = make_geometry_pointset(capture_ply_seg.get_point_all(), 0);
-    // // maskの点
-    // std::shared_ptr<open3d::geometry::Geometry> mask_geo = make_geometry_pointset(segline_point.get_point_all(), 1);
-    // // maskと原点をつなぐline
-    // std::shared_ptr<open3d::geometry::Geometry> mask_to_origin_line = make_line_origin(segline_point.get_point_all());
-    // open3d::visualization::DrawGeometries({ply_point_geo, mask_geo, axes, mask_to_origin_line, capture_mask_geo});
-
     // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
 
@@ -644,6 +637,64 @@ void PointOperation::capture_pointset()
     // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
 }
+
+void PointOperation::test_location()
+{
+    std::cout << "test location" << std::endl;
+    ObjectIO obj_io;
+
+    // load plydata
+    PointSet ply_point("plydata");
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
+    std::cout << default_dir_path + ply_file_name.at(0) << std::endl;
+
+    std::shared_ptr<open3d::geometry::PointCloud> kyoiku_point = std::make_shared<open3d::geometry::PointCloud>();
+    kyoiku_point->points_ = ply_point.get_point_all();
+
+    kyoiku_point->EstimateNormals();
+    kyoiku_point->PaintUniformColor({0.75, 0.75, 0.75});
+
+    const std::string bunny_path = default_dir_path + ply_file_name.at(0);
+    open3d::geometry::PointCloud bunny;
+    open3d::io::ReadPointCloudOption bunny_option;
+
+    open3d::io::ReadPointCloudFromPLY(bunny_path, bunny, bunny_option);
+    bunny.EstimateNormals();
+    bunny.PaintUniformColor({0.5, 0.5, 0.5});
+
+    auto keypoints = open3d::geometry::keypoint::ComputeISSKeypoints(*kyoiku_point);
+    auto keypoints_to_shape = [](std::shared_ptr<open3d::geometry::PointCloud> _keypoint)
+    {
+        auto spheres = open3d::geometry::TriangleMesh();
+
+        for (const auto &keypoint : _keypoint->points_)
+        {
+            auto sphere = open3d::geometry::TriangleMesh::CreateSphere(0.01);
+            sphere->Translate(keypoint);
+            spheres += *sphere;
+        }
+        spheres.PaintUniformColor({1.0, 0.75, 0.0});
+
+        return spheres;
+    };
+
+    auto keypoint_sphe = keypoints_to_shape(keypoints);
+
+    std::vector<std::shared_ptr<const open3d::geometry::Geometry>> geo;
+    std::shared_ptr<open3d::geometry::Geometry> bunny_ptr = std::make_shared<open3d::geometry::PointCloud>(bunny);
+    std::shared_ptr<open3d::geometry::Geometry> keypoint_sphe_ptr = std::make_shared<open3d::geometry::TriangleMesh>(keypoint_sphe);
+
+    Viewer3D check_window;
+    check_window.add_geometry_pointset(ply_point.get_point_all(), 3);
+    // check_window.add_geometry_obj(bunny_ptr);
+    check_window.add_geometry_obj(keypoint_sphe_ptr);
+    check_window.show_using_drawgeometries();
+    // geo.push_back(bunny_ptr);
+    // geo.push_back(keypoint_sphe_ptr);
+
+    // open3d::visualization::DrawGeometries(geo);
+}
+
 /**
  * @brief 読み込むファイル名, pathをprintする
  *

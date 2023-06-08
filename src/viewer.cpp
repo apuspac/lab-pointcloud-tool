@@ -62,7 +62,7 @@ void Viewer3D::show_using_custom_visualizer()
 
 void Viewer3D::show_using_drawgeometries()
 {
-    open3d::visualization::DrawGeometries(get_geometry_obj(), window_name = window_name);
+    open3d::visualization::DrawGeometries(get_geometry_obj(), window_name = window_name, 800, 600, 50, 50, false);
 }
 
 void Viewer3D::add_sphere()
@@ -169,6 +169,8 @@ void Viewer3D::add_geometry_pointset(std::vector<Eigen::Vector3d> pointset, int 
 
     pointcloud->points_ = pointset;
     pointcloud->colors_ = point_color;
+
+    pointcloud->EstimateNormals();
 
     add_geometry_obj(pointcloud);
 }
