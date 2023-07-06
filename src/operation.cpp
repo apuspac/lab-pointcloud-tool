@@ -413,149 +413,6 @@ void PointOperation::capture_segmentation_point()
     obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
 }
 
-// TODO: あとで作り直す
-// これは、VisualizerWindowを使ったやり方。 機能を自分で作らなければいけない分 ちょっとめんどう。
-void show_sphere()
-{
-    auto sphere = open3d::geometry::TriangleMesh::CreateSphere(1.0);
-    sphere->ComputeVertexNormals();
-    sphere->PaintUniformColor({0.0, 1.0, 0.0});
-
-    open3d::visualization::Visualizer vis;
-    vis.CreateVisualizerWindow("OKOK");
-    vis.AddGeometry(sphere);
-
-    // Change view
-    open3d::visualization::ViewControl &view_control = vis.GetViewControl();
-    auto view_params = open3d::visualization::ViewParameters();
-    view_control.ConvertToViewParameters(view_params);
-
-    view_params.front_ = Eigen::Vector3d(0, -1, 0);
-    view_params.lookat_ = Eigen::Vector3d(0, 0, 0);
-    view_params.up_ = Eigen::Vector3d(0, 0, 1);
-    // view_params.zoom_ = 1.0;
-    view_control.ConvertFromViewParameters(view_params);
-
-    // PollEventsはウィンドウが閉じられるときにfalseを返す
-    while (vis.PollEvents() == true)
-    {
-        vis.UpdateGeometry();
-        vis.UpdateRender();
-    }
-
-    vis.DestroyVisualizerWindow();
-}
-
-std::shared_ptr<open3d::geometry::LineSet> show_axes()
-{
-
-    std::vector<Eigen::Vector3d> line_point;
-    std::vector<Eigen::Vector2i> line_line;
-    std::vector<Eigen::Vector3d> line_color;
-
-    // 原点と各軸の延ばした点を使って 座標軸を表示する
-    // ほかに表示する方法もあるらしい
-    line_point.push_back({0.0, 0.0, 0});
-
-    line_point.push_back({10.0, 0.0, 0});
-    line_point.push_back({0, 10.0, 0});
-    line_point.push_back({0, 0.0, 10.0});
-
-    line_point.push_back({-10.0, 0.0, 0});
-    line_point.push_back({0, -10.0, 0});
-    line_point.push_back({0, 0.0, -10.0});
-
-    // lineの定義
-    line_line.push_back({0, 1});
-    line_line.push_back({0, 2});
-    line_line.push_back({0, 3});
-    line_line.push_back({0, 4});
-    line_line.push_back({0, 5});
-    line_line.push_back({0, 6});
-
-    line_color.push_back({0.9, 0.1, 0.1});
-    line_color.push_back({0.1, 0.9, 0.1});
-    line_color.push_back({0.1, 0.1, 0.9});
-
-    line_color.push_back({0.75, 0.75, 0.75});
-    line_color.push_back({0.75, 0.75, 0.75});
-    line_color.push_back({0.75, 0.75, 0.75});
-
-    std::shared_ptr<open3d::geometry::LineSet> lineset = std::make_shared<open3d::geometry::LineSet>();
-    lineset->points_ = line_point;
-    lineset->lines_ = line_line;
-    lineset->colors_ = line_color;
-
-    return lineset;
-}
-
-std::shared_ptr<open3d::geometry::LineSet> make_line_origin(std::vector<Eigen::Vector3d> pointset)
-{
-
-    std::vector<Eigen::Vector3d> line_point;
-    std::vector<Eigen::Vector2i> line_line;
-    std::vector<Eigen::Vector3d> line_color;
-
-    for (const auto &point_xyz : pointset)
-    {
-        line_point.push_back(point_xyz);
-    }
-
-    for (int i = 1; i < int(pointset.size()); i++)
-    {
-        line_line.push_back({0, i});
-    }
-
-    for (int i = 1; i < int(pointset.size()); i++)
-    {
-        line_color.push_back({0.9, 0.6, 0.1});
-    }
-
-    std::shared_ptr<open3d::geometry::LineSet> lineset = std::make_shared<open3d::geometry::LineSet>();
-    lineset->points_ = line_point;
-    lineset->lines_ = line_line;
-    lineset->colors_ = line_color;
-
-    return lineset;
-}
-
-std::shared_ptr<open3d::geometry::Geometry> make_geometry_pointset(std::vector<Eigen::Vector3d> pointset, int color_preset)
-{
-
-    std::shared_ptr<open3d::geometry::PointCloud> pointcloud = std::make_shared<open3d::geometry::PointCloud>();
-    std::vector<Eigen::Vector3d> test_color;
-    Eigen::Vector3d color;
-
-    if (color_preset == 0)
-    {
-        color = {0.9, 0.1, 0.1};
-    }
-    else if (color_preset == 1)
-    {
-        color = {0.1, 0.9, 0.1};
-    }
-    else if (color_preset == 2)
-    {
-        color = {0.1, 0.1, 0.9};
-    }
-    else if (color_preset == 3)
-    {
-        color = {0.75, 0.75, 0.75};
-    }
-
-    for (int i = 0; i < int(pointset.size()); i++)
-    {
-        test_color.push_back(color);
-    }
-
-    pointcloud->points_ = pointset;
-    pointcloud->colors_ = test_color;
-
-    return pointcloud;
-    // std::cout << "OK" << std::endl;
-    // open3d::visualization::DrawGeometries({pointcloud});
-}
-
 void PointOperation::capture_pointset()
 {
     std::cout << "capture boxpoint" << std::endl;
@@ -638,7 +495,22 @@ void PointOperation::capture_pointset()
     // obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
 }
 
-void PointOperation::test_location()
+/**
+ * @brief テスト用の関数
+ *
+ * 新機能等を作ったら、あとで実装してあげる
+ *
+ *  * 実行例:
+ * ./Rotation   --mode 9
+ *              --img_cp img.dat,
+ *              --ply_cp, ply.dat,
+ *              --ply, plyfile.ply,
+ *              --img, img/pic_point1.jpg,
+ *              --dir, data/test/,
+ *              --json, data/detections_test.json,
+ *              --mode, 9,
+ */
+void pointoperation::test_location()
 {
     std::cout << "test location" << std::endl;
     ObjectIO obj_io;

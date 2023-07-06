@@ -28,7 +28,11 @@ Eigen::Vector3d Viewer3D::color_preset(int code)
     return color;
 }
 
-// これは、VisualizerWindowを使ったやり方。 機能を自分で設定する分 ちょっとめんどう。
+/**
+ * @brief geometry_objに登録されたGeometryを表示する
+ * これは、VisualizerWindowを使ったやり方。 機能を自分で設定する分 ちょっとめんどう。
+ *
+ */
 void Viewer3D::show_using_custom_visualizer()
 {
     open3d::visualization::Visualizer vis;
@@ -60,6 +64,10 @@ void Viewer3D::show_using_custom_visualizer()
     vis.DestroyVisualizerWindow();
 }
 
+/**
+ * @brief geometry_objに登録されたGeometryを表示する
+ *
+ */
 void Viewer3D::show_using_drawgeometries()
 {
     open3d::visualization::DrawGeometries(get_geometry_obj(), window_name = window_name, 800, 600, 50, 50, false);
@@ -74,6 +82,12 @@ void Viewer3D::add_sphere()
     add_geometry_obj(sphere);
 }
 
+/**
+ * @brief 座標軸を表示のために追加する
+ *
+ * 右手系です。
+ *
+ */
 void Viewer3D::add_axes()
 {
 
@@ -124,6 +138,7 @@ void Viewer3D::add_axes()
  * 4角錐を作る用途で作成
  *
  * @param pointset 原点とを結ぶ点集合
+ * @param color_num 色番号
  */
 void Viewer3D::add_line_origin(std::vector<Eigen::Vector3d> pointset, int color_num)
 {
@@ -133,11 +148,13 @@ void Viewer3D::add_line_origin(std::vector<Eigen::Vector3d> pointset, int color_
     std::vector<Eigen::Vector3d> line_color;
     Eigen::Vector3d color = color_preset(color_num);
 
+    // pointを追加
     for (const auto &point_xyz : pointset)
     {
         line_point.push_back(point_xyz);
     }
 
+    // 原点と各点を結ぶlineを追加
     for (int i = 1; i < int(pointset.size()); i++)
     {
         line_line.push_back({0, i});
@@ -156,12 +173,19 @@ void Viewer3D::add_line_origin(std::vector<Eigen::Vector3d> pointset, int color_
     add_geometry_obj(lineset);
 }
 
+/**
+ * @brief 点群を描画用のGeometryに追加する
+ *
+ * @param pointset 表示する点群
+ * @param color_num colorpresetで指定する色番号
+ */
 void Viewer3D::add_geometry_pointset(std::vector<Eigen::Vector3d> pointset, int color_num)
 {
     std::shared_ptr<open3d::geometry::PointCloud> pointcloud = std::make_shared<open3d::geometry::PointCloud>();
     std::vector<Eigen::Vector3d> point_color;
     Eigen::Vector3d color = color_preset(color_num);
 
+    // color適用はもっと良い方法ある気がするけどね。
     for (int i = 0; i < int(pointset.size()); i++)
     {
         point_color.push_back(color);
@@ -170,6 +194,7 @@ void Viewer3D::add_geometry_pointset(std::vector<Eigen::Vector3d> pointset, int 
     pointcloud->points_ = pointset;
     pointcloud->colors_ = point_color;
 
+    // 法線推定
     pointcloud->EstimateNormals();
 
     add_geometry_obj(pointcloud);
