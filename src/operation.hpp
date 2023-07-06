@@ -10,6 +10,7 @@
 #include "object_io.hpp"
 #include "calc_pointset.hpp"
 #include "capture_boxpoint.hpp"
+#include "viewer.hpp"
 
 #include "open3d/Open3D.h"
 
@@ -76,6 +77,7 @@ public:
     void capture_boxpoint();
     void capture_segmentation_point();
     void capture_pointset();
+    void test_location();
 
     // switch文回避のための map
     // typedef void (PointOperation::*mode_func)();

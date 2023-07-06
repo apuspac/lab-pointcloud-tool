@@ -46,7 +46,7 @@
                 "--json",
                 "data/detections_test.json",
                 "--mode",
-                "6",
+                "9",
             ],
         }
     ],
