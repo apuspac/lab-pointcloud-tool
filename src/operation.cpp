@@ -25,6 +25,52 @@ void PointOperation::mode_select()
 }
 
 /**
+ * @brief 読み込むファイル名, pathをprintする
+ *
+ */
+void PointOperation::print()
+{
+    std::cout << "mode:"
+              << mode << std::endl;
+
+    std::cout << std::endl
+              << "default_dir_path: "
+              << default_dir_path << std::endl;
+
+    std::cout << std::endl
+              << "jsonfile_path: "
+              << json_file_path << std::endl;
+
+    std::cout << std::endl
+              << "corresp_img_file_name: " << std::endl;
+    for (auto tmp : corresp_img_file_name)
+    {
+        std::cout << tmp << std::endl;
+    }
+
+    std::cout << std::endl
+              << "corresp_ply_file_name: " << std::endl;
+    for (auto tmp : corresp_ply_file_name)
+    {
+        std::cout << tmp << std::endl;
+    }
+
+    std::cout << std::endl
+              << "img_file_path: " << std::endl;
+    for (auto tmp : img_file_path)
+    {
+        std::cout << tmp << std::endl;
+    }
+
+    std::cout << std::endl
+              << "ply_file_path: " << std::endl;
+    for (auto tmp : ply_file_name)
+    {
+        std::cout << tmp << std::endl;
+    }
+}
+
+/**
  * @brief 回転と並進を対応点から計算する
  *
  * 対応点とplyファイルを読み込む。 画像からの対応点は読み込み時に方向ベクトルに変換する。
@@ -510,105 +556,6 @@ void PointOperation::capture_pointset()
  *              --json, data/detections_test.json,
  *              --mode, 9,
  */
-void pointoperation::test_location()
+void PointOperation::test_location()
 {
-    std::cout << "test location" << std::endl;
-    ObjectIO obj_io;
-
-    // load plydata
-    PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
-    std::cout << default_dir_path + ply_file_name.at(0) << std::endl;
-
-    std::shared_ptr<open3d::geometry::PointCloud> kyoiku_point = std::make_shared<open3d::geometry::PointCloud>();
-    kyoiku_point->points_ = ply_point.get_point_all();
-
-    kyoiku_point->EstimateNormals();
-    kyoiku_point->PaintUniformColor({0.75, 0.75, 0.75});
-
-    const std::string bunny_path = default_dir_path + ply_file_name.at(0);
-    open3d::geometry::PointCloud bunny;
-    open3d::io::ReadPointCloudOption bunny_option;
-
-    open3d::io::ReadPointCloudFromPLY(bunny_path, bunny, bunny_option);
-    bunny.EstimateNormals();
-    bunny.PaintUniformColor({0.5, 0.5, 0.5});
-
-    auto keypoints = open3d::geometry::keypoint::ComputeISSKeypoints(*kyoiku_point);
-    auto keypoints_to_shape = [](std::shared_ptr<open3d::geometry::PointCloud> _keypoint)
-    {
-        auto spheres = open3d::geometry::TriangleMesh();
-
-        for (const auto &keypoint : _keypoint->points_)
-        {
-            auto sphere = open3d::geometry::TriangleMesh::CreateSphere(0.01);
-            sphere->Translate(keypoint);
-            spheres += *sphere;
-        }
-        spheres.PaintUniformColor({1.0, 0.75, 0.0});
-
-        return spheres;
-    };
-
-    auto keypoint_sphe = keypoints_to_shape(keypoints);
-
-    std::vector<std::shared_ptr<const open3d::geometry::Geometry>> geo;
-    std::shared_ptr<open3d::geometry::Geometry> bunny_ptr = std::make_shared<open3d::geometry::PointCloud>(bunny);
-    std::shared_ptr<open3d::geometry::Geometry> keypoint_sphe_ptr = std::make_shared<open3d::geometry::TriangleMesh>(keypoint_sphe);
-
-    Viewer3D check_window;
-    check_window.add_geometry_pointset(ply_point.get_point_all(), 3);
-    // check_window.add_geometry_obj(bunny_ptr);
-    check_window.add_geometry_obj(keypoint_sphe_ptr);
-    check_window.show_using_drawgeometries();
-    // geo.push_back(bunny_ptr);
-    // geo.push_back(keypoint_sphe_ptr);
-
-    // open3d::visualization::DrawGeometries(geo);
-}
-
-/**
- * @brief 読み込むファイル名, pathをprintする
- *
- */
-void PointOperation::print()
-{
-    std::cout << "mode:"
-              << mode << std::endl;
-
-    std::cout << std::endl
-              << "default_dir_path: "
-              << default_dir_path << std::endl;
-
-    std::cout << std::endl
-              << "jsonfile_path: "
-              << json_file_path << std::endl;
-
-    std::cout << std::endl
-              << "corresp_img_file_name: " << std::endl;
-    for (auto tmp : corresp_img_file_name)
-    {
-        std::cout << tmp << std::endl;
-    }
-
-    std::cout << std::endl
-              << "corresp_ply_file_name: " << std::endl;
-    for (auto tmp : corresp_ply_file_name)
-    {
-        std::cout << tmp << std::endl;
-    }
-
-    std::cout << std::endl
-              << "img_file_path: " << std::endl;
-    for (auto tmp : img_file_path)
-    {
-        std::cout << tmp << std::endl;
-    }
-
-    std::cout << std::endl
-              << "ply_file_path: " << std::endl;
-    for (auto tmp : ply_file_name)
-    {
-        std::cout << tmp << std::endl;
-    }
 }
