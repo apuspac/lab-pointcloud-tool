@@ -390,31 +390,54 @@ void PointOperation::Rotation_only_simulation()
  */
 void PointOperation::capture_boxpoint()
 {
-    // ./Rotation --ply "ply_data_name" >! ../../ply_data/"ply_data_dir"/out-"log_name".dat
     std::cout << "capture boxpoint::" << std::endl;
     ObjectIO obj_io;
 
     // load plydata
     PointSet ply_point("plydata");
-    // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
 
     // load bbox
-    PointSet bbox_img_point("corresp_imgpoint");
-    obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), bbox_img_point);
-    bbox_img_point.print();
+    DetectionData detect;
+    obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
+
+    // // load bbox
+    // PointSet bbox_img_point("corresp_imgpoint");
+    // obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), bbox_img_point);
+    // bbox_img_point.print();
 
     CaptureBoxPoint capbox;
 
-    // 抽出したポイントを格納
+    // 抽出したポイントを格納するPointSetの宣言
+    // どちらも複数の点をまとめる。
     PointSet capture_ply("capture_bbox_point");
-    // バウンディングボックス描画用
-    PointSet bbox_point("bbox");
-    // capbox.capture_bbox(ply_point, capture_ply, bbox_img_point, bbox_point);
+    PointSet bbox_print("bbox");
 
-    // capture_ply.print();
-    obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
-    obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
+    // 1つのBBOXで実験
+    PointSet one_capture_ply;
+    BBox one_bbox = detect.get_bbox_data().at(0).get_bbox_all().at(0);
+    PointSet one_bbox_forprint;
+    capbox.capture_bbox(ply_point, one_capture_ply, one_bbox, one_bbox_forprint);
+
+    // 1つのBBOX結果を格納
+    // one_capture_ply.print();
+    // one_bbox_forprint.print();
+    capture_ply.add_point(one_capture_ply);
+    bbox_print.add_point(one_bbox_forprint);
+
+    std::cout << "check_ply_visualization" << std::endl;
+
+    Viewer3D check_ply("check_ply");
+    check_ply.add_axes();
+    check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
+    check_ply.add_geometry_pointset(capture_ply.get_point_all(), 0);
+    check_ply.add_geometry_pointset(bbox_print.get_point_all(), 1);
+    check_ply.add_line_origin(bbox_print.get_point_all(), 2);
+
+    check_ply.show_using_drawgeometries();
+
+    // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
+    // obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
 }
 
 /**
@@ -482,7 +505,7 @@ void PointOperation::capture_pointset()
     detect.get_bbox_data().at(0).get_bbox_all().at(0).print();
 
     // とりあえず 最初の1つだけ取り出す。
-    BBoxData one_img_bbox = detect.get_bbox_data().at(0);
+    BBox one_img_bbox = detect.get_bbox_data().at(0).get_bbox_all().at(0);
     capbox.capture_bbox(ply_point, capture_ply, one_img_bbox, bbox_point);
 
     std::cout << ply_point.get_point_all().at(0) << std::endl;
@@ -493,7 +516,7 @@ void PointOperation::capture_pointset()
 
     check_ply.show_using_drawgeometries();
 
-    // ここからsegmentation
+    // --------- capture segmentation point -------------
     // 抽出したポイントを格納
     PointSet capture_ply_seg("capture_segmentation_point");
     // segmentation_lineを格納
@@ -515,7 +538,7 @@ void PointOperation::capture_pointset()
     check_window.add_axes();
     check_window.add_geometry_pointset(ply_point.get_point_all(), 3);
     check_window.add_geometry_pointset(capture_ply.get_point_all(), 0);
-    check_window.add_geometry_pointset(one_img_bbox.get_bbox_all().at(0).get_xyz(), 1);
+    check_window.add_geometry_pointset(one_img_bbox.get_xyz(), 1);
     check_window.add_line_origin(bbox_point.get_point_all(), 2);
 
     check_window.show_using_drawgeometries();
@@ -558,4 +581,7 @@ void PointOperation::capture_pointset()
  */
 void PointOperation::test_location()
 {
+    std::cout << "capture boxpoint" << std::endl;
+
+    capture_boxpoint();
 }

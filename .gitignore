@@ -38,7 +38,6 @@
 ./src/build/Makefile
 
 # exeFile
-./src/build/Rotation
 
 # Created by https://www.toptal.com/developers/gitignore/api/cmake
 # Edit at https://www.toptal.com/developers/gitignore?templates=cmake
@@ -68,3 +67,4 @@ _deps
 *.json
 
 # End of https://www.toptal.com/developers/gitignore/api/cmake
+src/build/Rotation

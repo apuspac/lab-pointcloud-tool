@@ -178,6 +178,7 @@ void ObjectIO::load_ply_point_file(std::string file_name, std::string dir_path, 
         }
 
         // TODO plyファイルのheaderを認識して "end_header"の次の行から入力をしたい
+        // TODO というかもうPCLで読み込んでしまってそこからXYZをPointSetとして格納したほうが早い。
 
         // 分割したものから xyzを取り出す。
         if (is_property_count_same(buf_list.size(), property_num))
