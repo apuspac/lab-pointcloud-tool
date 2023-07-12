@@ -303,7 +303,6 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
     {
         add_edge(box.at(i));
     }
-
 }
 // TODO:edgeの処理をなんとか作る。
 
@@ -399,7 +398,7 @@ auto check_xy_region = [](Eigen::Vector3d point)
  *
  * @param plypoint 抽出対象の点群
  * @param capture_point 抽出した点群を格納するPointSet
- * @param segmentation_point 原点と直線を作る点
+ * @param detect_mask 検出したマスクの点
  * @param segpoint_with_line 直線を描画する用に出力するPointSet
  */
 void CaptureBoxPoint::capture_segmentation_distance(PointSet &plypoint, PointSet &capture_point, PointSet &segmentation_point, PointSet &segpoint_with_line)
@@ -484,24 +483,25 @@ void CaptureBoxPoint::capture_segmentation_distance(PointSet &plypoint, PointSet
  *
  * @param plypoint 抽出対象の点群
  * @param capture_point 抽出した点群を格納するPointSet
- * @param segmentation_point 原点と直線を作る点
- * @param segpoint_with_line 直線を描画する用に出力するPointSet
+ * @param detect_mask セグメンテーションで検出したmaskのpixel
+ * @param detect_mask_forprint 直線を描画する用に出力するPointSet
  */
-void CaptureBoxPoint::capture_segmentation_angle(PointSet &plypoint, PointSet &capture_point, PointSet &segmentation_point, PointSet &segpoint_with_line)
+void CaptureBoxPoint::capture_segmentation_angle(PointSet &plypoint, PointSet &capture_point, Mask &detect_mask, PointSet &detect_mask_forprint)
 {
     std::cout << "capture_segmentation_point" << std::endl;
-
-    segmentation_point.print();
 
     /**
      * @brief 原点と結んだ点で作る直線と角度を計算
      *
      */
-    auto calc_angle_to_line = [](Eigen::Vector3d point, Eigen::Vector3d line)
+    auto calc_angle_to_vector = [](Eigen::Vector3d point, Eigen::Vector3d mask)
     {
-        double theta = std::acos(line.dot(point) / point.norm());
+        double theta = std::acos(mask.dot(point) / point.norm());
+        // double theta = std::cos(mask.dot(point) / (mask.squaredNorm() * point.squaredNorm()));
 
-        std::cout << line.dot(point) << " : " << point.squaredNorm() << " : " << line.dot(point) / (line.squaredNorm() * point.squaredNorm()) << " : " << theta << std::endl;
+        // std::cout << "theta:" << theta << std::endl;
+
+        // std::cout << line.dot(point) << " : " << point.squaredNorm() << " : " << line.dot(point) / (line.squaredNorm() * point.squaredNorm()) << " : " << theta << std::endl;
         return theta;
     };
 
@@ -510,7 +510,7 @@ void CaptureBoxPoint::capture_segmentation_angle(PointSet &plypoint, PointSet &c
      * 原点が0番目に保存されていることが前提なので、 最初に追加しておく。
      *
      */
-    auto add_edge = [&segpoint_with_line](Eigen::Vector3d edge_point)
+    auto add_edge = [&detect_mask_forprint](Eigen::Vector3d edge_point)
     {
         Eigen::Vector3d tmp_normalize = edge_point.normalized();
 
@@ -524,39 +524,43 @@ void CaptureBoxPoint::capture_segmentation_angle(PointSet &plypoint, PointSet &c
         // 距離rを伸ばしてpointを新たに格納
         double r = 20.0;
         Eigen::Vector3d tmp_vec = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
-        segpoint_with_line.add_point(tmp_vec);
+        detect_mask_forprint.add_point(tmp_vec);
 
         // 原点とのedgeを格納
         long unsigned int i = 1;
-        std::array<int, 2> to_zero{0, static_cast<int>(segpoint_with_line.get_point_num() - i)};
-        segpoint_with_line.add_edge(to_zero);
+        std::array<int, 2> to_zero{0, static_cast<int>(detect_mask_forprint.get_point_num() - i)};
+        detect_mask_forprint.add_edge(to_zero);
     };
 
     // 原点とのedgeを作る用に 原点を追加
     Eigen::Vector3d zero = {0, 0, 0};
-    segpoint_with_line.add_point(zero);
+    detect_mask_forprint.add_point(zero);
 
+    // 点群の抽出
+    // なす角度の許容範囲
     double allow_angle = 0.2;
+    // 許容範囲をラジアンに変換
     double allow_angle_radian = allow_angle * (M_PI / 180.0);
     std::cout << "allow_angle_radian:" << allow_angle_radian << std::endl;
 
-    // CRSを実装してみる
-
-    for (auto target_line : segmentation_point.get_point_all())
+    // 一個一個の点に対し、抽出対象範囲の角度にある点かどうか判定する。
+    for (auto mask_point : detect_mask.get_mask_xyz())
     {
-        // target_line = segmentation_point.get_point(1);
-        add_edge(target_line);
-        int region_line = check_xy_region(target_line);
+        // 点の属す領域を判定して 計算を減らしてみる
+        int region_line = check_xy_region(mask_point);
 
         for (auto target_point : plypoint.get_point_all())
         {
             if (check_xy_region(target_point) == region_line)
             {
-                if (calc_angle_to_line(target_point, target_line) < allow_angle_radian)
+                if (calc_angle_to_vector(target_point, mask_point) < allow_angle_radian)
                 {
                     capture_point.add_point(target_point);
+                    std::cout << target_point.x() << " " << target_point.y() << " " << target_point.z() << std::endl;
                 }
             }
         }
+        // print用に追加
+        add_edge(mask_point);
     }
 }

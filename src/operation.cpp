@@ -415,8 +415,8 @@ void PointOperation::capture_boxpoint()
 
     // 1つのBBOXで実験
     PointSet one_capture_ply;
-    BBox one_bbox = detect.get_bbox_data().at(0).get_bbox_all().at(0);
     PointSet one_bbox_forprint;
+    BBox one_bbox = detect.get_bbox_data().at(0).get_bbox_all().at(0);
     capbox.capture_bbox(ply_point, one_capture_ply, one_bbox, one_bbox_forprint);
 
     // 1つのBBOX結果を格納
@@ -456,30 +456,51 @@ void PointOperation::capture_segmentation_point()
 {
     std::cout << "capture segmentation point" << std::endl;
 
-    std::cout
-        << "capture box point" << std::endl;
     ObjectIO obj_io;
 
     // load plypoint
     PointSet ply_point("plydata");
-    // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
 
     // load segmentation data
-    PointSet segmentation_point("corresp_imgpoint");
-    obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), segmentation_point);
+    DetectionData detect;
+    obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
+
+    // load segmentation data
+    // PointSet segmentation_point("corresp_imgpoint");
+    // obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), segmentation_point);
     // segmentation_point.print();
 
     CaptureBoxPoint capbox;
 
-    // 抽出したポイントを格納
+    // 抽出したポイントを格納するPointSetの宣言
+    // どちらも複数点をまとめる
     PointSet capture_ply("capture_segmentation_point");
-    // segmentation_lineを格納
-    PointSet segline_point("segmentation_point");
-    capbox.capture_segmentation_angle(ply_point, capture_ply, segmentation_point, segline_point);
+    PointSet mask_print("segmentation_mask_point");
 
-    obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
-    obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
+    // 一枚の画像からのMaskDataを渡す
+    PointSet one_mask("one_img_segmentation_mask_point");
+    PointSet one_mask_forprint("oneimg_segmentation_mask_forprint");
+    Mask one_img_mask = detect.get_mask_data().at(0).get_mask_data_all().at(0);
+
+    capbox.capture_segmentation_angle(ply_point, one_mask, one_img_mask, one_mask_forprint);
+
+    // 結果を格納
+    capture_ply.add_point(one_mask);
+    mask_print.add_point(one_mask_forprint);
+
+    Viewer3D check_ply("check_ply_segmentation");
+    check_ply.add_axes();
+    check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
+    check_ply.add_geometry_pointset(capture_ply.get_point_all(), 0);
+    check_ply.add_geometry_pointset(mask_print.get_point_all(), 1);
+    check_ply.add_line_origin(mask_print.get_point_all(), 2);
+
+    check_ply.show_using_drawgeometries();
+    // one_mask.add_point(one_img_mask.get_mask_xyz().at(0));
+
+    // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
+    // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
 }
 
 void PointOperation::capture_pointset()
@@ -583,5 +604,6 @@ void PointOperation::test_location()
 {
     std::cout << "capture boxpoint" << std::endl;
 
-    capture_boxpoint();
+    // capture_boxpoint();
+    capture_segmentation_point();
 }

@@ -140,7 +140,7 @@ private:
 public:
     void capture_bbox(PointSet &, PointSet &, BBox &, PointSet &);
     void capture_segmentation_distance(PointSet &, PointSet &, PointSet &, PointSet &);
-    void capture_segmentation_angle(PointSet &, PointSet &, PointSet &, PointSet &);
+    void capture_segmentation_angle(PointSet &, PointSet &, Mask &, PointSet &);
 
     // void Load_json();
     void set_bbox(double, double, double, double);
