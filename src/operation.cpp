@@ -395,7 +395,7 @@ void PointOperation::capture_boxpoint()
 
     // load plydata
     PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
 
     // load bbox
     DetectionData detect;
@@ -460,7 +460,7 @@ void PointOperation::capture_segmentation_point()
 
     // load plypoint
     PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
 
     // load segmentation data
     DetectionData detect;
@@ -499,7 +499,7 @@ void PointOperation::capture_segmentation_point()
     check_ply.show_using_drawgeometries();
     // one_mask.add_point(one_img_mask.get_mask_xyz().at(0));
 
-    // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
+    obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
 }
 
