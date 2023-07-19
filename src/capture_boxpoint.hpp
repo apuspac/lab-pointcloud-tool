@@ -138,9 +138,9 @@ private:
     std::vector<BBox> bbox_list;
 
 public:
-    void capture_bbox(PointSet &, PointSet &, BBoxData &, PointSet &);
+    void capture_bbox(PointSet &, PointSet &, BBox &, PointSet &);
     void capture_segmentation_distance(PointSet &, PointSet &, PointSet &, PointSet &);
-    void capture_segmentation_angle(PointSet &, PointSet &, PointSet &, PointSet &);
+    void capture_segmentation_angle(PointSet &, PointSet &, Mask &, PointSet &);
 
     // void Load_json();
     void set_bbox(double, double, double, double);

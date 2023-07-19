@@ -23,6 +23,23 @@ void PointSet::print()
     }
 }
 
+void PointSet::add_point(PointSet add_pointset)
+{
+    add_pointset.get_point_all();
+
+    for (auto point : add_pointset.get_point_all())
+    {
+        point3.push_back(point);
+    }
+
+    // if (point3.capacity() < point3.size() + add_pointset.get_point_all().size())
+    // {
+    //     point3.reserve(point3.size() + add_pointset.get_point_all().size());
+    // }
+    // point3.insert(point3.end(), add_pointset.get_point_all().begin(), add_pointset.get_point_all().end());
+    // std::cout << "oi" << std::endl;
+}
+
 /**
  * @brief pointに回転行列を適用させる
  *

@@ -25,6 +25,52 @@ void PointOperation::mode_select()
 }
 
 /**
+ * @brief 読み込むファイル名, pathをprintする
+ *
+ */
+void PointOperation::print()
+{
+    std::cout << "mode:"
+              << mode << std::endl;
+
+    std::cout << std::endl
+              << "default_dir_path: "
+              << default_dir_path << std::endl;
+
+    std::cout << std::endl
+              << "jsonfile_path: "
+              << json_file_path << std::endl;
+
+    std::cout << std::endl
+              << "corresp_img_file_name: " << std::endl;
+    for (auto tmp : corresp_img_file_name)
+    {
+        std::cout << tmp << std::endl;
+    }
+
+    std::cout << std::endl
+              << "corresp_ply_file_name: " << std::endl;
+    for (auto tmp : corresp_ply_file_name)
+    {
+        std::cout << tmp << std::endl;
+    }
+
+    std::cout << std::endl
+              << "img_file_path: " << std::endl;
+    for (auto tmp : img_file_path)
+    {
+        std::cout << tmp << std::endl;
+    }
+
+    std::cout << std::endl
+              << "ply_file_path: " << std::endl;
+    for (auto tmp : ply_file_name)
+    {
+        std::cout << tmp << std::endl;
+    }
+}
+
+/**
  * @brief 回転と並進を対応点から計算する
  *
  * 対応点とplyファイルを読み込む。 画像からの対応点は読み込み時に方向ベクトルに変換する。
@@ -344,31 +390,54 @@ void PointOperation::Rotation_only_simulation()
  */
 void PointOperation::capture_boxpoint()
 {
-    // ./Rotation --ply "ply_data_name" >! ../../ply_data/"ply_data_dir"/out-"log_name".dat
     std::cout << "capture boxpoint::" << std::endl;
     ObjectIO obj_io;
 
     // load plydata
     PointSet ply_point("plydata");
-    // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
     obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
 
     // load bbox
-    PointSet bbox_img_point("corresp_imgpoint");
-    obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), bbox_img_point);
-    bbox_img_point.print();
+    DetectionData detect;
+    obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
+
+    // // load bbox
+    // PointSet bbox_img_point("corresp_imgpoint");
+    // obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), bbox_img_point);
+    // bbox_img_point.print();
 
     CaptureBoxPoint capbox;
 
-    // 抽出したポイントを格納
+    // 抽出したポイントを格納するPointSetの宣言
+    // どちらも複数の点をまとめる。
     PointSet capture_ply("capture_bbox_point");
-    // バウンディングボックス描画用
-    PointSet bbox_point("bbox");
-    // capbox.capture_bbox(ply_point, capture_ply, bbox_img_point, bbox_point);
+    PointSet bbox_print("bbox");
 
-    // capture_ply.print();
-    obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
-    obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
+    // 1つのBBOXで実験
+    PointSet one_capture_ply;
+    PointSet one_bbox_forprint;
+    BBox one_bbox = detect.get_bbox_data().at(0).get_bbox_all().at(0);
+    capbox.capture_bbox(ply_point, one_capture_ply, one_bbox, one_bbox_forprint);
+
+    // 1つのBBOX結果を格納
+    // one_capture_ply.print();
+    // one_bbox_forprint.print();
+    capture_ply.add_point(one_capture_ply);
+    bbox_print.add_point(one_bbox_forprint);
+
+    std::cout << "check_ply_visualization" << std::endl;
+
+    Viewer3D check_ply("check_ply");
+    check_ply.add_axes();
+    check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
+    check_ply.add_geometry_pointset(capture_ply.get_point_all(), 0);
+    check_ply.add_geometry_pointset(bbox_print.get_point_all(), 1);
+    check_ply.add_line_origin(bbox_print.get_point_all(), 2);
+
+    check_ply.show_using_drawgeometries();
+
+    // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
+    // obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
 }
 
 /**
@@ -387,30 +456,51 @@ void PointOperation::capture_segmentation_point()
 {
     std::cout << "capture segmentation point" << std::endl;
 
-    std::cout
-        << "capture box point" << std::endl;
     ObjectIO obj_io;
 
     // load plypoint
     PointSet ply_point("plydata");
-    // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 6, ply_point);
     obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
 
     // load segmentation data
-    PointSet segmentation_point("corresp_imgpoint");
-    obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), segmentation_point);
+    DetectionData detect;
+    obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
+
+    // load segmentation data
+    // PointSet segmentation_point("corresp_imgpoint");
+    // obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), segmentation_point);
     // segmentation_point.print();
 
     CaptureBoxPoint capbox;
 
-    // 抽出したポイントを格納
+    // 抽出したポイントを格納するPointSetの宣言
+    // どちらも複数点をまとめる
     PointSet capture_ply("capture_segmentation_point");
-    // segmentation_lineを格納
-    PointSet segline_point("segmentation_point");
-    capbox.capture_segmentation_angle(ply_point, capture_ply, segmentation_point, segline_point);
+    PointSet mask_print("segmentation_mask_point");
+
+    // 一枚の画像からのMaskDataを渡す
+    PointSet one_mask("one_img_segmentation_mask_point");
+    PointSet one_mask_forprint("oneimg_segmentation_mask_forprint");
+    Mask one_img_mask = detect.get_mask_data().at(0).get_mask_data_all().at(0);
+
+    capbox.capture_segmentation_angle(ply_point, one_mask, one_img_mask, one_mask_forprint);
+
+    // 結果を格納
+    capture_ply.add_point(one_mask);
+    mask_print.add_point(one_mask_forprint);
+
+    Viewer3D check_ply("check_ply_segmentation");
+    check_ply.add_axes();
+    check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
+    check_ply.add_geometry_pointset(capture_ply.get_point_all(), 0);
+    check_ply.add_geometry_pointset(mask_print.get_point_all(), 1);
+    check_ply.add_line_origin(mask_print.get_point_all(), 2);
+
+    check_ply.show_using_drawgeometries();
+    // one_mask.add_point(one_img_mask.get_mask_xyz().at(0));
 
     obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
-    obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
+    // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
 }
 
 void PointOperation::capture_pointset()
@@ -436,7 +526,7 @@ void PointOperation::capture_pointset()
     detect.get_bbox_data().at(0).get_bbox_all().at(0).print();
 
     // とりあえず 最初の1つだけ取り出す。
-    BBoxData one_img_bbox = detect.get_bbox_data().at(0);
+    BBox one_img_bbox = detect.get_bbox_data().at(0).get_bbox_all().at(0);
     capbox.capture_bbox(ply_point, capture_ply, one_img_bbox, bbox_point);
 
     std::cout << ply_point.get_point_all().at(0) << std::endl;
@@ -447,7 +537,7 @@ void PointOperation::capture_pointset()
 
     check_ply.show_using_drawgeometries();
 
-    // ここからsegmentation
+    // --------- capture segmentation point -------------
     // 抽出したポイントを格納
     PointSet capture_ply_seg("capture_segmentation_point");
     // segmentation_lineを格納
@@ -469,7 +559,7 @@ void PointOperation::capture_pointset()
     check_window.add_axes();
     check_window.add_geometry_pointset(ply_point.get_point_all(), 3);
     check_window.add_geometry_pointset(capture_ply.get_point_all(), 0);
-    check_window.add_geometry_pointset(one_img_bbox.get_bbox_all().at(0).get_xyz(), 1);
+    check_window.add_geometry_pointset(one_img_bbox.get_xyz(), 1);
     check_window.add_line_origin(bbox_point.get_point_all(), 2);
 
     check_window.show_using_drawgeometries();
@@ -510,105 +600,10 @@ void PointOperation::capture_pointset()
  *              --json, data/detections_test.json,
  *              --mode, 9,
  */
-void pointoperation::test_location()
+void PointOperation::test_location()
 {
-    std::cout << "test location" << std::endl;
-    ObjectIO obj_io;
+    std::cout << "capture boxpoint" << std::endl;
 
-    // load plydata
-    PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
-    std::cout << default_dir_path + ply_file_name.at(0) << std::endl;
-
-    std::shared_ptr<open3d::geometry::PointCloud> kyoiku_point = std::make_shared<open3d::geometry::PointCloud>();
-    kyoiku_point->points_ = ply_point.get_point_all();
-
-    kyoiku_point->EstimateNormals();
-    kyoiku_point->PaintUniformColor({0.75, 0.75, 0.75});
-
-    const std::string bunny_path = default_dir_path + ply_file_name.at(0);
-    open3d::geometry::PointCloud bunny;
-    open3d::io::ReadPointCloudOption bunny_option;
-
-    open3d::io::ReadPointCloudFromPLY(bunny_path, bunny, bunny_option);
-    bunny.EstimateNormals();
-    bunny.PaintUniformColor({0.5, 0.5, 0.5});
-
-    auto keypoints = open3d::geometry::keypoint::ComputeISSKeypoints(*kyoiku_point);
-    auto keypoints_to_shape = [](std::shared_ptr<open3d::geometry::PointCloud> _keypoint)
-    {
-        auto spheres = open3d::geometry::TriangleMesh();
-
-        for (const auto &keypoint : _keypoint->points_)
-        {
-            auto sphere = open3d::geometry::TriangleMesh::CreateSphere(0.01);
-            sphere->Translate(keypoint);
-            spheres += *sphere;
-        }
-        spheres.PaintUniformColor({1.0, 0.75, 0.0});
-
-        return spheres;
-    };
-
-    auto keypoint_sphe = keypoints_to_shape(keypoints);
-
-    std::vector<std::shared_ptr<const open3d::geometry::Geometry>> geo;
-    std::shared_ptr<open3d::geometry::Geometry> bunny_ptr = std::make_shared<open3d::geometry::PointCloud>(bunny);
-    std::shared_ptr<open3d::geometry::Geometry> keypoint_sphe_ptr = std::make_shared<open3d::geometry::TriangleMesh>(keypoint_sphe);
-
-    Viewer3D check_window;
-    check_window.add_geometry_pointset(ply_point.get_point_all(), 3);
-    // check_window.add_geometry_obj(bunny_ptr);
-    check_window.add_geometry_obj(keypoint_sphe_ptr);
-    check_window.show_using_drawgeometries();
-    // geo.push_back(bunny_ptr);
-    // geo.push_back(keypoint_sphe_ptr);
-
-    // open3d::visualization::DrawGeometries(geo);
-}
-
-/**
- * @brief 読み込むファイル名, pathをprintする
- *
- */
-void PointOperation::print()
-{
-    std::cout << "mode:"
-              << mode << std::endl;
-
-    std::cout << std::endl
-              << "default_dir_path: "
-              << default_dir_path << std::endl;
-
-    std::cout << std::endl
-              << "jsonfile_path: "
-              << json_file_path << std::endl;
-
-    std::cout << std::endl
-              << "corresp_img_file_name: " << std::endl;
-    for (auto tmp : corresp_img_file_name)
-    {
-        std::cout << tmp << std::endl;
-    }
-
-    std::cout << std::endl
-              << "corresp_ply_file_name: " << std::endl;
-    for (auto tmp : corresp_ply_file_name)
-    {
-        std::cout << tmp << std::endl;
-    }
-
-    std::cout << std::endl
-              << "img_file_path: " << std::endl;
-    for (auto tmp : img_file_path)
-    {
-        std::cout << tmp << std::endl;
-    }
-
-    std::cout << std::endl
-              << "ply_file_path: " << std::endl;
-    for (auto tmp : ply_file_name)
-    {
-        std::cout << tmp << std::endl;
-    }
+    // capture_boxpoint();
+    capture_segmentation_point();
 }

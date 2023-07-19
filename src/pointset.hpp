@@ -39,6 +39,8 @@ public:
 
     // 点を最後に追加
     void add_point(Eigen::Vector3d add_point) { point3.push_back(add_point); }
+    void add_point(PointSet);
+    // void add_point(PointSet add_pointset) { point3.insert(point3.end(), add_pointset.get_point_all().begin(), add_pointset.get_point_all().end()); }
     // edgeの組を追加
     void add_edge(std::array<int, 2> edge) { edge2.push_back(edge); }
 
