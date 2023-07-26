@@ -65,6 +65,8 @@ _deps
 # dataファイルは追跡
 !data/
 !data/*.json
+!python/json_data/*.json
+!python/out/*.json
 
 # それ以外のjsonファイルは追跡しない
 
