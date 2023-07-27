@@ -489,6 +489,7 @@ void PointOperation::capture_segmentation_point()
     capture_ply.add_point(one_mask);
     mask_print.add_point(one_mask_forprint);
 
+    //  Check Result
     Viewer3D check_ply("check_ply_segmentation");
     check_ply.add_axes();
     check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
