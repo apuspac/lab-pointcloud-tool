@@ -479,6 +479,14 @@ void CaptureBoxPoint::capture_segmentation_distance(PointSet &plypoint, PointSet
 }
 
 /**
+ * @brief Create histgram of captured pointcloud
+ *
+ */
+void use_histgram(PointSet captured_point)
+{
+}
+
+/**
  * @brief 原点と点で結んだ直線上にある点群を抽出する。原点とで作る直線の角度で判別する。
  *
  * @param plypoint 抽出対象の点群
