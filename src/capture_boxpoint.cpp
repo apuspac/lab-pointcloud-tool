@@ -484,6 +484,10 @@ void CaptureBoxPoint::capture_segmentation_distance(PointSet &plypoint, PointSet
  */
 void use_histgram(PointSet captured_point)
 {
+    for (auto point : captured_point.get_point_all())
+    {
+        std::cout << point.transpose() << std::endl;
+    }
 }
 
 /**

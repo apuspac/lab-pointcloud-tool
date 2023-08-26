@@ -45,6 +45,7 @@
                 "data/test/",
                 "--json",
                 "data/PIC_point1.json",
+                // "data/detections_test.json",
                 "--mode",
                 "9",
             ],
