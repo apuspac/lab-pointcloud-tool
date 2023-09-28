@@ -504,6 +504,11 @@ void PointOperation::capture_segmentation_point()
     // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
 }
 
+/**
+ * @brief BBOXとセグメンテーションデータの画素値に対応した点群を抽出する処理。
+ * capture_bboxとcapture_segmentation_pointを組み合わせたもの。
+ *
+ */
 void PointOperation::capture_pointset()
 {
     std::cout << "capture boxpoint" << std::endl;
@@ -604,7 +609,51 @@ void PointOperation::capture_pointset()
 void PointOperation::test_location()
 {
     std::cout << "capture boxpoint" << std::endl;
+    ObjectIO obj_io;
 
-    // capture_boxpoint();
-    capture_segmentation_point();
+    // load plydata
+    PointSet ply_point("plydata");
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
+
+    // load bbox
+    DetectionData detect;
+    obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
+
+    // // load bbox
+    // PointSet bbox_img_point("corresp_imgpoint");
+    // obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), bbox_img_point);
+    // bbox_img_point.print();
+
+    CaptureBoxPoint capbox;
+
+    // 抽出したポイントを格納するPointSetの宣言
+    // どちらも複数の点をまとめる。
+    PointSet capture_ply("capture_bbox_point");
+    PointSet bbox_print("bbox");
+
+    // 1つのBBOXで実験
+    PointSet one_capture_ply;
+    PointSet one_bbox_forprint;
+    BBox one_bbox = detect.get_bbox_data().at(0).get_bbox_all().at(0);
+    capbox.capture_bbox(ply_point, one_capture_ply, one_bbox, one_bbox_forprint);
+
+    // 1つのBBOX結果を格納
+    // one_capture_ply.print();
+    // one_bbox_forprint.print();
+    capture_ply.add_point(one_capture_ply);
+    bbox_print.add_point(one_bbox_forprint);
+
+    std::cout << "check_ply_visualization" << std::endl;
+
+    Viewer3D check_ply("check_ply");
+    check_ply.add_axes();
+    check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
+    check_ply.add_geometry_pointset(capture_ply.get_point_all(), 0);
+    check_ply.add_geometry_pointset(bbox_print.get_point_all(), 1);
+    check_ply.add_line_origin(bbox_print.get_point_all(), 2);
+
+    check_ply.show_using_drawgeometries();
+
+    // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
+    // obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
 }
