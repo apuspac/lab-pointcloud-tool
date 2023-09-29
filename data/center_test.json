@@ -6,10 +6,10 @@
       "file_name": "PIC_point4_1200.jpg",
       "bbox_info": [
         {
-          "xmin": 1576,
-          "ymin": 1851,
-          "xmax": 1756,
-          "ymax": 2024,
+          "xmin": 1800,
+          "ymin": 1830,
+          "xmax": 2040,
+          "ymax": 2010,
           "confidence": 0.7604297996,
           "class": 9,
           "name": "square_box_w_marker_front_side"

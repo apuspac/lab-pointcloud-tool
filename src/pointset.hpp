@@ -11,6 +11,7 @@
 #include <math.h>
 #include <iomanip>
 #include <unordered_map>
+#include <numeric>
 
 #include <eigen3/Core>
 #include <eigen3/LU>
@@ -54,6 +55,8 @@ public:
      */
     Eigen::Vector3d get_point(uint64_t i) { return point3.at(i); }
     std::array<int, 2> get_edge(uint64_t i) { return edge2.at(i); }
+
+    Eigen::Vector3d get_center_of_gravity();
 
     // 全体getter
     std::vector<Eigen::Vector3d> get_point_all() { return point3; }

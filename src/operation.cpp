@@ -628,8 +628,8 @@ void PointOperation::test_location()
 
     // 抽出したポイントを格納するPointSetの宣言
     // どちらも複数の点をまとめる。
-    PointSet capture_ply("capture_bbox_point");
-    PointSet bbox_print("bbox");
+    PointSet captured_point_inner_bbox("captured_point_inner_bbox");
+    PointSet bbox_visualization("bbox");
 
     // 1つのBBOXで実験
     PointSet one_capture_ply;
@@ -640,17 +640,24 @@ void PointOperation::test_location()
     // 1つのBBOX結果を格納
     // one_capture_ply.print();
     // one_bbox_forprint.print();
-    capture_ply.add_point(one_capture_ply);
-    bbox_print.add_point(one_bbox_forprint);
+    captured_point_inner_bbox.add_point(one_capture_ply);
+    bbox_visualization.add_point(one_bbox_forprint);
+
+    Eigen::Vector3d center_of_gravity = captured_point_inner_bbox.get_center_of_gravity();
+    PointSet print_center_of_gravity;
+    print_center_of_gravity.add_point(center_of_gravity);
+
+    std::cout << "center_of_gravity: " << print_center_of_gravity.get_point(0).transpose() << std::endl;
 
     std::cout << "check_ply_visualization" << std::endl;
-
     Viewer3D check_ply("check_ply");
     check_ply.add_axes();
     check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
-    check_ply.add_geometry_pointset(capture_ply.get_point_all(), 0);
-    check_ply.add_geometry_pointset(bbox_print.get_point_all(), 1);
-    check_ply.add_line_origin(bbox_print.get_point_all(), 2);
+    check_ply.add_geometry_pointset(captured_point_inner_bbox.get_point_all(), 0);
+    check_ply.add_geometry_pointset(bbox_visualization.get_point_all(), 1);
+    check_ply.add_line_origin(bbox_visualization.get_point_all(), 2);
+    check_ply.add_geometry_pointset(print_center_of_gravity.get_point_all(), 4);
+    // check_ply.add_line_origin(print_center_of_gravity.get_point_all(), 4);
 
     check_ply.show_using_drawgeometries();
 

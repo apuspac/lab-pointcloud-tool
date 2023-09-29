@@ -285,7 +285,7 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
         double phi = std::atan2(tmp_normalize(1), tmp_normalize(0));
 
         // 距離rを伸ばしてpointを新たに格納
-        double r = 5.0;
+        double r = 10.0;
         Eigen::Vector3d tmp_vec = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
         bboxpoint_forPrint.add_point(tmp_vec);
 

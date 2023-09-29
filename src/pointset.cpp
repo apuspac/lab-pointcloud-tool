@@ -67,3 +67,17 @@ void PointSet::transform(Eigen::Vector3d transform_vec)
         tmp = transform_vec + tmp;
     }
 }
+
+/**
+ * @brief pointsetの重心を返す
+ *
+ * @return Eigen::Vector3d
+ */
+Eigen::Vector3d PointSet::get_center_of_gravity()
+{
+    std::cout << "get_center_of_gravity" << std::endl;
+
+    Eigen::Vector3d sum = std::reduce(point3.begin(), point3.end(), Eigen::Vector3d(0, 0, 0), [](Eigen::Vector3d a, Eigen::Vector3d b)
+                                      { return a + b; });
+    return (sum / static_cast<double>(point3.size()));
+}
