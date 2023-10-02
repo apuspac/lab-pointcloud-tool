@@ -57,6 +57,7 @@ public:
     std::array<int, 2> get_edge(uint64_t i) { return edge2.at(i); }
 
     Eigen::Vector3d get_center_of_gravity();
+    void create_histgram();
 
     // 全体getter
     std::vector<Eigen::Vector3d> get_point_all() { return point3; }

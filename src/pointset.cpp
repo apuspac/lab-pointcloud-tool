@@ -81,3 +81,36 @@ Eigen::Vector3d PointSet::get_center_of_gravity()
                                       { return a + b; });
     return (sum / static_cast<double>(point3.size()));
 }
+
+void PointSet::create_histgram()
+{
+    std::cout << "histgram" << std::endl;
+
+    std::vector<double> distance_from_center;
+
+    // 中心からの距離でヒストグラムを作成する
+    for (const auto &point : point3)
+    {
+        double tmp_dis_center = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0));
+        distance_from_center.push_back(tmp_dis_center);
+    }
+
+    std::array<int, 100> histgram_intervals = {};
+    double interval = 0.05;
+
+    auto is_within_roomrange = [](double x)
+    { return (x < 100.0 && x > 0.0); };
+
+    for (const auto &distance : distance_from_center)
+    {
+        if (is_within_roomrange(distance / interval))
+        {
+            histgram_intervals.at(static_cast<int>(distance / interval)) += 1;
+        }
+    }
+
+    for (unsigned int i = 0; i < histgram_intervals.size(); i++)
+    {
+        std::cout << i * interval << " " << histgram_intervals.at(i) << std::endl;
+    }
+}

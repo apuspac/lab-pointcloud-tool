@@ -643,12 +643,17 @@ void PointOperation::test_location()
     captured_point_inner_bbox.add_point(one_capture_ply);
     bbox_visualization.add_point(one_bbox_forprint);
 
+    // captured_point_inner_bboxのヒストグラムを作成
+    captured_point_inner_bbox.create_histgram();
+
+    // 重心を計算
     Eigen::Vector3d center_of_gravity = captured_point_inner_bbox.get_center_of_gravity();
     PointSet print_center_of_gravity;
     print_center_of_gravity.add_point(center_of_gravity);
 
     std::cout << "center_of_gravity: " << print_center_of_gravity.get_point(0).transpose() << std::endl;
 
+    // 描画処理
     std::cout << "check_ply_visualization" << std::endl;
     Viewer3D check_ply("check_ply");
     check_ply.add_axes();
@@ -659,7 +664,8 @@ void PointOperation::test_location()
     check_ply.add_geometry_pointset(print_center_of_gravity.get_point_all(), 4);
     // check_ply.add_line_origin(print_center_of_gravity.get_point_all(), 4);
 
-    check_ply.show_using_drawgeometries();
+    // TODO: 描画重いのでちょっとカット
+    // check_ply.show_using_drawgeometries();
 
     // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
