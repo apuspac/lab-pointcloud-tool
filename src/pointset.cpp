@@ -144,6 +144,6 @@ void PointSet::create_histgram()
     for (unsigned int i = 0; i < histgram_intervals.size(); i++)
     {
 
-        // std::cout << i * interval << " " << histgram_one_diff.at(i) << std::endl;
+        std::cout << i * interval << " " << histgram_one_diff.at(i) << std::endl;
     }
 }
