@@ -111,6 +111,39 @@ void PointSet::create_histgram()
 
     for (unsigned int i = 0; i < histgram_intervals.size(); i++)
     {
-        std::cout << i * interval << " " << histgram_intervals.at(i) << std::endl;
+        std::cout << "histgram_distance_from_center" << std::endl;
+        std::cout << i * interval << ", " << histgram_intervals.at(i) << std::endl;
+    }
+
+    std::array<int, 100> histgram_one_diff = {};
+
+    // 一階差分を取ってみる
+    for (std::array<int, 100>::iterator itr = histgram_intervals.begin() + 1; itr != histgram_intervals.end(); itr++)
+    {
+        // std::cout << *itr - *(itr - 1) << std::endl;
+
+        // イテレータの添字は現在のitrとはじめのitrのdistanceで取れる
+        histgram_one_diff.at(std::distance(histgram_intervals.begin(), itr)) = *itr - *(itr - 1);
+    }
+
+    // 一階差分で符号が反転しているところをピックアップしてみる
+    auto is_extremum = [](int diff_minus1, int diff)
+    {
+        return (diff_minus1 * diff) < 0 && (diff_minus1 > 0);
+    };
+
+    for (std::array<int, 100>::iterator itr = histgram_one_diff.begin() + 1; itr != histgram_one_diff.end(); itr++)
+    {
+        if (is_extremum(*(itr - 1), *itr))
+        {
+            std::cout << "sign changed" << std::endl;
+            std::cout << std::distance(histgram_one_diff.begin(), itr) * interval << std::endl;
+        }
+    }
+
+    for (unsigned int i = 0; i < histgram_intervals.size(); i++)
+    {
+
+        // std::cout << i * interval << " " << histgram_one_diff.at(i) << std::endl;
     }
 }

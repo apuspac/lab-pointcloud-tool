@@ -531,7 +531,10 @@ int ObjectIO::load_detection_json_file(std::string filepath, DetectionData &dete
 
                     for (const auto &pixel_tmp : pixel_mask.GetArray())
                     {
-                        mask_data.add_mask(pixel_tmp[0].GetInt(), pixel_tmp[1].GetInt());
+                        // intかdoubleか判定して doubleはcastして読み込み
+                        int tmp_zero = pixel_tmp[0].IsInt() ? pixel_tmp[0].GetInt() : static_cast<int>(pixel_tmp[0].GetDouble());
+                        int tmp_one = pixel_tmp[1].IsInt() ? pixel_tmp[1].GetInt() : static_cast<int>(pixel_tmp[1].GetDouble());
+                        mask_data.add_mask(tmp_zero, tmp_one);
                     }
                 }
                 mask_data.equirectangular_to_sphere(img_size.at(0), img_size.at(1));
