@@ -200,7 +200,7 @@ void ObjectIO::load_ply_point_file(std::string file_name, std::string dir_path, 
                     }
                     catch (const std::invalid_argument &e)
                     {
-                        std::cout << "invalid argument" << std::endl;
+                        std::cout << "invalid argument:" << one_point_data << std::endl;
                         not_string_flag = false;
                     }
                     catch (const std::out_of_range &e)

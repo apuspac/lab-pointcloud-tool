@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <unordered_map>
 #include <numeric>
+#include <mutex>
 
 #include <eigen3/Core>
 #include <eigen3/LU>

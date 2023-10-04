@@ -109,10 +109,10 @@ void PointSet::create_histgram()
         }
     }
 
+    std::cout << "histgram_distance_from_center" << std::endl;
     for (unsigned int i = 0; i < histgram_intervals.size(); i++)
     {
-        std::cout << "histgram_distance_from_center" << std::endl;
-        std::cout << i * interval << ", " << histgram_intervals.at(i) << std::endl;
+        // std::cout << i * interval << ", " << histgram_intervals.at(i) << std::endl;
     }
 
     std::array<int, 100> histgram_one_diff = {};
@@ -127,23 +127,42 @@ void PointSet::create_histgram()
     }
 
     // 一階差分で符号が反転しているところをピックアップしてみる
+    // ピックアップしたピークの中から最初のピークを取得
     auto is_extremum = [](int diff_minus1, int diff)
     {
         return (diff_minus1 * diff) < 0 && (diff_minus1 > 0);
     };
 
+    double first_peak = 0.0;
+
     for (std::array<int, 100>::iterator itr = histgram_one_diff.begin() + 1; itr != histgram_one_diff.end(); itr++)
     {
         if (is_extremum(*(itr - 1), *itr))
         {
-            std::cout << "sign changed" << std::endl;
-            std::cout << std::distance(histgram_one_diff.begin(), itr) * interval << std::endl;
+            // std::cout << "sign changed" << std::endl;
+            // std::cout << std::distance(histgram_one_diff.begin(), itr) * interval << std::endl;
+
+            static std::once_flag flag;
+            std::call_once(flag, [&]
+                           {auto peak_range = std::distance(histgram_one_diff.begin(), itr) * interval;
+                            std::cout << "first peak:" << peak_range << std::endl;
+                            first_peak = peak_range; });
         }
     }
 
-    for (unsigned int i = 0; i < histgram_intervals.size(); i++)
+    // 最初のピークを基準に 0.1m範囲の点のみを抽出
+    std::vector<Eigen::Vector3d> point3_filtered;
+    for (const auto &point : point3)
     {
 
-        std::cout << i * interval << " " << histgram_one_diff.at(i) << std::endl;
+        double tmp_dis_center = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0));
+
+        if (tmp_dis_center > (first_peak - 0.1) && tmp_dis_center < (first_peak + 0.1))
+        {
+            // std::cout << tmp_dis_center << std::endl;
+            point3_filtered.push_back(point);
+        }
     }
+
+    point3 = point3_filtered;
 }

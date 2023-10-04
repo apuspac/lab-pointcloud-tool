@@ -221,16 +221,16 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
         return false;
     };
 
-    std::cout << "------capture_boxpoint" << std::endl;
+    // std::cout << "------capture_boxpoint" << std::endl;
 
     // 画素値から球投影の座標変換したものを格納
     std::vector<Eigen::Vector3d> box = detect_bbox.get_xyz();
 
-    std::cout << "box:" << std::endl
-              << box.at(0).transpose() << std::endl
-              << box.at(1).transpose() << std::endl
-              << box.at(2).transpose() << std::endl
-              << box.at(3).transpose() << std::endl;
+    // std::cout << "box:" << std::endl
+    //           << box.at(0).transpose() << std::endl
+    //           << box.at(1).transpose() << std::endl
+    //           << box.at(2).transpose() << std::endl
+    //           << box.at(3).transpose() << std::endl;
 
     Eigen::Vector3d origin = {0, 0, 0};
 
@@ -265,9 +265,9 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
         }
     }
 
-    std::cout
-        << "plane_normal: " << normal_vec.at(0).transpose() << std::endl
-        << "d: " << distance.at(0) << std::endl;
+    // std::cout
+    //     << "plane_normal: " << normal_vec.at(0).transpose() << std::endl
+    //     << "d: " << distance.at(0) << std::endl;
     /**
      * @brief 原点との引数の点とのedge 直線をsegpoint_with_lineに追加する
      * 原点が0番目に保存されていることが前提なので、 最初に追加しておく。
