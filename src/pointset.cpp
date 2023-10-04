@@ -84,7 +84,7 @@ Eigen::Vector3d PointSet::get_center_of_gravity()
 
 void PointSet::create_histgram()
 {
-    std::cout << "histgram" << std::endl;
+    std::cout << "create_histgram" << std::endl;
 
     std::vector<double> distance_from_center;
 
@@ -95,30 +95,33 @@ void PointSet::create_histgram()
         distance_from_center.push_back(tmp_dis_center);
     }
 
-    std::array<int, 100> histgram_intervals = {};
+    std::array<int, 500> histgram_intervals = {};
     double interval = 0.05;
 
     auto is_within_roomrange = [](double x)
-    { return (x < 100.0 && x > 0.0); };
+    { return (x < 1000.0 && x > 0.0); };
 
     for (const auto &distance : distance_from_center)
     {
+        // std::cout << (distance / interval) << "    ";
         if (is_within_roomrange(distance / interval))
         {
             histgram_intervals.at(static_cast<int>(distance / interval)) += 1;
+            // std::cout << "in  " << std::endl;
         }
     }
 
     std::cout << "histgram_distance_from_center" << std::endl;
+
     for (unsigned int i = 0; i < histgram_intervals.size(); i++)
     {
         // std::cout << i * interval << ", " << histgram_intervals.at(i) << std::endl;
     }
 
-    std::array<int, 100> histgram_one_diff = {};
+    std::array<int, 500> histgram_one_diff = {};
 
     // 一階差分を取ってみる
-    for (std::array<int, 100>::iterator itr = histgram_intervals.begin() + 1; itr != histgram_intervals.end(); itr++)
+    for (std::array<int, 500>::iterator itr = histgram_intervals.begin() + 1; itr != histgram_intervals.end(); itr++)
     {
         // std::cout << *itr - *(itr - 1) << std::endl;
 
@@ -135,18 +138,22 @@ void PointSet::create_histgram()
 
     double first_peak = 0.0;
 
-    for (std::array<int, 100>::iterator itr = histgram_one_diff.begin() + 1; itr != histgram_one_diff.end(); itr++)
+    bool flag = false;
+
+    for (std::array<int, 500>::iterator itr = histgram_one_diff.begin() + 1; itr != histgram_one_diff.end(); itr++)
     {
+        // std::cout << *(itr - 1) * (*itr) << " " << (*(itr - 1)) << std::endl;
         if (is_extremum(*(itr - 1), *itr))
         {
             // std::cout << "sign changed" << std::endl;
             // std::cout << std::distance(histgram_one_diff.begin(), itr) * interval << std::endl;
-
-            static std::once_flag flag;
-            std::call_once(flag, [&]
-                           {auto peak_range = std::distance(histgram_one_diff.begin(), itr) * interval;
-                            std::cout << "first peak:" << peak_range << std::endl;
-                            first_peak = peak_range; });
+            if (flag == false)
+            {
+                auto peak_range = std::distance(histgram_one_diff.begin(), itr) * interval;
+                std::cout << "first peak:" << peak_range << std::endl;
+                first_peak = peak_range;
+                flag = true;
+            }
         }
     }
 

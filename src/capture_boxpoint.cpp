@@ -178,6 +178,9 @@ void CaptureBoxPoint::set_bbox(double xmin, double ymin, double xmax, double yma
 void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, BBox &detect_bbox, PointSet &bboxpoint_forPrint)
 {
 
+    // parts番号取得
+    capture_point.set_class_num(detect_bbox.get_class_num());
+
     // 面法線を求める
     auto calc_plane_normal = [](std::array<Eigen::Vector3d, 3> triangle)
     {
@@ -226,11 +229,11 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
     // 画素値から球投影の座標変換したものを格納
     std::vector<Eigen::Vector3d> box = detect_bbox.get_xyz();
 
-    // std::cout << "box:" << std::endl
-    //           << box.at(0).transpose() << std::endl
-    //           << box.at(1).transpose() << std::endl
-    //           << box.at(2).transpose() << std::endl
-    //           << box.at(3).transpose() << std::endl;
+    std::cout << "box:" << std::endl
+              << box.at(0).transpose() << std::endl
+              << box.at(1).transpose() << std::endl
+              << box.at(2).transpose() << std::endl
+              << box.at(3).transpose() << std::endl;
 
     Eigen::Vector3d origin = {0, 0, 0};
 
@@ -262,6 +265,7 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
         if (is_point_upper_side_of_plane(target_point, normal_vec.at(0), distance.at(0)) && is_point_upper_side_of_plane(target_point, normal_vec.at(1), distance.at(1)) && is_point_upper_side_of_plane(target_point, normal_vec.at(2), distance.at(2)) && is_point_upper_side_of_plane(target_point, normal_vec.at(3), distance.at(3)))
         {
             capture_point.add_point(target_point);
+            // std::cout << "num" << capture_point.get_point_num();
         }
     }
 

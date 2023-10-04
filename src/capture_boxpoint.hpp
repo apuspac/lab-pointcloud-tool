@@ -31,6 +31,8 @@ public:
     BBox(double x_min, double y_min, double x_max, double y_max) : xmin(x_min), ymin(y_min), xmax(x_max), ymax(y_max) {}
     ~BBox() {}
 
+    int get_class_num() { return class_num; }
+
     void set_BBox(double x_min, double y_min, double x_max, double y_max) { xmin = x_min, ymin = y_min, xmax = x_max, ymax = y_max; }
     void set_class_name(std::string name) { class_name = name; }
     void set_class_num(int num) { class_num = num; }

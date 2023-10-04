@@ -23,7 +23,9 @@ Eigen::Vector3d Viewer3D::color_preset(int code)
         {3, [&color]
          { color = {0.75, 0.75, 0.75}; }},
         {4, [&color]
-         { color = {0, 0, 0.9}; }}};
+         { color = {0, 0, 0.9}; }},
+         {4, [&color]
+         { color = {0, 0, 0.9}; };
 
     color_func[code]();
 

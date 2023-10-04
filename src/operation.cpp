@@ -614,7 +614,7 @@ void PointOperation::test_location()
     // load plydata
     PointSet ply_point("plydata");
     obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
-    ply_point.print();
+    // ply_point.print();
 
     // load bbox
     DetectionData detect;
@@ -624,8 +624,6 @@ void PointOperation::test_location()
     // PointSet bbox_img_point("corresp_imgpoint");
     // obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), bbox_img_point);
     // bbox_img_point.print();
-
-    CaptureBoxPoint capbox;
 
     // 複数の点に対応する。
     std::vector<std::vector<PointSet>> all_captured_point;
@@ -642,14 +640,18 @@ void PointOperation::test_location()
         // 一つの画像の中の複数のBBoxを扱う
         for (auto &one_bbox : in_img_bbox.get_bbox_all())
         {
+            CaptureBoxPoint capbox;
+
             // 抽出したポイントを格納するPointSetの宣言
             PointSet captured_point_inner_bbox("captured_point_inner_bbox");
             PointSet bbox_visualization("bbox");
 
             capbox.capture_bbox(ply_point, captured_point_inner_bbox, one_bbox, bbox_visualization);
+            std::cout << "captured_point_inner_bbox2: " << captured_point_inner_bbox.get_point_num() << std::endl;
 
             // captured_point_inner_bboxのヒストグラムを作成
             captured_point_inner_bbox.create_histgram();
+            std::cout << "after create_histgram: " << captured_point_inner_bbox.get_point_num() << std::endl;
 
             // 重心計算
             Eigen::Vector3d center_of_gravity = captured_point_inner_bbox.get_center_of_gravity();
@@ -672,36 +674,38 @@ void PointOperation::test_location()
     std::cout << "check_ply_visualization" << std::endl;
     Viewer3D check_ply("check_ply");
     check_ply.add_axes();
-    check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
+    // check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
 
     // captured_point
-    // for (auto &captured_point_inner_bbox : all_captured_point)
-    // {
-    //     for (auto &captured_point : captured_point_inner_bbox)
-    //     {
-    //         check_ply.add_geometry_pointset(captured_point.get_point_all(), 0);
-    //     }
-    // }
+    for (auto &captured_point_inner_bbox : all_captured_point)
+    {
+        for (auto &captured_point : captured_point_inner_bbox)
+        {
+            check_ply.add_geometry_pointset(captured_point.get_point_all(), captured_point.get_class_num());
+            std::cout << "captured_point_vis" << captured_point.get_point_num() << std::endl;
+        }
+    }
 
     // // bbox_visualization
-    // for (auto &bbox_visualization : all_bbox_visualization)
-    // {
-    //     for (auto &bbox : bbox_visualization)
-    //     {
-    //         check_ply.add_geometry_pointset(bbox.get_point_all(), 1);
-    //         check_ply.add_line_origin(bbox.get_point_all(), 2);
-    //     }
-    // }
+    for (auto &bbox_visualization : all_bbox_visualization)
+    {
+        for (auto &bbox : bbox_visualization)
+        {
+            check_ply.add_geometry_pointset(bbox.get_point_all(), bbox.get_class_num());
+            check_ply.add_line_origin(bbox.get_point_all(), bbox.get_class_num());
+        }
+    }
 
     // // center_of_gravity
-    // for (auto &center_of_gravity_multi : all_center_of_gravity)
-    // {
-    //     for (auto &center_of_gravity : center_of_gravity_multi)
-    //     {
-    //         check_ply.add_geometry_pointset(center_of_gravity.get_point_all(), 4);
-    //         check_ply.add_line_origin(center_of_gravity.get_point_all(), 4);
-    //     }
-    // }
+    for (auto &center_of_gravity_multi : all_center_of_gravity)
+    {
+        for (auto &center_of_gravity : center_of_gravity_multi)
+        {
+            check_ply.add_geometry_pointset(center_of_gravity.get_point_all(), 4);
+            check_ply.add_line_origin(center_of_gravity.get_point_all(), 4);
+        }
+    }
+
     // TODO: 描画重いのでちょっとカット
     check_ply.show_using_drawgeometries();
 

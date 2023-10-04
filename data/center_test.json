@@ -15,92 +15,20 @@
           "name": "square_box_w_marker_front_side"
         },
         {
-          "xmin": 534.4877929688,
-          "ymin": 906.0694580078,
-          "xmax": 563.3963012695,
-          "ymax": 935.2483520508,
+          "xmin": 2501,
+          "ymin": 1518,
+          "xmax": 2788,
+          "ymax": 1872,
           "confidence": 0.6121305823,
           "class": 9,
           "name": "square_box_w_marker_front_side"
         },
         {
-          "xmin": 538.7492675781,
-          "ymin": 900.9768676758,
-          "xmax": 550.9517211914,
-          "ymax": 912.8776245117,
+          "xmin": 3543,
+          "ymin": 1552,
+          "xmax": 3856,
+          "ymax": 1956,
           "confidence": 0.5755448937,
-          "class": 3,
-          "name": "connector"
-        },
-        {
-          "xmin": 555.4219360352,
-          "ymin": 903.5587768555,
-          "xmax": 587.0814208984,
-          "ymax": 932.9715576172,
-          "confidence": 0.5466070175,
-          "class": 9,
-          "name": "square_box_w_marker_front_side"
-        },
-        {
-          "xmin": 560.7940673828,
-          "ymin": 896.6022949219,
-          "xmax": 574.0325317383,
-          "ymax": 906.4776000977,
-          "confidence": 0.4880639315,
-          "class": 3,
-          "name": "connector"
-        },
-        {
-          "xmin": 559.768737793,
-          "ymin": 670.7883300781,
-          "xmax": 582.9661865234,
-          "ymax": 699.7424316406,
-          "confidence": 0.4848645031,
-          "class": 9,
-          "name": "square_box_w_marker_front_side"
-        },
-        {
-          "xmin": 150.3047027588,
-          "ymin": 123.6535186768,
-          "xmax": 198.5148773193,
-          "ymax": 181.1329193115,
-          "confidence": 0.4804799855,
-          "class": 0,
-          "name": "big_rectangle_box_back_side"
-        },
-        {
-          "xmin": 534.4720458984,
-          "ymin": 904.7702636719,
-          "xmax": 563.048034668,
-          "ymax": 935.2660522461,
-          "confidence": 0.3850408792,
-          "class": 3,
-          "name": "connector"
-        },
-        {
-          "xmin": 320.3080749512,
-          "ymin": 307.0648498535,
-          "xmax": 334.0715637207,
-          "ymax": 319.4484863281,
-          "confidence": 0.3017393053,
-          "class": 3,
-          "name": "connector"
-        },
-        {
-          "xmin": 145.7390594482,
-          "ymin": 125.2853622437,
-          "xmax": 198.4386901855,
-          "ymax": 187.0322875977,
-          "confidence": 0.2998635173,
-          "class": 7,
-          "name": "square_box_back_side"
-        },
-        {
-          "xmin": 320.5987548828,
-          "ymin": 295.2772827148,
-          "xmax": 344.0626220703,
-          "ymax": 317.3491210938,
-          "confidence": 0.2963709235,
           "class": 3,
           "name": "connector"
         }
@@ -357,148 +285,31 @@
       "file_name": "PIC_point2.jpg",
       "bbox_info": [
         {
-          "xmin": 407.1828918457,
-          "ymin": 1467.7575683594,
-          "xmax": 552.6828613281,
-          "ymax": 1611.1292724609,
+          "xmin": 4261,
+          "ymin": 1766,
+          "xmax": 4542,
+          "ymax": 1966,
           "confidence": 0.8671263456,
           "class": 9,
           "name": "square_box_w_marker_front_side"
         },
         {
-          "xmin": 5542.3520507812,
-          "ymin": 1592.7868652344,
-          "xmax": 5651.1435546875,
-          "ymax": 1707.4431152344,
+          "xmin": 4777,
+          "ymin": 1704,
+          "xmax": 5001,
+          "ymax": 2052,
           "confidence": 0.7987324595,
           "class": 9,
           "name": "square_box_w_marker_front_side"
         },
         {
-          "xmin": 6454.35546875,
-          "ymin": 2171.5073242188,
-          "xmax": 6594.37890625,
-          "ymax": 2318.6420898438,
+          "xmin": 5601,
+          "ymin": 1813,
+          "xmax": 6082,
+          "ymax": 2068,
           "confidence": 0.7969229221,
           "class": 9,
           "name": "square_box_w_marker_front_side"
-        },
-        {
-          "xmin": 2020.3071289062,
-          "ymin": 1745.478515625,
-          "xmax": 2079.8227539062,
-          "ymax": 1806.6815185547,
-          "confidence": 0.7909534574,
-          "class": 9,
-          "name": "square_box_w_marker_front_side"
-        },
-        {
-          "xmin": 474.0788269043,
-          "ymin": 1416.5794677734,
-          "xmax": 532.0240478516,
-          "ymax": 1472.4610595703,
-          "confidence": 0.7387499213,
-          "class": 3,
-          "name": "connector"
-        },
-        {
-          "xmin": 1994.5024414062,
-          "ymin": 2305.5864257812,
-          "xmax": 2054.7277832031,
-          "ymax": 2379.3139648438,
-          "confidence": 0.6251608729,
-          "class": 9,
-          "name": "square_box_w_marker_front_side"
-        },
-        {
-          "xmin": 426.7717285156,
-          "ymin": 713.6975708008,
-          "xmax": 550.2406005859,
-          "ymax": 826.2225341797,
-          "confidence": 0.6160290241,
-          "class": 9,
-          "name": "square_box_w_marker_front_side"
-        },
-        {
-          "xmin": 5525.8598632812,
-          "ymin": 968.0161132812,
-          "xmax": 5619.2939453125,
-          "ymax": 1070.2586669922,
-          "confidence": 0.5405952334,
-          "class": 9,
-          "name": "square_box_w_marker_front_side"
-        },
-        {
-          "xmin": 6514.6274414062,
-          "ymin": 2126.4304199219,
-          "xmax": 6566.0258789062,
-          "ymax": 2176.8481445312,
-          "confidence": 0.5160530806,
-          "class": 3,
-          "name": "connector"
-        },
-        {
-          "xmin": 5136.7309570312,
-          "ymin": 1704.6745605469,
-          "xmax": 5204.6728515625,
-          "ymax": 1779.8664550781,
-          "confidence": 0.3978380561,
-          "class": 9,
-          "name": "square_box_w_marker_front_side"
-        },
-        {
-          "xmin": 5538.958984375,
-          "ymin": 1588.0744628906,
-          "xmax": 5646.2397460938,
-          "ymax": 1699.7149658203,
-          "confidence": 0.3666237295,
-          "class": 3,
-          "name": "connector"
-        },
-        {
-          "xmin": 468.2557983398,
-          "ymin": 690.6670532227,
-          "xmax": 512.1970825195,
-          "ymax": 734.326171875,
-          "confidence": 0.3665367961,
-          "class": 3,
-          "name": "connector"
-        },
-        {
-          "xmin": 2009.7497558594,
-          "ymin": 2295.4848632812,
-          "xmax": 2087.1337890625,
-          "ymax": 2366.6477050781,
-          "confidence": 0.3190865517,
-          "class": 9,
-          "name": "square_box_w_marker_front_side"
-        },
-        {
-          "xmin": 5125.01953125,
-          "ymin": 1203.8315429688,
-          "xmax": 5181.8745117188,
-          "ymax": 1276.0086669922,
-          "confidence": 0.3005811274,
-          "class": 7,
-          "name": "square_box_back_side"
-        },
-        {
-          "xmin": 5576.1640625,
-          "ymin": 1561.6103515625,
-          "xmax": 5620.2197265625,
-          "ymax": 1597.4645996094,
-          "confidence": 0.2999435663,
-          "class": 3,
-          "name": "connector"
-        },
-        {
-          "xmin": 460.7559204102,
-          "ymin": 1431.6990966797,
-          "xmax": 533.4612426758,
-          "ymax": 1506.3657226562,
-          "confidence": 0.2776562572,
-          "class": 3,
-          "name": "connector"
         }
       ],
       "mask_info": [
@@ -636,39 +447,6 @@
             [[505, 1319]]
           ],
           "confidence": 0.7073473930358887
-        }
-      ]
-    },
-    {
-      "file_path": "data/20230403-kiritori/PIC_point2_1200.jpg",
-      "file_name": "PIC_point2_1200.jpg",
-      "bbox_info": [
-        {
-          "xmin": 126.7172775269,
-          "ymin": 40.5072631836,
-          "xmax": 195.6074523926,
-          "ymax": 112.3004074097,
-          "confidence": 0.6364126205,
-          "class": 0,
-          "name": "big_rectangle_box_back_side"
-        },
-        {
-          "xmin": 553.7448120117,
-          "ymin": 418.092956543,
-          "xmax": 659.0624389648,
-          "ymax": 545.0140380859,
-          "confidence": 0.5145512223,
-          "class": 9,
-          "name": "square_box_w_marker_front_side"
-        },
-        {
-          "xmin": 144.1257629395,
-          "ymin": 36.4245986938,
-          "xmax": 175.4994354248,
-          "ymax": 58.9760704041,
-          "confidence": 0.3400975764,
-          "class": 3,
-          "name": "connector"
         }
       ]
     }

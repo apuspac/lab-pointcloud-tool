@@ -31,11 +31,17 @@ private:
     std::vector<std::array<int, 2>> edge2;
     std::string name;
 
+    // parts検出用
+    int class_num;
+    std::string class_name;
+
 public:
     PointSet(std::string point_name = "none") : name(point_name) {}
     ~PointSet() {}
 
     void print();
+    void set_class_name(std::string _name) { class_name = _name; }
+    void set_class_num(int _num) { class_num = _num; }
 
     std::string get_name() { return name; }
 
@@ -67,6 +73,8 @@ public:
     // point3の総数を返す
     long unsigned int get_point_num() { return point3.size(); }
     long unsigned int get_edge_num() { return edge2.size(); }
+
+    int get_class_num() { return class_num; }
 
     void rotate(Eigen::Matrix3d);
     void transform(Eigen::Vector3d);
