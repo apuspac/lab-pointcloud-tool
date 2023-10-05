@@ -103,7 +103,7 @@ class COCO_Anotation_convert():
 
         merged_data = {'file_path': filepath, 'file_name': filename,'bbox_info': bbox_info, 'mask_info': mask_info}
         merged_data_list = [merged_data]
-        convert_format = {'imput_path': input_path, 'merged_data': merged_data_list}
+        convert_format = {'input_path': input_path, 'merged_data': merged_data_list}
 
         return convert_format
 

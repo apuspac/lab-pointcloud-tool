@@ -481,6 +481,7 @@ int ObjectIO::load_detection_json_file(std::string filepath, DetectionData &dete
     // 配列がある場合は getArray
     const rapidjson::Value &merge_data = doc["merged_data"].GetArray();
 
+
     for (const auto &detect_img : merge_data.GetArray())
     {
         BBoxData bboxdata;

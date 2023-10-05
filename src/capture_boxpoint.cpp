@@ -178,9 +178,11 @@ void CaptureBoxPoint::set_bbox(double xmin, double ymin, double xmax, double yma
 void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, BBox &detect_bbox, PointSet &bboxpoint_forPrint)
 {
 
-    // parts番号取得
+    // parts番号と あればname取得
     capture_point.set_class_num(detect_bbox.get_class_num());
     bboxpoint_forPrint.set_class_num(detect_bbox.get_class_num());
+    capture_point.set_class_name(detect_bbox.get_class_name());
+    bboxpoint_forPrint.set_class_name(detect_bbox.get_class_name());
 
     // 面法線を求める
     auto calc_plane_normal = [](std::array<Eigen::Vector3d, 3> triangle)

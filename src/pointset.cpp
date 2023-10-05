@@ -73,13 +73,13 @@ void PointSet::transform(Eigen::Vector3d transform_vec)
  *
  * @return Eigen::Vector3d
  */
-Eigen::Vector3d PointSet::get_center_of_gravity()
+void PointSet::calc_center_of_gravity()
 {
-    std::cout << "get_center_of_gravity" << std::endl;
+    // std::cout << "get_center_of_gravity" << std::endl;
 
     Eigen::Vector3d sum = std::reduce(point3.begin(), point3.end(), Eigen::Vector3d(0, 0, 0), [](Eigen::Vector3d a, Eigen::Vector3d b)
                                       { return a + b; });
-    return (sum / static_cast<double>(point3.size()));
+    center_of_gravity = (sum / static_cast<double>(point3.size()));
 }
 
 void PointSet::create_histgram()

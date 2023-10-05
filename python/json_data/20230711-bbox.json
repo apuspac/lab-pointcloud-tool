@@ -1,0 +1,377 @@
+{
+  "images": [
+    {
+      "id": 234,
+      "dataset_id": 6,
+      "category_ids": [5, 11, 12],
+      "path": "/datasets/20230711-bbox/PIC_20230711.jpg",
+      "width": 7680,
+      "height": 3840,
+      "file_name": "PIC_20230711.jpg",
+      "annotated": true,
+      "annotating": [],
+      "num_annotations": 10,
+      "metadata": {},
+      "milliseconds": 0,
+      "events": [],
+      "regenerate_thumbnail": false,
+      "is_modified": false
+    }
+  ],
+  "categories": [
+    {
+      "id": 4,
+      "name": "big_rectangle_box_back_side",
+      "supercategory": "",
+      "color": "#a27ae5",
+      "metadata": {},
+      "creator": "cafelatte",
+      "keypoint_colors": []
+    },
+    {
+      "id": 5,
+      "name": "big_rectangle_box_front_side",
+      "supercategory": "",
+      "color": "#a6db70",
+      "metadata": {},
+      "creator": "cafelatte",
+      "keypoint_colors": []
+    },
+    {
+      "id": 6,
+      "name": "big_rectangle_box_w_marker_front_side",
+      "supercategory": "",
+      "color": "#21c55f",
+      "metadata": {},
+      "creator": "cafelatte",
+      "keypoint_colors": []
+    },
+    {
+      "id": 7,
+      "name": "connector",
+      "supercategory": "",
+      "color": "#0a1af0",
+      "metadata": {},
+      "creator": "cafelatte",
+      "keypoint_colors": []
+    },
+    {
+      "id": 11,
+      "name": "square_box_back_side",
+      "supercategory": "",
+      "color": "#84a210",
+      "metadata": {},
+      "creator": "cafelatte",
+      "keypoint_colors": []
+    },
+    {
+      "id": 12,
+      "name": "square_box_front_side",
+      "supercategory": "",
+      "color": "#e65965",
+      "metadata": {},
+      "creator": "cafelatte",
+      "keypoint_colors": []
+    },
+    {
+      "id": 13,
+      "name": "square_box_w_marker_front_side",
+      "supercategory": "",
+      "color": "#8356f1",
+      "metadata": {},
+      "creator": "cafelatte",
+      "keypoint_colors": []
+    },
+    {
+      "id": 14,
+      "name": "pipe",
+      "supercategory": "",
+      "color": "#c278de",
+      "metadata": {},
+      "creator": "cafelatte",
+      "keypoint_colors": []
+    }
+  ],
+  "annotations": [
+    {
+      "id": 1496,
+      "image_id": 234,
+      "category_id": 11,
+      "dataset_id": 6,
+      "segmentation": [
+        [5098.2, 1737.9, 5098.2, 1807.4, 5024.5, 1807.4, 5024.5, 1737.9]
+      ],
+      "area": 5037,
+      "bbox": [5025, 1738, 73, 69],
+      "iscrowd": false,
+      "isbbox": true,
+      "creator": "cafelatte",
+      "width": 7680,
+      "height": 3840,
+      "color": "#e4e838",
+      "metadata": {},
+      "milliseconds": 4094,
+      "events": [
+        {
+          "_cls": "SessionEvent",
+          "created_at": { "$date": 1696468217073 },
+          "user": "cafelatte",
+          "milliseconds": 2047,
+          "tools_used": ["BBox"]
+        }
+      ]
+    },
+    {
+      "id": 1497,
+      "image_id": 234,
+      "category_id": 11,
+      "dataset_id": 6,
+      "segmentation": [
+        [5092.8, 1195.2, 5092.8, 1251.7, 5019.3, 1251.7, 5019.3, 1195.2]
+      ],
+      "area": 4218,
+      "bbox": [5019, 1195, 74, 57],
+      "iscrowd": false,
+      "isbbox": true,
+      "creator": "cafelatte",
+      "width": 7680,
+      "height": 3840,
+      "color": "#c11003",
+      "metadata": {},
+      "milliseconds": 1100,
+      "events": [
+        {
+          "_cls": "SessionEvent",
+          "created_at": { "$date": 1696468216525 },
+          "user": "cafelatte",
+          "milliseconds": 550,
+          "tools_used": ["BBox"]
+        }
+      ]
+    },
+    {
+      "id": 1501,
+      "image_id": 234,
+      "category_id": 5,
+      "dataset_id": 6,
+      "segmentation": [
+        [4264.7, 1792.6, 4264.7, 1842.7, 4207.5, 1842.7, 4207.5, 1792.6]
+      ],
+      "area": 2850,
+      "bbox": [4208, 1793, 57, 50],
+      "iscrowd": false,
+      "isbbox": true,
+      "creator": "cafelatte",
+      "width": 7680,
+      "height": 3840,
+      "color": "#1eae6b",
+      "metadata": {},
+      "milliseconds": 16438,
+      "events": [
+        {
+          "_cls": "SessionEvent",
+          "created_at": { "$date": 1696468154032 },
+          "user": "cafelatte",
+          "milliseconds": 16438,
+          "tools_used": ["BBox"]
+        }
+      ]
+    },
+    {
+      "id": 1502,
+      "image_id": 234,
+      "category_id": 12,
+      "dataset_id": 6,
+      "segmentation": [
+        [4328.2, 1787.7, 4328.2, 1833.1, 4278.6, 1833.1, 4278.6, 1787.7]
+      ],
+      "area": 2205,
+      "bbox": [4279, 1788, 49, 45],
+      "iscrowd": false,
+      "isbbox": true,
+      "creator": "cafelatte",
+      "width": 7680,
+      "height": 3840,
+      "color": "#66e1f9",
+      "metadata": {},
+      "milliseconds": 2524,
+      "events": [
+        {
+          "_cls": "SessionEvent",
+          "created_at": { "$date": 1696468233754 },
+          "user": "cafelatte",
+          "milliseconds": 631,
+          "tools_used": ["Select"]
+        }
+      ]
+    },
+    {
+      "id": 1503,
+      "image_id": 234,
+      "category_id": 12,
+      "dataset_id": 6,
+      "segmentation": [
+        [4266.3, 2247.1, 4266.3, 2308.3, 4219.8, 2308.3, 4219.8, 2247.1]
+      ],
+      "area": 2806,
+      "bbox": [4220, 2247, 46, 61],
+      "iscrowd": false,
+      "isbbox": true,
+      "creator": "cafelatte",
+      "width": 7680,
+      "height": 3840,
+      "color": "#9115d4",
+      "metadata": {},
+      "milliseconds": 2136,
+      "events": [
+        {
+          "_cls": "SessionEvent",
+          "created_at": { "$date": 1696468214422 },
+          "user": "cafelatte",
+          "milliseconds": 1068,
+          "tools_used": ["BBox"]
+        }
+      ]
+    },
+    {
+      "id": 1504,
+      "image_id": 234,
+      "category_id": 12,
+      "dataset_id": 6,
+      "segmentation": [
+        [178.3, 1788.6, 178.3, 1853.7, 115.7, 1853.7, 115.7, 1788.6]
+      ],
+      "area": 4030,
+      "bbox": [116, 1789, 62, 65],
+      "iscrowd": false,
+      "isbbox": true,
+      "creator": "cafelatte",
+      "width": 7680,
+      "height": 3840,
+      "color": "#8a26a1",
+      "metadata": {},
+      "milliseconds": 3378,
+      "events": [
+        {
+          "_cls": "SessionEvent",
+          "created_at": { "$date": 1696468213298 },
+          "user": "cafelatte",
+          "milliseconds": 1126,
+          "tools_used": ["BBox"]
+        }
+      ]
+    },
+    {
+      "id": 1505,
+      "image_id": 234,
+      "category_id": 12,
+      "dataset_id": 6,
+      "segmentation": [
+        [87.4, 2280.2, 87.4, 2342.2, 27.8, 2342.2, 27.8, 2280.2]
+      ],
+      "area": 3658,
+      "bbox": [28, 2280, 59, 62],
+      "iscrowd": false,
+      "isbbox": true,
+      "creator": "cafelatte",
+      "width": 7680,
+      "height": 3840,
+      "color": "#e43208",
+      "metadata": {},
+      "milliseconds": 2226,
+      "events": [
+        {
+          "_cls": "SessionEvent",
+          "created_at": { "$date": 1696468212558 },
+          "user": "cafelatte",
+          "milliseconds": 742,
+          "tools_used": ["BBox"]
+        }
+      ]
+    },
+    {
+      "id": 1506,
+      "image_id": 234,
+      "category_id": 12,
+      "dataset_id": 6,
+      "segmentation": [
+        [175.5, 2267.2, 175.5, 2327.7, 115.9, 2327.7, 115.9, 2267.2]
+      ],
+      "area": 3660,
+      "bbox": [116, 2267, 60, 61],
+      "iscrowd": false,
+      "isbbox": true,
+      "creator": "cafelatte",
+      "width": 7680,
+      "height": 3840,
+      "color": "#b50f69",
+      "metadata": {},
+      "milliseconds": 9162,
+      "events": [
+        {
+          "_cls": "SessionEvent",
+          "created_at": { "$date": 1696468207978 },
+          "user": "cafelatte",
+          "milliseconds": 4581,
+          "tools_used": ["BBox"]
+        }
+      ]
+    },
+    {
+      "id": 1508,
+      "image_id": 234,
+      "category_id": 12,
+      "dataset_id": 6,
+      "segmentation": [
+        [6762, 1776, 6762, 1840.5, 6702.5, 1840.5, 6702.5, 1776]
+      ],
+      "area": 3835,
+      "bbox": [6703, 1776, 59, 65],
+      "iscrowd": false,
+      "isbbox": true,
+      "creator": "cafelatte",
+      "width": 7680,
+      "height": 3840,
+      "color": "#4c0ac3",
+      "metadata": {},
+      "milliseconds": 9660,
+      "events": [
+        {
+          "_cls": "SessionEvent",
+          "created_at": { "$date": 1696468234387 },
+          "user": "cafelatte",
+          "milliseconds": 9660,
+          "tools_used": ["BBox"]
+        }
+      ]
+    },
+    {
+      "id": 1509,
+      "image_id": 234,
+      "category_id": 12,
+      "dataset_id": 6,
+      "segmentation": [
+        [6771.1, 1348.7, 6771.1, 1417.8, 6700.3, 1417.8, 6700.3, 1348.7]
+      ],
+      "area": 4899,
+      "bbox": [6700, 1349, 71, 69],
+      "iscrowd": false,
+      "isbbox": true,
+      "creator": "cafelatte",
+      "width": 7680,
+      "height": 3840,
+      "color": "#cafe5c",
+      "metadata": {},
+      "milliseconds": 2636,
+      "events": [
+        {
+          "_cls": "SessionEvent",
+          "created_at": { "$date": 1696468286211 },
+          "user": "cafelatte",
+          "milliseconds": 1318,
+          "tools_used": ["BBox"]
+        }
+      ]
+    }
+  ]
+}
