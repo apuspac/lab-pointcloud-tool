@@ -661,28 +661,35 @@ void PointOperation::test_location()
             captured_point_inner_bbox_multi.push_back(captured_point_inner_bbox);
             bbox_visualization_multi.push_back(bbox_visualization);
             center_of_gravity_multi.push_back(print_center_of_gravity);
+
+            std::cout << std::endl;
         }
 
         all_captured_point.push_back(captured_point_inner_bbox_multi);
         all_bbox_visualization.push_back(bbox_visualization_multi);
         all_center_of_gravity.push_back(center_of_gravity_multi);
 
-        std::cout << in_img_bbox.get_img_name() << std::endl;
+        std::cout << in_img_bbox.get_img_name() << std::endl
+                  << std::endl;
     }
 
     // 描画処理
     std::cout << "check_ply_visualization" << std::endl;
     Viewer3D check_ply("check_ply");
     check_ply.add_axes();
-    // check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
+    check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
 
     // captured_point
     for (auto &captured_point_inner_bbox : all_captured_point)
     {
         for (auto &captured_point : captured_point_inner_bbox)
         {
-            check_ply.add_geometry_pointset(captured_point.get_point_all(), captured_point.get_class_num());
-            std::cout << "captured_point_vis" << captured_point.get_point_num() << std::endl;
+            std::cout << captured_point.get_class_num() << std::endl;
+            if (captured_point.get_point_num() != 0)
+            {
+                check_ply.add_geometry_pointset(captured_point.get_point_all(), captured_point.get_class_num());
+                std::cout << "captured_point_vis_num: " << captured_point.get_point_num() << std::endl;
+            }
         }
     }
 
@@ -691,8 +698,11 @@ void PointOperation::test_location()
     {
         for (auto &bbox : bbox_visualization)
         {
-            check_ply.add_geometry_pointset(bbox.get_point_all(), bbox.get_class_num());
-            check_ply.add_line_origin(bbox.get_point_all(), bbox.get_class_num());
+            // check_ply.add_geometry_pointset(bbox.get_point_all(), bbox.get_class_num());
+            // check_ply.add_line_origin(bbox.get_point_all(), bbox.get_class_num());
+            check_ply.add_geometry_pointset(bbox.get_point_all(), 3);
+            check_ply.add_line_origin(bbox.get_point_all(), 3);
+            std::cout << "bbox_vis_num" << bbox.get_point_num() << std::endl;
         }
     }
 

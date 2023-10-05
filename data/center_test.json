@@ -11,7 +11,7 @@
           "xmax": 2040,
           "ymax": 2010,
           "confidence": 0.7604297996,
-          "class": 9,
+          "class": 5,
           "name": "square_box_w_marker_front_side"
         },
         {
@@ -20,7 +20,7 @@
           "xmax": 2788,
           "ymax": 1872,
           "confidence": 0.6121305823,
-          "class": 9,
+          "class": 4,
           "name": "square_box_w_marker_front_side"
         },
         {

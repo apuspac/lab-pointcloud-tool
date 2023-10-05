@@ -180,6 +180,7 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
 
     // parts番号取得
     capture_point.set_class_num(detect_bbox.get_class_num());
+    bboxpoint_forPrint.set_class_num(detect_bbox.get_class_num());
 
     // 面法線を求める
     auto calc_plane_normal = [](std::array<Eigen::Vector3d, 3> triangle)
