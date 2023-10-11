@@ -305,6 +305,7 @@ void ObjectIO::load_img_point_file(std::string file_name, std::string dir_path, 
     std::array<double, 2> img_size = get_img_width_height(img_path);
 
     // 点群の読み込みとほぼ同じことをしているので、 ほんとは一緒にしたいが、PointSetを画像点も扱えるようにしないといけない。
+    // つまりめんどい
 
     // getlineで1行ずつ処理する
     while (std::getline(data_file, one_line_buffer))
@@ -480,7 +481,6 @@ int ObjectIO::load_detection_json_file(std::string filepath, DetectionData &dete
 
     // 配列がある場合は getArray
     const rapidjson::Value &merge_data = doc["merged_data"].GetArray();
-
 
     for (const auto &detect_img : merge_data.GetArray())
     {

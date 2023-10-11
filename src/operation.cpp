@@ -638,6 +638,8 @@ void PointOperation::test_location()
         std::vector<PointSet> bbox_visualization_multi;
         std::vector<PointSet> center_of_gravity_multi;
 
+        int count = 0;
+
         // 一つの画像の中の複数のBBoxを扱う
         for (auto &one_bbox : in_img_bbox.get_bbox_all())
         {
@@ -660,10 +662,12 @@ void PointOperation::test_location()
             PointSet print_center_of_gravity;
             print_center_of_gravity.add_point(center_of_gravity);
 
+            // 抽出点群 bbox 重心を格納
             captured_point_inner_bbox_multi.push_back(captured_point_inner_bbox);
             bbox_visualization_multi.push_back(bbox_visualization);
             center_of_gravity_multi.push_back(print_center_of_gravity);
 
+            captured_point_inner_bbox.output_hist(std::to_string(count++));
             std::cout << std::endl;
         }
 
@@ -739,21 +743,20 @@ void PointOperation::test_location()
                 output_captured_point[captured_point.get_class_num()].set_class_name(captured_point.get_class_name());
             }
         }
+
+        // center_of_gravity
+
+        // for (auto &center_of_gravity_multi : all_center_of_gravity)
+        // {
+        //     for (auto &center_of_gravity : center_of_gravity_multi)
+        //     {
+        //         for (auto &point : center_of_gravity.get_point_all())
+        //         {
+        //             output_center_gravity.add_point(point);
+        //         }
+        //     }
+        // }
     }
-
-    // center_of_gravity
-
-    // for (auto &center_of_gravity_multi : all_center_of_gravity)
-    // {
-    //     for (auto &center_of_gravity : center_of_gravity_multi)
-    //     {
-    //         for (auto &point : center_of_gravity.get_point_all())
-    //         {
-    //             output_center_gravity.add_point(point);
-    //         }
-    //     }
-    // }
-
     for (auto &parts_point : output_captured_point)
     {
         if (parts_point.get_point_num() != 0)

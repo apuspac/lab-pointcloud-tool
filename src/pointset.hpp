@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <numeric>
 #include <mutex>
+#include <fstream>
 
 #include <eigen3/Core>
 #include <eigen3/LU>
@@ -35,8 +36,11 @@ private:
     int class_num;
     std::string class_name;
 
+    // histgram
+    std::array<int, 500> histgram_intervals;
+
 public:
-    PointSet(std::string point_name = "none") : name(point_name) {}
+    PointSet(std::string point_name = "none") : name(point_name) { histgram_intervals = {}; }
     ~PointSet() {}
 
     void print();
@@ -80,6 +84,8 @@ public:
 
     void rotate(Eigen::Matrix3d);
     void transform(Eigen::Vector3d);
+
+    void output_hist(std::string);
 };
 #endif
 

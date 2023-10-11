@@ -95,7 +95,7 @@ void PointSet::create_histgram()
         distance_from_center.push_back(tmp_dis_center);
     }
 
-    std::array<int, 500> histgram_intervals = {};
+    // std::array<int, 500> histgram_intervals = {};
     double interval = 0.05;
 
     auto is_within_roomrange = [](double x)
@@ -172,4 +172,18 @@ void PointSet::create_histgram()
     }
 
     point3 = point3_filtered;
+}
+
+void PointSet::output_hist(std::string count)
+{
+    std::string path = "hist-" + class_name + count + ".csv";
+    std::ofstream output_data(path);
+
+    double interval = 0.05;
+    for (unsigned int i = 0; i < histgram_intervals.size(); i++)
+    {
+        output_data << i * interval << ", " << histgram_intervals.at(i) << std::endl;
+    }
+
+    output_data.close();
 }
