@@ -28,6 +28,8 @@ class PointSet
 private:
     // 点群を扱う。 点単体は Eigen::Vector3
     std::vector<Eigen::Vector3d> point3;
+    // 極座標(r, phi, theta)
+    std::vector<Eigen::Vector3d> point3_polar;
     std::vector<std::array<int, 2>> edge2;
     Eigen::Vector3d center_of_gravity;
     std::string name;
@@ -43,25 +45,24 @@ public:
     PointSet(std::string point_name = "none") : name(point_name) { histgram_intervals = {}; }
     ~PointSet() {}
 
-    void print();
+    // set
     void set_pointset_name(std::string _name) { name = _name; }
     void set_class_name(std::string _name) { class_name = _name; }
     void set_class_num(int _num) { class_num = _num; }
 
+    long unsigned int get_point_num() { return point3.size(); }
+    long unsigned int get_edge_num() { return edge2.size(); }
+    int get_class_num() { return class_num; }
+    std::string get_class_name() { return class_name; }
     std::string get_name() { return name; }
 
-    // 点を最後に追加
+    // 点の追加 edgeの組を追加
     void add_point(Eigen::Vector3d add_point) { point3.push_back(add_point); }
     void add_point(PointSet);
-    // void add_point(PointSet add_pointset) { point3.insert(point3.end(), add_pointset.get_point_all().begin(), add_pointset.get_point_all().end()); }
-    // edgeの組を追加
     void add_edge(std::array<int, 2> edge) { edge2.push_back(edge); }
-    void calc_center_of_gravity();
-
     /**
      * @brief Get the point object
-     * 単体が欲しいとき
-     * これget_point_all()で渡して そっちで.at()したほうがいいかも？
+     * 単体が欲しいとき用だが、 get_point_all()で渡して そっちで.at()したほうがいいかもしれない
      *
      * @param i 欲しい点の番号
      * @return Eigen::Vector3d
@@ -69,23 +70,20 @@ public:
     Eigen::Vector3d get_point(uint64_t i) { return point3.at(i); }
     std::array<int, 2> get_edge(uint64_t i) { return edge2.at(i); }
     Eigen::Vector3d get_center_of_gravity() { return center_of_gravity; }
-    void create_histgram();
 
     // 全体getter
     std::vector<Eigen::Vector3d> get_point_all() { return point3; }
     std::vector<std::array<int, 2>> get_edge_all() { return edge2; }
 
-    // point3の総数を返す
-    long unsigned int get_point_num() { return point3.size(); }
-    long unsigned int get_edge_num() { return edge2.size(); }
-
-    int get_class_num() { return class_num; }
-    std::string get_class_name() { return class_name; }
-
+    // calc
+    void convert_to_polar();
+    void create_histgram();
+    void calc_center_of_gravity();
     void rotate(Eigen::Matrix3d);
     void transform(Eigen::Vector3d);
 
     void output_hist(std::string);
+    void print();
 };
 #endif
 

@@ -20,6 +20,7 @@ add_executable(
     calc_pointset.cpp
     capture_boxpoint.cpp
     viewer.cpp
+    img_proc.cpp
 )
 
 # ここeigenはなんでリンクしなくていいのかよくわからん

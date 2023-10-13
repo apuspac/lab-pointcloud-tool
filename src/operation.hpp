@@ -11,6 +11,7 @@
 #include "calc_pointset.hpp"
 #include "capture_boxpoint.hpp"
 #include "viewer.hpp"
+#include "img_proc.hpp"
 
 #include "open3d/Open3D.h"
 

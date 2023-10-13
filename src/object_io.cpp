@@ -227,7 +227,7 @@ void ObjectIO::load_ply_point_file(std::string file_name, std::string dir_path, 
 }
 
 /**
- * @brief Get the img width height
+ * @brief Get img width height
  *
  * @param img_path 画像の相対パス
  * @return std::array<double, 2> 画像の幅, 画像の高さの順に取得

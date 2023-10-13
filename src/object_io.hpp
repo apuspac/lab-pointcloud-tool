@@ -9,6 +9,7 @@
 #include "pointset.hpp"
 #include "operation.hpp"
 #include "capture_boxpoint.hpp"
+#include "img_proc.hpp"
 #include <fstream>
 #include <unistd.h>
 #include <getopt.h>

@@ -720,6 +720,7 @@ void PointOperation::capture_point_inner_bbox()
         }
     }
 
+    // 描画
     check_ply.show_using_drawgeometries();
 
     //  output_ply パーツごとではなく、クラスでまとめて出力する
@@ -781,4 +782,39 @@ void PointOperation::capture_point_inner_bbox()
  */
 void PointOperation::test_location()
 {
+
+    ObjectIO obj_io;
+    // std::cout << "projection to sphere" << std::endl;
+
+    // // load plydata
+    // PointSet ply_point("plydata");
+    // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
+
+    // ply_point.convert_to_polar();
+
+    // PointSet projection_unisphere("projection_sphere");
+
+    // // 極座標変換して 距離1にすれば 単位球に投影される
+    // for (auto &point : ply_point.get_point_all())
+    // {
+    //     double phi = point(1);
+    //     double theta = point(2);
+    //     projection_unisphere.add_point(Eigen::Vector3d(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta)));
+    // }
+
+    // std::cout << "check_ply_visualization" << std::endl;
+    // Viewer3D check_ply("check_ply");
+    // check_ply.add_axes();
+    // check_ply.add_geometry_pointset(projection_unisphere.get_point_all(), 3);
+
+    // check_ply.show_using_drawgeometries();
+
+    std::cout << "img edge detection" << std::endl;
+
+    // load 画像対応点 読み込む際に方向ベクトルに変換
+    PointSet corresp_img_point("corresp_imgpoint");
+    InstaImg image;
+    image.load_img(img_file_path.at(0));
+
+    std::cout << image.get_name() << std::endl;
 }

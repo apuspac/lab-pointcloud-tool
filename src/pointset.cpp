@@ -187,3 +187,17 @@ void PointSet::output_hist(std::string count)
 
     output_data.close();
 }
+
+void PointSet::convert_to_polar()
+{
+    std::cout << "convert_to_polar" << std::endl;
+
+    for (auto &point : point3)
+    {
+        double r = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0) + std::pow(point(2), 2.0));
+        double phi = std::atan2(point(1), point(0));
+        double theta = std::acos(point(2) / r);
+
+        point3_polar.push_back(Eigen::Vector3d(r, phi, theta));
+    }
+}
