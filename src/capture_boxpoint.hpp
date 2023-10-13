@@ -31,6 +31,9 @@ public:
     BBox(double x_min, double y_min, double x_max, double y_max) : xmin(x_min), ymin(y_min), xmax(x_max), ymax(y_max) {}
     ~BBox() {}
 
+    int get_class_num() { return class_num; }
+    std::string get_class_name() { return class_name; }
+
     void set_BBox(double x_min, double y_min, double x_max, double y_max) { xmin = x_min, ymin = y_min, xmax = x_max, ymax = y_max; }
     void set_class_name(std::string name) { class_name = name; }
     void set_class_num(int num) { class_num = num; }
@@ -60,7 +63,7 @@ public:
 
     // だいたいbbox全体をloopで回すと思うので、 get_bboxで取得するようにしよう
     std::vector<BBox> get_bbox_all() { return bbox; }
-    std::string get_img_name() { return img_name; }
+    const std::string get_img_name() { return img_name; }
     void set_bbox(BBox bbox_one_instance) { bbox.push_back(bbox_one_instance); }
     void set_img_name(std::string name) { img_name = name; }
 };

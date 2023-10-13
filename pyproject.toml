@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "coordinate-transform"
+version = "0.1.0"
+description = ""
+authors = ["apuspac <workapus@gmail.com>"]
+readme = "README.md"
+packages = [{include = "coordinate_transform"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

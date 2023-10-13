@@ -11,6 +11,8 @@
 #include "open3d/Open3D.h"
 #include "pointset.hpp"
 
+
+
 class Viewer3D
 {
 private:
@@ -34,5 +36,4 @@ public:
     void show_using_drawgeometries();
     Eigen::Vector3d color_preset(int);
 };
-
 #endif

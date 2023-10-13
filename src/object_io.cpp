@@ -200,7 +200,7 @@ void ObjectIO::load_ply_point_file(std::string file_name, std::string dir_path, 
                     }
                     catch (const std::invalid_argument &e)
                     {
-                        std::cout << "invalid argument" << std::endl;
+                        std::cout << "invalid argument:" << one_point_data << std::endl;
                         not_string_flag = false;
                     }
                     catch (const std::out_of_range &e)
@@ -305,6 +305,7 @@ void ObjectIO::load_img_point_file(std::string file_name, std::string dir_path, 
     std::array<double, 2> img_size = get_img_width_height(img_path);
 
     // 点群の読み込みとほぼ同じことをしているので、 ほんとは一緒にしたいが、PointSetを画像点も扱えるようにしないといけない。
+    // つまりめんどい
 
     // getlineで1行ずつ処理する
     while (std::getline(data_file, one_line_buffer))
@@ -531,7 +532,10 @@ int ObjectIO::load_detection_json_file(std::string filepath, DetectionData &dete
 
                     for (const auto &pixel_tmp : pixel_mask.GetArray())
                     {
-                        mask_data.add_mask(pixel_tmp[0].GetInt(), pixel_tmp[1].GetInt());
+                        // intかdoubleか判定して doubleはcastして読み込み
+                        int tmp_zero = pixel_tmp[0].IsInt() ? pixel_tmp[0].GetInt() : static_cast<int>(pixel_tmp[0].GetDouble());
+                        int tmp_one = pixel_tmp[1].IsInt() ? pixel_tmp[1].GetInt() : static_cast<int>(pixel_tmp[1].GetDouble());
+                        mask_data.add_mask(tmp_zero, tmp_one);
                     }
                 }
                 mask_data.equirectangular_to_sphere(img_size.at(0), img_size.at(1));

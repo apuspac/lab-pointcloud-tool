@@ -178,6 +178,12 @@ void CaptureBoxPoint::set_bbox(double xmin, double ymin, double xmax, double yma
 void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, BBox &detect_bbox, PointSet &bboxpoint_forPrint)
 {
 
+    // parts番号と あればname取得
+    capture_point.set_class_num(detect_bbox.get_class_num());
+    bboxpoint_forPrint.set_class_num(detect_bbox.get_class_num());
+    capture_point.set_class_name(detect_bbox.get_class_name());
+    bboxpoint_forPrint.set_class_name(detect_bbox.get_class_name());
+
     // 面法線を求める
     auto calc_plane_normal = [](std::array<Eigen::Vector3d, 3> triangle)
     {
@@ -221,7 +227,7 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
         return false;
     };
 
-    std::cout << "------capture_boxpoint" << std::endl;
+    // std::cout << "------capture_boxpoint" << std::endl;
 
     // 画素値から球投影の座標変換したものを格納
     std::vector<Eigen::Vector3d> box = detect_bbox.get_xyz();
@@ -262,12 +268,13 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
         if (is_point_upper_side_of_plane(target_point, normal_vec.at(0), distance.at(0)) && is_point_upper_side_of_plane(target_point, normal_vec.at(1), distance.at(1)) && is_point_upper_side_of_plane(target_point, normal_vec.at(2), distance.at(2)) && is_point_upper_side_of_plane(target_point, normal_vec.at(3), distance.at(3)))
         {
             capture_point.add_point(target_point);
+            // std::cout << "num" << capture_point.get_point_num();
         }
     }
 
-    std::cout
-        << "plane_normal: " << normal_vec.at(0).transpose() << std::endl
-        << "d: " << distance.at(0) << std::endl;
+    // std::cout
+    //     << "plane_normal: " << normal_vec.at(0).transpose() << std::endl
+    //     << "d: " << distance.at(0) << std::endl;
     /**
      * @brief 原点との引数の点とのedge 直線をsegpoint_with_lineに追加する
      * 原点が0番目に保存されていることが前提なので、 最初に追加しておく。
@@ -285,7 +292,7 @@ void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, 
         double phi = std::atan2(tmp_normalize(1), tmp_normalize(0));
 
         // 距離rを伸ばしてpointを新たに格納
-        double r = 20.0;
+        double r = 10.0;
         Eigen::Vector3d tmp_vec = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
         bboxpoint_forPrint.add_point(tmp_vec);
 
@@ -476,6 +483,18 @@ void CaptureBoxPoint::capture_segmentation_distance(PointSet &plypoint, PointSet
     }
 
     std::cout << "uwaa";
+}
+
+/**
+ * @brief Create histgram of captured pointcloud
+ *
+ */
+void use_histgram(PointSet captured_point)
+{
+    for (auto point : captured_point.get_point_all())
+    {
+        std::cout << point.transpose() << std::endl;
+    }
 }
 
 /**
