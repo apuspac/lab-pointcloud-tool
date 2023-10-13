@@ -606,31 +606,28 @@ void PointOperation::capture_pointset()
  *              --json, data/detections_test.json,
  *              --mode, 9,
  */
-void PointOperation::test_location()
+void PointOperation::capture_point_inner_bbox()
 {
-    std::cout << "capture boxpoint" << std::endl;
+    std::cout << "capture_point_inner_bbox" << std::endl;
     ObjectIO obj_io;
 
     // load plydata
     PointSet ply_point("plydata");
     obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
+
+    // HACK: ply_point 移動
     // ply_point.transform(Eigen::Vector3d(0, 0, 0.06));
-    // ply_point.print();
 
     // load bbox
     DetectionData detect;
     obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
 
-    // // load bbox
-    // PointSet bbox_img_point("corresp_imgpoint");
-    // obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), bbox_img_point);
-    // bbox_img_point.print();
-
-    // 複数の点に対応する。
+    // すべてのパーツごとの点群を格納
     std::vector<std::vector<PointSet>> all_captured_point;
     std::vector<std::vector<PointSet>> all_bbox_visualization;
     std::vector<std::vector<PointSet>> all_center_of_gravity;
 
+    // BBoxから 点群を抽出する
     for (auto &in_img_bbox : detect.get_bbox_data())
     {
         // 複数の点に対応する。
@@ -638,7 +635,7 @@ void PointOperation::test_location()
         std::vector<PointSet> bbox_visualization_multi;
         std::vector<PointSet> center_of_gravity_multi;
 
-        int count = 0;
+        int for_histgram_output_count = 0;
 
         // 一つの画像の中の複数のBBoxを扱う
         for (auto &one_bbox : in_img_bbox.get_bbox_all())
@@ -667,7 +664,8 @@ void PointOperation::test_location()
             bbox_visualization_multi.push_back(bbox_visualization);
             center_of_gravity_multi.push_back(print_center_of_gravity);
 
-            captured_point_inner_bbox.output_hist(std::to_string(count++));
+            // ヒストグラム確認したいとき用
+            captured_point_inner_bbox.output_hist(std::to_string(for_histgram_output_count++));
             std::cout << std::endl;
         }
 
@@ -685,7 +683,7 @@ void PointOperation::test_location()
     check_ply.add_axes();
     check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
 
-    // captured_point
+    // all_captured_pointのPointSetをgeometrySetの中に入れる
     for (auto &captured_point_inner_bbox : all_captured_point)
     {
         for (auto &captured_point : captured_point_inner_bbox)
@@ -699,7 +697,7 @@ void PointOperation::test_location()
         }
     }
 
-    // // bbox_visualization
+    // bbox_visualization もlinesetと一緒に入れる
     for (auto &bbox_visualization : all_bbox_visualization)
     {
         for (auto &bbox : bbox_visualization)
@@ -722,15 +720,14 @@ void PointOperation::test_location()
         }
     }
 
-    // TODO: 描画重いのでちょっとカット
     check_ply.show_using_drawgeometries();
 
-    // output用
+    //  output_ply パーツごとではなく、クラスでまとめて出力する
     std::array<PointSet, 20> output_captured_point;
     std::array<PointSet, 20> output_center_gravity;
     // PointSet output_center_gravity("output_center_gravity");
 
-    // captured_point
+    // captured_point をまとめる処理
     for (auto &captured_point_inner_bbox : all_captured_point)
     {
         for (auto &captured_point : captured_point_inner_bbox)
@@ -744,8 +741,7 @@ void PointOperation::test_location()
             }
         }
 
-        // center_of_gravity
-
+        // center_of_gravity 重心も分けたい場合はこれも
         // for (auto &center_of_gravity_multi : all_center_of_gravity)
         // {
         //     for (auto &center_of_gravity : center_of_gravity_multi)
@@ -757,6 +753,8 @@ void PointOperation::test_location()
         //     }
         // }
     }
+
+    // plyファイル出力
     for (auto &parts_point : output_captured_point)
     {
         if (parts_point.get_point_num() != 0)
@@ -764,10 +762,23 @@ void PointOperation::test_location()
             obj_io.output_ply(parts_point, default_dir_path + parts_point.get_class_name() + "-" + std::to_string(parts_point.get_class_num()) + ".ply");
         }
     }
-    // obj_io.output_ply(output_captured_point, default_dir_path + output_captured_point.get_name() + ".ply");
-    // obj_io.output_ply(output_center_gravity, default_dir_path + output_center_gravity.get_name() + ".ply");
-    // obj_io.output_ply(ply_point, default_dir_path + ply_point.get_name() + ".ply");
+}
 
-    // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
-    // obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
+/**
+ * @brief テスト用の関数
+ *
+ * 新機能等を作ったら、あとで実装してあげる
+ *
+ *  * 実行例:
+ * ./Rotation   --mode 9
+ *              --img_cp img.dat,
+ *              --ply_cp, ply.dat,
+ *              --ply, plyfile.ply,
+ *              --img, img/pic_point1.jpg,
+ *              --dir, data/test/,
+ *              --json, data/detections_test.json,
+ *              --mode, 9,
+ */
+void PointOperation::test_location()
+{
 }

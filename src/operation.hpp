@@ -77,6 +77,7 @@ public:
     void capture_boxpoint();
     void capture_segmentation_point();
     void capture_pointset();
+    void capture_point_inner_bbox();
     void test_location();
 
     // switch文回避のための map
