@@ -816,5 +816,24 @@ void PointOperation::test_location()
     InstaImg image;
     image.load_img(img_file_path.at(0));
 
+    // image.show();
+
     std::cout << image.get_name() << std::endl;
+
+    // ガウシアンのブラーかけてノイズ除去してからCanney法
+    // またopenCVに頼って,,,って言われそうだが そうも言ってられない
+    image.canny();
+
+    // 画像のedgeの点を球の画像にプロットする
+    PointSet img_projection_unisphere;
+
+    image.convert_to_unitsphere(img_projection_unisphere);
+    img_projection_unisphere.print();
+
+    std::cout << "check_ply_visualization" << std::endl;
+    Viewer3D check_ply("check_ply");
+    check_ply.add_axes();
+    check_ply.add_geometry_pointset(img_projection_unisphere.get_point_all(), 3);
+
+    check_ply.show_using_drawgeometries();
 }

@@ -14,6 +14,7 @@ class InstaImg
 {
 private:
     cv::Mat img;
+    cv::Mat img_edge;
 
     // cols, rows
     double height;
@@ -27,6 +28,11 @@ public:
     void load_img(std::string);
     std::array<double, 2> get_img_size() { return {height, width}; };
     std::string get_name() { return name; };
+
+    void show() { cv::imshow(name, img); }
+    // 画像処理
+    void canny();
+    void convert_to_unitsphere(PointSet &);
 };
 
 /**

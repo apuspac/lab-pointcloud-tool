@@ -57,7 +57,7 @@ public:
     std::string get_name() { return name; }
 
     // 点の追加 edgeの組を追加
-    void add_point(Eigen::Vector3d add_point) { point3.push_back(add_point); }
+    void add_point(const Eigen::Vector3d add_point) { point3.push_back(add_point); }
     void add_point(PointSet);
     void add_edge(std::array<int, 2> edge) { edge2.push_back(edge); }
     /**
