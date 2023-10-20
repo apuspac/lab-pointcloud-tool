@@ -821,14 +821,14 @@ void PointOperation::test_location()
     std::cout << image.get_name() << std::endl;
 
     // ガウシアンのブラーかけてノイズ除去してからCanney法
-    // またopenCVに頼って,,,って言われそうだが そうも言ってられない
+    // またopenCVに頼って... ガハハ
     image.canny();
 
     // 画像のedgeの点を球の画像にプロットする
     PointSet img_projection_unisphere;
 
     image.convert_to_unitsphere(img_projection_unisphere);
-    img_projection_unisphere.print();
+    // img_projection_unisphere.print();
 
     std::cout << "check_ply_visualization" << std::endl;
     Viewer3D check_ply("check_ply");
@@ -836,4 +836,6 @@ void PointOperation::test_location()
     check_ply.add_geometry_pointset(img_projection_unisphere.get_point_all(), 3);
 
     check_ply.show_using_drawgeometries();
+
+    obj_io.output_ply(img_projection_unisphere, default_dir_path + "-" + ".ply");
 }

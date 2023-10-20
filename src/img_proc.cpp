@@ -42,26 +42,51 @@ void InstaImg::canny()
 
 void InstaImg::convert_to_unitsphere(PointSet &projected_img)
 {
-    auto equirectangular_to_sphere = [=](double x, double y)
+    auto equirectangular_to_sphere = [=](double u, double v)
     {
-        x /= width;
-        y /= height;
+        // obj_ioのプログラムとは逆なので気を付ける
+        u /= height;
+        v /= width;
 
-        double phi = x * 2 * M_PI;
-        double theta = y * M_PI;
+        double phi = u * 2 * M_PI;
+        double theta = v * M_PI;
 
-        Eigen::Vector3d p = {abs(sin(theta)) * cos(phi), abs(sin(theta)) * sin(phi), cos(theta)};
+        Eigen::Vector3d p = {abs(sin(theta)) * sin(phi), abs(sin(theta)) * cos(phi), cos(theta)};
 
         return p;
     };
 
     std::cout << "convert_to_unitsphere" << std::endl;
 
-    img.forEach<u_char>([&projected_img, equirectangular_to_sphere](u_char &p, const int *position) -> void
-                        {
-        // double x = position[0];
-        // double y = position[1];
-        // projected_img.add_point(equirectangular_to_sphere(p[0], p[1]));
-        // std::cout << p[0]  << " " << p[1] << " " << p[2] << std::endl;
-        std::cout << p << " " << std::endl; });
+    // cv::Mat gray_img;
+    // cv::cvtColor(img_edge, gray_img, cv::COLOR_BGR2GRAY);
+
+    for (int v = 0; v < img_edge.rows; v++)
+    {
+        for (int u = 0; u < img_edge.cols; u++)
+        {
+            uchar *ptr = img_edge.data + img_edge.step * v;
+            if (ptr[u] != 0)
+            {
+                // static_cast<int>(ptr[u])
+                std::cout << v << "." << u << " " << std::endl;
+                projected_img.add_point(equirectangular_to_sphere(v, u));
+            }
+        }
+
+        std::cout << width << " " << height << std::endl;
+    }
+
+    // uchar *ptr = image.data + image.step * y;
+    // uchar Blue = ptr[n * x];
+    // uchar Green = ptr[n * x + 1];
+    // uchar Red = ptr[n * x + 2];
+
+    // img.forEach<u_char>([&projected_img, equirectangular_to_sphere](u_char &p, const int *position) -> void
+    //                     {
+    //     // double x = position[0];
+    //     // double y = position[1];
+    //     // projected_img.add_point(equirectangular_to_sphere(p[0], p[1]));
+    //     // std::cout << p[0]  << " " << p[1] << " " << p[2] << std::endl;
+    //     std::cout << p << " " << std::endl; });
 }
