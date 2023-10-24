@@ -188,6 +188,10 @@ void PointSet::output_hist(std::string count)
     output_data.close();
 }
 
+/**
+ * @brief xyz -> r, phi, theta and save to point3_polar
+ *
+ */
 void PointSet::convert_to_polar()
 {
     std::cout << "convert_to_polar" << std::endl;

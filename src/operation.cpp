@@ -786,38 +786,81 @@ void PointOperation::test_location()
     ObjectIO obj_io;
     // std::cout << "projection to sphere" << std::endl;
 
-    // // load plydata
-    // PointSet ply_point("plydata");
-    // obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
+    // load plydata img
+    PointSet ply_point("plydata");
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
+    InstaImg image;
+    image.load_img(img_file_path.at(0));
 
-    // ply_point.convert_to_polar();
+    // convert to polar
+    ply_point.convert_to_polar();
+    PointSet projection_unisphere("projection_sphere");
 
-    // PointSet projection_unisphere("projection_sphere");
-
-    // // 極座標変換して 距離1にすれば 単位球に投影される
-    // for (auto &point : ply_point.get_point_all())
+    // 極座標変換して 距離1にすれば 単位球に投影される
+    // for (auto &point : ply_point.get_point_all_polar())
     // {
     //     double phi = point(1);
     //     double theta = point(2);
     //     projection_unisphere.add_point(Eigen::Vector3d(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta)));
     // }
 
-    // std::cout << "check_ply_visualization" << std::endl;
-    // Viewer3D check_ply("check_ply");
-    // check_ply.add_axes();
-    // check_ply.add_geometry_pointset(projection_unisphere.get_point_all(), 3);
+    // 画像のほうに合わせれば、edge画像との類似度を計算しやすいし、総当たりもしやすいため動かす。
 
-    // check_ply.show_using_drawgeometries();
+    LidarImg lidar_img;
+
+    // translate search
+
+    // xyz 探索範囲
+    // 0.1 なら ±0.1の範囲を探索
+    double x_limit = 1.0;
+    double y_limit = 1.0;
+    double z_limit = 1.0;
+
+    // 刻み幅  全部同じ幅でいいのか という問題はある
+    double split = 0.05;
+
+    for (double x = -x_limit; x < x_limit; x += split)
+    {
+        for (double y = -y_limit; y < y_limitl y += split)
+        {
+            for (double z = -z_limit; z < z_limit; z += split)
+            {
+                // 並進の適用
+
+                // rotate seartch
+                // thetaは 0-pi, phiは 0-2pi
+                // split は まず 1度ずつ？かな？
+                double theta = 0;
+                double phi = 0;
+                double rad_split = 0;
+            }
+        }
+    }
+
+    // 極座標から画像の
+    for (auto &point : ply_point.get_point_all_polar())
+    {
+        double u_dash = point(1) / (2.0 * M_PI);
+        double v_dash = point(2) / M_PI;
+        double u = u_dash * image.get_width();
+        double v = v_dash * image.get_height();
+
+        lidar_img.add_point()
+    }
+
+    std::cout << "check_ply_visualization" << std::endl;
+    Viewer3D check_ply("check_ply");
+    check_ply.add_axes();
+    check_ply.add_geometry_pointset(projection_unisphere.get_point_all(), 3);
+
+    check_ply.show_using_drawgeometries();
 
     std::cout << "img edge detection" << std::endl;
 
-    // load 画像対応点 読み込む際に方向ベクトルに変換
-    PointSet corresp_img_point("corresp_imgpoint");
     InstaImg image;
     image.load_img(img_file_path.at(0));
 
-    // image.show();
-
+    // image edge
     std::cout << image.get_name() << std::endl;
 
     // ガウシアンのブラーかけてノイズ除去してからCanney法
@@ -830,12 +873,13 @@ void PointOperation::test_location()
     image.convert_to_unitsphere(img_projection_unisphere);
     // img_projection_unisphere.print();
 
-    std::cout << "check_ply_visualization" << std::endl;
-    Viewer3D check_ply("check_ply");
-    check_ply.add_axes();
-    check_ply.add_geometry_pointset(img_projection_unisphere.get_point_all(), 3);
+    // std::cout << "check_ply_visualization" << std::endl;
+    // Viewer3D check_ply("check_ply");
+    // check_ply.add_axes();
+    // check_ply.add_geometry_pointset(img_projection_unisphere.get_point_all(), 3);
 
-    check_ply.show_using_drawgeometries();
+    // check_ply.show_using_drawgeometries();
 
-    obj_io.output_ply(img_projection_unisphere, default_dir_path + "-" + ".ply");
+    obj_io.output_ply(img_projection_unisphere, default_dir_path + "img" + ".ply");
+    obj_io.output_ply(projection_unisphere, default_dir_path + "plypoint" + ".ply");
 }

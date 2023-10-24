@@ -73,6 +73,7 @@ public:
 
     // 全体getter
     std::vector<Eigen::Vector3d> get_point_all() { return point3; }
+    std::vector<Eigen::Vector3d> get_point_all_polar() { return point3_polar; }
     std::vector<std::array<int, 2>> get_edge_all() { return edge2; }
 
     // calc
