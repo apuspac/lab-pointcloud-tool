@@ -30,9 +30,11 @@ public:
     std::string get_name() { return name; };
     double get_height() { return height; };
     double get_width() { return width; };
+    cv::Mat get_mat() { return img; };
+    cv::Mat get_mat_edge() { return img_edge; };
 
-    double set_height(double _height) { height = _height; };
-    double set_width(double _width) { width = _width; };
+    void set_height(double _height) { height = _height; };
+    void set_width(double _width) { width = _width; };
 
     void show() { cv::imshow(name, img); }
     // 画像処理
@@ -49,19 +51,13 @@ public:
     LidarImg() : InstaImg(), img_projected(cv::Mat()) {}
     ~LidarImg() {}
     void show() { cv::imshow(name, img_projected); }
-    void set_zero_img_projected(double _height, double _width) { img_projected = cv::Mat::zeros(_height, _width, CV_8UC1); }
-    void set_point_projected(int x, int y) { img_projected.at<uchar>(x, y) = 255; }
+    cv::Mat get_mat_projected() { return img_projected; };
+
+    // REVIEW: バイトサイズがCV_8UC1でいいかどうかあとでチェック
+    void set_zero_img_projected(double _height, double _width) { img_projected = cv::Mat::zeros(static_cast<int>(_height), static_cast<int>(_width), CV_8UC1); }
+    void set_point_projected(int x, int y)
+    {
+        img_projected.at<uchar>(x, y) = 255;
+    }
 };
-
-/**
- * @brief こっちが複数のやつを扱う Imgは単体
- *
- * 必要かどうかは微妙なので作るだけ。
- *
- */
-// class ImgProc
-// {
-//     class
-// };
-
 #endif

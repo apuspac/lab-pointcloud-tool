@@ -23,6 +23,17 @@ void PointSet::print()
     }
 }
 
+void PointSet::print_polar()
+{
+
+    std::cout << "Point_polar: " << name << std::endl;
+
+    for (const auto &tmp : point3_polar)
+    {
+        std::cout << std::setprecision(15) << tmp.transpose() << std::endl;
+    }
+}
+
 void PointSet::add_point(PointSet add_pointset)
 {
     add_pointset.get_point_all();
@@ -199,9 +210,14 @@ void PointSet::convert_to_polar()
     for (auto &point : point3)
     {
         double r = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0) + std::pow(point(2), 2.0));
-        double phi = std::atan2(point(1), point(0));
         double theta = std::acos(point(2) / r);
+        double phi = std::atan2(point(1), point(0));
 
-        point3_polar.push_back(Eigen::Vector3d(r, phi, theta));
+        // if (phi < 0)
+        // {
+        //     phi = 2 * M_PI - abs(phi);
+        // }
+
+        point3_polar.push_back(Eigen::Vector3d(r, theta, phi));
     }
 }

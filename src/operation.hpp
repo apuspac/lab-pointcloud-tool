@@ -81,6 +81,8 @@ public:
     void capture_point_inner_bbox();
     void test_location();
 
+    // FIXME: 後でちゃんと関数化しよう
+    void projection_to_sphere();
     // switch文回避のための map
     // typedef void (PointOperation::*mode_func)();
     std::unordered_map<int, std::function<void(void)>> switch_func;

@@ -28,7 +28,7 @@ class PointSet
 private:
     // 点群を扱う。 点単体は Eigen::Vector3
     std::vector<Eigen::Vector3d> point3;
-    // 極座標(r, phi, theta)
+    // 極座標(r, theta, phi)
     std::vector<Eigen::Vector3d> point3_polar;
     std::vector<std::array<int, 2>> edge2;
     Eigen::Vector3d center_of_gravity;
@@ -85,6 +85,7 @@ public:
 
     void output_hist(std::string);
     void print();
+    void print_polar();
 };
 #endif
 
