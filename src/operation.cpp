@@ -860,7 +860,7 @@ void PointOperation::test_location()
     // 画像のほうに合わせれば、edge画像との類似度を計算しやすいし、総当たりもしやすいため動かす。
 
     LidarImg lidar_img;
-    lidar_img.set_zero_img_projected(image.get_width(), image.get_height());
+    lidar_img.set_zero_img_projected(image.get_height(), image.get_width());
 
     // translate search
 
@@ -895,13 +895,16 @@ void PointOperation::test_location()
     // 極座標から画像の
     for (auto &point : ply_point.get_point_all_polar())
     {
+        // thetaをxy平面からではなく、天頂角の名前のように上からの角度に変えた方がいいのかと思ったけど
+        // 実質同じかもです
+        // double up_theta = M_PI / 2.0 - point(2);
+        // double v_dash = up_theta / M_PI;
+
         double u_dash = point(1) / (2.0 * M_PI);
         double v_dash = point(2) / M_PI;
         int u = static_cast<int>(u_dash * image.get_width());
         int v = static_cast<int>(v_dash * image.get_height());
 
-        std::cout << u_dash << ":" << v_dash << " ";
-        // lidar_img.add_point();
         lidar_img.set_point_projected(u, v);
     }
 
@@ -924,4 +927,9 @@ void PointOperation::test_location()
     PointSet img_projection_unisphere;
 
     image.convert_to_unitsphere(img_projection_unisphere);
+
+    std::cout << image.get_mat_edge().channels() << std::endl;
+
+    // 画像を重ね合わせてみる
+    image.img_alpha_blending(image.get_mat_edge(), lidar_img.get_mat_projected(), 0.5);
 }

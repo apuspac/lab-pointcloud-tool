@@ -40,6 +40,7 @@ public:
     // 画像処理
     void canny();
     void convert_to_unitsphere(PointSet &);
+    void img_alpha_blending(const cv::Mat &, double);
 };
 
 class LidarImg : public InstaImg
@@ -54,10 +55,12 @@ public:
     cv::Mat get_mat_projected() { return img_projected; };
 
     // REVIEW: バイトサイズがCV_8UC1でいいかどうかあとでチェック
-    void set_zero_img_projected(double _height, double _width) { img_projected = cv::Mat::zeros(static_cast<int>(_height), static_cast<int>(_width), CV_8UC1); }
+    void set_zero_img_projected(double _height, double _width) { img_projected = cv::Mat::zeros(static_cast<int>(_height), static_cast<int>(_width), CV_8UC3); }
     void set_point_projected(int x, int y)
     {
-        img_projected.at<uchar>(x, y) = 255;
+        img_projected.at<cv::Vec3b>(x, y)[0] = 255;
+        img_projected.at<cv::Vec3b>(x, y)[1] = 255;
+        img_projected.at<cv::Vec3b>(x, y)[2] = 255;
     }
 };
 #endif

@@ -19,8 +19,9 @@ void InstaImg::load_img(std::string img_path)
     {
         std::cout << "Success load image: " << img_path << std::endl;
         name = img_path;
-        height = img.cols;
-        width = img.rows;
+        // openCV 逆っぽいため こちらも反転しておく
+        height = img.rows;
+        width = img.cols;
     }
 }
 
@@ -44,14 +45,13 @@ void InstaImg::convert_to_unitsphere(PointSet &projected_img)
 {
     auto equirectangular_to_sphere = [=](double u, double v)
     {
-        // obj_ioのプログラムとは逆なので気を付ける
-        u /= height;
-        v /= width;
+        u /= width;
+        v /= height;
 
         double phi = u * 2 * M_PI;
         double theta = v * M_PI;
 
-        //REVIEW: ここ thetaにabsかけてもいいんですか？
+        // REVIEW: ここ thetaにabsかけてもいいんですか？
         Eigen::Vector3d p = {abs(sin(theta)) * sin(phi), abs(sin(theta)) * cos(phi), cos(theta)};
 
         return p;
@@ -70,12 +70,12 @@ void InstaImg::convert_to_unitsphere(PointSet &projected_img)
             if (ptr[u] != 0)
             {
                 // static_cast<int>(ptr[u])
-                std::cout << v << "." << u << " " << std::endl;
+                // std::cout << v << "." << u << " " << std::endl;
                 projected_img.add_point(equirectangular_to_sphere(v, u));
             }
         }
 
-        std::cout << width << " " << height << std::endl;
+        // std::cout << width << " " << height << std::endl;
     }
 
     // uchar *ptr = image.data + image.step * y;
@@ -90,4 +90,21 @@ void InstaImg::convert_to_unitsphere(PointSet &projected_img)
     //     // projected_img.add_point(equirectangular_to_sphere(p[0], p[1]));
     //     // std::cout << p[0]  << " " << p[1] << " " << p[2] << std::endl;
     //     std::cout << p << " " << std::endl; });
+}
+
+void InstaImg::img_alpha_blending(const cv::Mat &blend_a, const cv::Mat &blend_b, double weight)
+{
+    cv::Mat out_a, out_b;
+    out_a = (img.channels() == 1) ? cv::cvtColor(blend_a, )
+    {
+        cv::cvtColor(img, blend_a, cv::COLOR_GRAY2BGR);
+    }
+    if (blend_img.channels() == 1)
+    {
+        cv::cvtColor(blend_img, blend_b, cv::COLOR_GRAY2BGR);
+    }
+    cv::Mat output;
+    cv::addWeighted(img, weight, blend_img, 1.0 - weight, 0, output);
+    cv::imshow("alpha blending", output);
+    cv::waitKey(0);
 }
