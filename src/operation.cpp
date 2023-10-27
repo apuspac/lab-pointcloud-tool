@@ -899,7 +899,7 @@ void PointOperation::test_location()
     {
         // thetaをxy平面からではなく、天頂角の名前のように上からの角度に変えた方がいいのかと思ったけど
         // 実質同じかもです
-        // double up_theta = M_PI / 2.0 - point(2);
+        // double up_theta = M_PI / 2.0 - point(1);
         // double v_dash = up_theta / M_PI;
 
         double u_dash = point(2) / (2.0 * M_PI);
@@ -907,7 +907,7 @@ void PointOperation::test_location()
 
         // で、おそらく画像は視点座標系で左手系になるので、
         // 上から見たときの回転方向が逆になる。ので、最後にwidthから引く。
-        int u = static_cast<int>((u_dash * image.get_width()));
+        int u = static_cast<int>(-(u_dash * image.get_width()));
         int v = static_cast<int>(v_dash * image.get_height());
 
         // std::cout << image.get_width() << " " << (u_dash * image.get_width()) << " ";

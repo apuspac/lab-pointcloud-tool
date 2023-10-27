@@ -58,10 +58,9 @@ public:
     void set_zero_img_projected(double _height, double _width) { img_projected = cv::Mat::zeros(static_cast<int>(_height), static_cast<int>(_width), CV_8UC3); }
     void set_point_projected(int x, int y)
     {
-        std::cout << x << " " << y << "::" << std::endl;
-        img_projected.at<cv::Vec3b>(x, y)[0] = 255;
-        img_projected.at<cv::Vec3b>(x, y)[1] = 255;
-        img_projected.at<cv::Vec3b>(x, y)[2] = 255;
+        img_projected.at<cv::Vec3b>(y, x)[0] = 255;
+        img_projected.at<cv::Vec3b>(y, x)[1] = 255;
+        img_projected.at<cv::Vec3b>(y, x)[2] = 255;
     }
 };
 #endif

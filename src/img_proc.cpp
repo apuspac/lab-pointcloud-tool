@@ -27,14 +27,14 @@ void InstaImg::load_img(std::string img_path)
 
 void InstaImg::canny()
 {
-    cv::Mat output, tmp, tmp2;
+    cv::Mat output, tmp;
     // cv::Laplacian(img, tmp, CV_32F, 3);
-    cv::GaussianBlur(img, tmp, cv::Size(3, 3), 3, 3);
+    // cv::GaussianBlur(img, tmp, cv::Size(3, 3), 3, 3);
 
-    cv::Canny(tmp, tmp2, 50, 200, 3, true);
-    img_edge = tmp2;
+    cv::Canny(img, tmp, 50, 200, 3, true);
+    img_edge = tmp;
 
-    cv::convertScaleAbs(tmp2, output, 1, 0);
+    cv::convertScaleAbs(tmp, output, 1, 0);
     cv::resize(output, output, cv::Size(), 0.25, 0.25);
 
     cv::imshow("canny", output);
