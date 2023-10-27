@@ -892,6 +892,8 @@ void PointOperation::test_location()
     // }
     //
 
+    std::cout << image.get_width() << "::" << image.get_height() << std::endl;
+
     // 極座標から画像の
     for (auto &point : ply_point.get_point_all_polar())
     {
@@ -900,11 +902,15 @@ void PointOperation::test_location()
         // double up_theta = M_PI / 2.0 - point(2);
         // double v_dash = up_theta / M_PI;
 
-        double u_dash = point(1) / (2.0 * M_PI);
-        double v_dash = point(2) / M_PI;
-        int u = static_cast<int>(u_dash * image.get_width());
+        double u_dash = point(2) / (2.0 * M_PI);
+        double v_dash = point(1) / M_PI;
+
+        // で、おそらく画像は視点座標系で左手系になるので、
+        // 上から見たときの回転方向が逆になる。ので、最後にwidthから引く。
+        int u = static_cast<int>((u_dash * image.get_width()));
         int v = static_cast<int>(v_dash * image.get_height());
 
+        // std::cout << image.get_width() << " " << (u_dash * image.get_width()) << " ";
         lidar_img.set_point_projected(u, v);
     }
 
@@ -927,8 +933,6 @@ void PointOperation::test_location()
     PointSet img_projection_unisphere;
 
     image.convert_to_unitsphere(img_projection_unisphere);
-
-    std::cout << image.get_mat_edge().channels() << std::endl;
 
     // 画像を重ね合わせてみる
     image.img_alpha_blending(image.get_mat_edge(), lidar_img.get_mat_projected(), 0.5);

@@ -32,10 +32,10 @@ void InstaImg::canny()
     cv::GaussianBlur(img, tmp, cv::Size(3, 3), 3, 3);
 
     cv::Canny(tmp, tmp2, 50, 200, 3, true);
+    img_edge = tmp2;
+
     cv::convertScaleAbs(tmp2, output, 1, 0);
     cv::resize(output, output, cv::Size(), 0.25, 0.25);
-
-    img_edge = output;
 
     cv::imshow("canny", output);
     cv::waitKey(0);
@@ -94,17 +94,34 @@ void InstaImg::convert_to_unitsphere(PointSet &projected_img)
 
 void InstaImg::img_alpha_blending(const cv::Mat &blend_a, const cv::Mat &blend_b, double weight)
 {
-    cv::Mat out_a, out_b;
-    out_a = (img.channels() == 1) ? cv::cvtColor(blend_a, )
+
+    cv::Mat out_a = cv::Mat::zeros(blend_a.rows, blend_a.cols, CV_8UC3);
+    cv::Mat out_b = cv::Mat::zeros(blend_b.rows, blend_b.cols, CV_8UC3);
+
+    (blend_a.channels() == 1) ? cv::cvtColor(blend_a, out_a, cv::COLOR_GRAY2BGR) : blend_a.copyTo(out_a);
+    (blend_b.channels() == 1) ? cv::cvtColor(blend_b, out_b, cv::COLOR_GRAY2BGR) : blend_b.copyTo(out_b);
+
+    for (int v = 0; v < img_edge.rows; v++)
     {
-        cv::cvtColor(img, blend_a, cv::COLOR_GRAY2BGR);
+        for (int u = 0; u < img_edge.cols; u++)
+        {
+            uchar *ptr = img_edge.data + img_edge.step * v;
+            if (ptr[u] != 0)
+            {
+                out_a.at<cv::Vec3b>(v, u)[0] = 20;
+                out_a.at<cv::Vec3b>(v, u)[1] = 255;
+                out_a.at<cv::Vec3b>(v, u)[2] = 181;
+            }
+        }
     }
-    if (blend_img.channels() == 1)
-    {
-        cv::cvtColor(blend_img, blend_b, cv::COLOR_GRAY2BGR);
-    }
-    cv::Mat output;
-    cv::addWeighted(img, weight, blend_img, 1.0 - weight, 0, output);
+
+    // alpha blending
+    cv::Mat output = cv::Mat::zeros(blend_a.rows, blend_a.cols, CV_8UC3);
+    // cv::addWeighted(out_a, weight, out_b, 1.0 - weight, 0, output);
+    cv::addWeighted(out_a, 1.0, out_b, 1.0, 0, output);
+    cv::resize(output, output, cv::Size(), 0.25, 0.25);
+
+    // show
     cv::imshow("alpha blending", output);
     cv::waitKey(0);
 }
