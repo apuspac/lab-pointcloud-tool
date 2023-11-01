@@ -9,6 +9,8 @@
 
 #include "object_io.hpp"
 #include <opencv2/opencv.hpp>
+#include <opencv2/quality.hpp>
+#include <opencv2/core/types.hpp>
 
 class InstaImg
 {
@@ -41,6 +43,7 @@ public:
     void canny();
     void convert_to_unitsphere(PointSet &);
     void img_alpha_blending(const cv::Mat &, const cv::Mat &, double);
+    double compute_MSE(const cv::Mat &, const cv::Mat &);
 };
 
 class LidarImg : public InstaImg
@@ -53,14 +56,16 @@ public:
     ~LidarImg() {}
     void show() { cv::imshow(name, img_projected); }
     cv::Mat get_mat_projected() { return img_projected; };
+    void canny_projected();
 
     // REVIEW: バイトサイズがCV_8UC1でいいかどうかあとでチェック
-    void set_zero_img_projected(double _height, double _width) { img_projected = cv::Mat::zeros(static_cast<int>(_height), static_cast<int>(_width), CV_8UC3); }
+    void set_zero_img_projected(double _height, double _width) { img_projected = cv::Mat::zeros(static_cast<int>(_height), static_cast<int>(_width), CV_8UC1); }
     void set_point_projected(int x, int y)
     {
-        img_projected.at<cv::Vec3b>(y, x)[0] = 255;
-        img_projected.at<cv::Vec3b>(y, x)[1] = 255;
-        img_projected.at<cv::Vec3b>(y, x)[2] = 255;
+        img_projected.at<u_char>(y, x) = 255;
+        // img_projected.at<cv::Vec3b>(y, x)[0] = 255;
+        // img_projected.at<cv::Vec3b>(y, x)[1] = 255;
+        // img_projected.at<cv::Vec3b>(y, x)[2] = 255;
     }
 };
 #endif

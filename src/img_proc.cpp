@@ -41,6 +41,22 @@ void InstaImg::canny()
     cv::waitKey(0);
 }
 
+void LidarImg::canny_projected()
+{
+    cv::Mat output, tmp;
+    // cv::Laplacian(img, tmp, CV_32F, 3);
+    // cv::GaussianBlur(img, tmp, cv::Size(3, 3), 3, 3);
+
+    cv::Canny(img_projected, tmp, 50, 200, 3, true);
+    img_edge = tmp;
+
+    cv::convertScaleAbs(tmp, output, 1, 0);
+    cv::resize(output, output, cv::Size(), 0.25, 0.25);
+
+    // cv::imshow("canny", output);
+    // cv::waitKey(0);
+}
+
 void InstaImg::convert_to_unitsphere(PointSet &projected_img)
 {
     auto equirectangular_to_sphere = [=](double u, double v)
@@ -108,13 +124,17 @@ void InstaImg::img_alpha_blending(const cv::Mat &blend_a, const cv::Mat &blend_b
             uchar *ptr = img_edge.data + img_edge.step * v;
             if (ptr[u] != 0)
             {
+                // blend_a greeen
                 out_a.at<cv::Vec3b>(v, u)[0] = 20;
                 out_a.at<cv::Vec3b>(v, u)[1] = 255;
                 out_a.at<cv::Vec3b>(v, u)[2] = 181;
             }
+            // blend_b white
+            // out_b.at<cv::Vec3b>(v, u)[0] = 255;
+            // out_b.at<cv::Vec3b>(v, u)[1] = 255;
+            // out_b.at<cv::Vec3b>(v, u)[2] = 255;
         }
     }
-
     // alpha blending
     cv::Mat output = cv::Mat::zeros(blend_a.rows, blend_a.cols, CV_8UC3);
     // cv::addWeighted(out_a, weight, out_b, 1.0 - weight, 0, output);
@@ -122,6 +142,18 @@ void InstaImg::img_alpha_blending(const cv::Mat &blend_a, const cv::Mat &blend_b
     cv::resize(output, output, cv::Size(), 0.25, 0.25);
 
     // show
-    cv::imshow("alpha blending", output);
-    cv::waitKey(0);
+    // cv::imshow("alpha blending", output);
+    // cv::waitKey(0);
+}
+
+double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison)
+{
+    // std::cout << reference.size() << " " << comparison.size() << std::endl;
+    // std::cout << reference.channels() << " " << comparison.channels() << std::endl;
+
+    cv::Scalar_<double> dest = cv::quality::QualityMSE::compute(reference, comparison, cv::noArray());
+    cv::Scalar_<double> dest_ssim = cv::quality::QualitySSIM::compute(reference, comparison, cv::noArray());
+
+    std::cout << dest[0] << " " << dest_ssim[0] << std::endl;
+    return dest[0];
 }

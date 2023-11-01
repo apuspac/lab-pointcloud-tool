@@ -58,7 +58,8 @@ void PointSet::add_point(PointSet add_pointset)
  */
 void PointSet::rotate(Eigen::Matrix3d rotate_matrix)
 {
-    std::cout << name << " point_rotated:" << rotate_matrix << std::endl;
+    // std::cout << name << " point_rotated:" << std::endl
+    //           << rotate_matrix << std::endl;
     for (Eigen::Vector3d &tmp : point3)
     {
         tmp = rotate_matrix * tmp;
@@ -72,7 +73,7 @@ void PointSet::rotate(Eigen::Matrix3d rotate_matrix)
  */
 void PointSet::transform(Eigen::Vector3d transform_vec)
 {
-    std::cout << name << " point_transformed:" << transform_vec.transpose() << std::endl;
+    // std::cout << name << " point_transformed:" << transform_vec.transpose() << std::endl;
     for (Eigen::Vector3d &tmp : point3)
     {
         tmp = transform_vec + tmp;
@@ -213,11 +214,31 @@ void PointSet::convert_to_polar()
         double theta = std::acos(point(2) / r);
         double phi = std::atan2(point(1), point(0));
 
-        // if (phi < 0)
-        // {
-        //     phi = 2 * M_PI - abs(phi);
-        // }
-
         point3_polar.push_back(Eigen::Vector3d(r, theta, phi));
+    }
+}
+
+void PointSet::convert_to_polar_overwrite()
+{
+    // std::cout << "convert_to_polar" << std::endl;
+
+    for (auto &point : point3)
+    {
+        double r = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0) + std::pow(point(2), 2.0));
+        double theta = std::acos(point(2) / r);
+        double phi = std::atan2(point(1), point(0));
+
+        int index = &point - &point3[0];
+
+        if (point3_polar.size() < point3.size())
+        {
+            // point3_polar.reserve(point3.size());
+            point3_polar.push_back(Eigen::Vector3d(r, theta, phi));
+        }
+        else
+        {
+
+            point3_polar.at(index) = Eigen::Vector3d(r, theta, phi);
+        }
     }
 }

@@ -826,6 +826,49 @@ void PointOperation::projection_to_sphere()
     obj_io.output_ply(projection_unisphere, default_dir_path + "plypoint" + ".ply");
 }
 
+double img_projection(PointSet &ply_point, LidarImg &lidar_img, InstaImg &image)
+{
+
+    // std::cout << image.get_width() << "::" << image.get_height() << std::endl;
+    // std::cout << ply_point.get_point(0).transpose() << std::endl;
+
+    // 極座標から画像の
+    for (auto &point : ply_point.get_point_all_polar())
+    {
+        // thetaをxy平面からではなく、天頂角の名前のように上からの角度に変えた方がいいのかと思ったけど
+        // 実質同じかもです
+        // double up_theta = M_PI / 2.0 - point(1);
+        // double v_dash = up_theta / M_PI;
+
+        double u_dash = point(2) / (2.0 * M_PI);
+        double v_dash = point(1) / M_PI;
+
+        // で、おそらく画像は視点座標系で左手系になるので、
+        // 右手系と合わせるために、 反転して、90度回転させる
+        int u = static_cast<int>(-(u_dash * image.get_width()) + (image.get_width() / 4));
+        int v = static_cast<int>(v_dash * image.get_height());
+
+        if (u > image.get_width())
+        {
+            u -= static_cast<int>(image.get_width());
+        }
+
+        lidar_img.set_point_projected(u, v);
+    }
+
+    lidar_img.canny_projected();
+
+    cv::Mat show;
+    cv::resize(lidar_img.get_mat_edge(), show, cv::Size(), 0.25, 0.25);
+    // cv::imshow("lidar_img", show);
+    // cv::waitKey(0);
+    // 画像を重ね合わせてみる
+    image.img_alpha_blending(image.get_mat_edge(), lidar_img.get_mat_edge(), 0.5);
+
+    double mse = image.compute_MSE(image.get_mat_edge(), lidar_img.get_mat_edge());
+    return mse;
+}
+
 /**
  * @brief テスト用の関数
  *
@@ -853,72 +896,6 @@ void PointOperation::test_location()
     InstaImg image;
     image.load_img(img_file_path.at(0));
 
-    // convert to polar
-    ply_point.convert_to_polar();
-    PointSet projection_unisphere("projection_sphere");
-
-    // 画像のほうに合わせれば、edge画像との類似度を計算しやすいし、総当たりもしやすいため動かす。
-
-    LidarImg lidar_img;
-    lidar_img.set_zero_img_projected(image.get_height(), image.get_width());
-
-    // translate search
-
-    // xyz 探索範囲
-    // 0.1 なら ±0.1の範囲を探索
-    // double x_limit = 1.0;
-    // double y_limit = 1.0;
-    // double z_limit = 1.0;
-
-    // // 刻み幅  全部同じ幅でいいのか という問題はある
-    // double split = 0.05;
-
-    // for (double x = -x_limit; x < x_limit; x += split)
-    // {
-    //     for (double y = -y_limit; y < y_limit; y += split)
-    //     {
-    //         for (double z = -z_limit; z < z_limit; z += split)
-    //         {
-    //             // 並進の適用
-
-    //             // rotate seartch
-    //             // thetaは 0-pi, phiは 0-2pi
-    //             // split は まず 1度ずつ？かな？
-    //             double theta = 0;
-    //             double phi = 0;
-    //             double rad_split = 0;
-    //         }
-    //     }
-    // }
-    //
-
-    std::cout << image.get_width() << "::" << image.get_height() << std::endl;
-
-    // 極座標から画像の
-    for (auto &point : ply_point.get_point_all_polar())
-    {
-        // thetaをxy平面からではなく、天頂角の名前のように上からの角度に変えた方がいいのかと思ったけど
-        // 実質同じかもです
-        // double up_theta = M_PI / 2.0 - point(1);
-        // double v_dash = up_theta / M_PI;
-
-        double u_dash = point(2) / (2.0 * M_PI);
-        double v_dash = point(1) / M_PI;
-
-        // で、おそらく画像は視点座標系で左手系になるので、
-        // 上から見たときの回転方向が逆になる。ので、最後にwidthから引く。
-        int u = static_cast<int>(-(u_dash * image.get_width()));
-        int v = static_cast<int>(v_dash * image.get_height());
-
-        // std::cout << image.get_width() << " " << (u_dash * image.get_width()) << " ";
-        lidar_img.set_point_projected(u, v);
-    }
-
-    cv::Mat show;
-    cv::resize(lidar_img.get_mat_projected(), show, cv::Size(), 0.25, 0.25);
-    cv::imshow("lidar_img", show);
-    cv::waitKey(0);
-
     // ========== ここから img 処理 ==========
     std::cout << "img edge detection" << std::endl;
 
@@ -931,9 +908,75 @@ void PointOperation::test_location()
 
     // 画像のedgeの点を球の画像にプロットする
     PointSet img_projection_unisphere;
-
     image.convert_to_unitsphere(img_projection_unisphere);
 
-    // 画像を重ね合わせてみる
-    image.img_alpha_blending(image.get_mat_edge(), lidar_img.get_mat_projected(), 0.5);
+    // =========== LiDAR 処理 ===========
+
+    // translate search
+
+    // xyz 探索範囲
+    // 0.1 なら ±0.1の範囲を探索
+    double x_limit = 1.0;
+    double y_limit = 1.0;
+    double z_limit = 1.0;
+
+    // // 刻み幅
+    double x_split = 0.25;
+    double y_split = 0.25;
+    double z_split = 0.25;
+
+    ply_point.transform(Eigen::Vector3d(-x_limit, -y_limit, -z_limit));
+    double eva_img = 0;
+    Eigen::Vector3d best_transform = {0, 0, 0};
+    Eigen::Matrix3d best_rotate = Eigen::Matrix3d::Identity();
+    int count = 0;
+
+    for (double x = -x_limit; x < x_limit; x += x_split)
+    {
+        for (double y = -y_limit; y < y_limit; y += y_split)
+        {
+            for (double z = -z_limit; z < z_limit; z += z_split)
+            {
+                // 並進の適用
+                Eigen::Vector3d transform = {x_split, y_split, z_split};
+                ply_point.transform(transform);
+
+                // rotate seartch
+                // z軸回転の実装
+                CalcPointSet calc;
+                double angle_split = 10.0;
+
+                for (double angle = 0; angle < 360; angle += angle_split)
+                {
+
+                    Eigen::Vector3d rotate_axis = {0, 0, 1.0};
+                    Eigen::Matrix3d rotate_mat = calc.calc_theory_value_Rotation_Matrix(rotate_axis, angle);
+                    ply_point.rotate(rotate_mat);
+                    ply_point.convert_to_polar_overwrite();
+
+                    // ここから点群と画像の比較処理
+
+                    std::cout << count++ << ":" << transform.transpose() << std::endl
+                              << rotate_mat << std::endl;
+
+                    LidarImg lidar_img;
+                    lidar_img.set_zero_img_projected(image.get_height(), image.get_width());
+                    double eva_tmp = img_projection(ply_point, lidar_img, image);
+                    if (eva_img < eva_tmp)
+                    {
+                        best_transform = transform;
+                        best_rotate = rotate_mat;
+                        eva_img = eva_tmp;
+                    }
+                }
+            }
+        }
+    }
+
+    std::cout << "RESULT" << std::endl
+              << "transform" << std::endl
+              << best_transform.transpose() << std::endl
+              << "rotate" << std::endl
+              << best_rotate << std::endl
+              << "eva" << eva_img << std::endl;
 }

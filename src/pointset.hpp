@@ -78,6 +78,7 @@ public:
 
     // calc
     void convert_to_polar();
+    void convert_to_polar_overwrite();
     void create_histgram();
     void calc_center_of_gravity();
     void rotate(Eigen::Matrix3d);
