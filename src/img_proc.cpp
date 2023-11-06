@@ -154,6 +154,6 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
     cv::Scalar_<double> dest = cv::quality::QualityMSE::compute(reference, comparison, cv::noArray());
     cv::Scalar_<double> dest_ssim = cv::quality::QualitySSIM::compute(reference, comparison, cv::noArray());
 
-    std::cout << dest[0] << " " << dest_ssim[0] << std::endl;
+    // std::cout << dest[0] << " " << dest_ssim[0] << std::endl;
     return dest[0];
 }

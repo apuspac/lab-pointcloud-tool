@@ -21,6 +21,7 @@ void PointOperation::mode_select()
     switch_func[5] = std::bind(&PointOperation::capture_segmentation_point, this);
     switch_func[6] = std::bind(&PointOperation::capture_pointset, this);
     switch_func[9] = std::bind(&PointOperation::test_location, this);
+    switch_func[10] = std::bind(&PointOperation::test_location_two, this);
     switch_func[get_mode()]();
 }
 
@@ -910,23 +911,34 @@ void PointOperation::test_location()
     PointSet img_projection_unisphere;
     image.convert_to_unitsphere(img_projection_unisphere);
 
+    // 同じ画像でやってみる。
+    double mse = image.compute_MSE(image.get_mat_edge(), image.get_mat_edge());
+    std::cout << mse << std::endl;
+    cv::Mat show;
+    cv::resize(image.get_mat_edge(), show, cv::Size(), 0.25, 0.25);
+    cv::imshow("lidar_img", show);
+    cv::waitKey(0);
+
+    // うまく行かないので いろいろチェックする状態
+
     // =========== LiDAR 処理 ===========
 
     // translate search
 
     // xyz 探索範囲
     // 0.1 なら ±0.1の範囲を探索
-    double x_limit = 1.0;
-    double y_limit = 1.0;
-    double z_limit = 1.0;
+    // NOTE: 一時的に 0 にして 回転に集中
+    double x_limit = 0;
+    double y_limit = 0;
+    double z_limit = 0;
 
     // // 刻み幅
-    double x_split = 0.25;
-    double y_split = 0.25;
-    double z_split = 0.25;
+    double x_split = 0;
+    double y_split = 0;
+    double z_split = 0;
 
     ply_point.transform(Eigen::Vector3d(-x_limit, -y_limit, -z_limit));
-    double eva_img = 0;
+    double eva_img = 100000;
     Eigen::Vector3d best_transform = {0, 0, 0};
     Eigen::Matrix3d best_rotate = Eigen::Matrix3d::Identity();
     int count = 0;
@@ -944,7 +956,7 @@ void PointOperation::test_location()
                 // rotate seartch
                 // z軸回転の実装
                 CalcPointSet calc;
-                double angle_split = 10.0;
+                double angle_split = 1;
 
                 for (double angle = 0; angle < 360; angle += angle_split)
                 {
@@ -956,13 +968,13 @@ void PointOperation::test_location()
 
                     // ここから点群と画像の比較処理
 
-                    std::cout << count++ << ":" << transform.transpose() << std::endl
-                              << rotate_mat << std::endl;
+                    // std::cout << count++ << ":" << transform.transpose() << std::endl
+                    //           << rotate_mat << std::endl;
 
                     LidarImg lidar_img;
                     lidar_img.set_zero_img_projected(image.get_height(), image.get_width());
                     double eva_tmp = img_projection(ply_point, lidar_img, image);
-                    if (eva_img < eva_tmp)
+                    if (eva_img > eva_tmp)
                     {
                         best_transform = transform;
                         best_rotate = rotate_mat;
@@ -979,4 +991,9 @@ void PointOperation::test_location()
               << "rotate" << std::endl
               << best_rotate << std::endl
               << "eva" << eva_img << std::endl;
+}
+
+void PointOperation::test_location_two()
+{
+    std::cout << "test_location_two"
 }

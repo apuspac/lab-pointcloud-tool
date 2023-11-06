@@ -80,6 +80,7 @@ public:
     void capture_pointset();
     void capture_point_inner_bbox();
     void test_location();
+    void test_location_two();
 
     // FIXME: 後でちゃんと関数化しよう
     void projection_to_sphere();

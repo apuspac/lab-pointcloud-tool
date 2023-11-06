@@ -20,20 +20,23 @@ int main(int argc, char *argv[])
     ObjectIO::option_process(argc, argv, opt);
     opt.print();
     opt.mode_select();
+    
 
-    auto sphere = open3d::geometry::TriangleMesh::CreateSphere(1.0);
-    sphere->ComputeVertexNormals();
-    sphere->PaintUniformColor({0.0, 1.0, 0.0});
+    
 
-    std::shared_ptr<open3d::geometry::PointCloud> pointcloud = std::make_shared<open3d::geometry::PointCloud>();
-    std::vector<Eigen::Vector3d> test_point, test_color;
-    test_point.push_back({3.0, 2.0, 1.0});
-    test_point.push_back({2.0, 1.0, 4.0});
-    test_color.push_back({0.9, 0.1, 0.1});
-    test_color.push_back({0.1, 0.9, 0.1});
+    // auto sphere = open3d::geometry::TriangleMesh::CreateSphere(1.0);
+    // sphere->ComputeVertexNormals();
+    // sphere->PaintUniformColor({0.0, 1.0, 0.0});
 
-    pointcloud->points_ = test_point;
-    pointcloud->colors_ = test_color;
+    // std::shared_ptr<open3d::geometry::PointCloud> pointcloud = std::make_shared<open3d::geometry::PointCloud>();
+    // std::vector<Eigen::Vector3d> test_point, test_color;
+    // test_point.push_back({3.0, 2.0, 1.0});
+    // test_point.push_back({2.0, 1.0, 4.0});
+    // test_color.push_back({0.9, 0.1, 0.1});
+    // test_color.push_back({0.1, 0.9, 0.1});
+
+    // pointcloud->points_ = test_point;
+    // pointcloud->colors_ = test_color;
 
     // std::cout << "OK" << std::endl;
     // open3d::visualization::DrawGeometries({pointcloud});
