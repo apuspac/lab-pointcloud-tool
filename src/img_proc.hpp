@@ -19,8 +19,8 @@ protected:
     cv::Mat img_edge;
 
     // cols, rows
-    double height;
-    double width;
+    int height;
+    int width;
 
     std::string name;
 
@@ -28,15 +28,15 @@ public:
     InstaImg() : img(cv::Mat()), height(0), width(0), name("none") {}
     ~InstaImg() {}
     void load_img(std::string);
-    std::array<double, 2> get_img_size() { return {height, width}; };
+    std::array<int, 2> get_img_size() { return {height, width}; };
     std::string get_name() { return name; };
-    double get_height() { return height; };
-    double get_width() { return width; };
+    int get_height() { return height; };
+    int get_width() { return width; };
     cv::Mat get_mat() { return img; };
     cv::Mat get_mat_edge() { return img_edge; };
 
-    void set_height(double _height) { height = _height; };
-    void set_width(double _width) { width = _width; };
+    void set_height(int _height) { height = _height; };
+    void set_width(int _width) { width = _width; };
 
     void show() { cv::imshow(name, img); }
     // 画像処理
@@ -58,8 +58,16 @@ public:
     cv::Mat get_mat_projected() { return img_projected; };
     void edge_detect_sobel();
 
+    // override
+    cv::Mat get_mat() { return img_projected; };
+
     // REVIEW: バイトサイズがCV_8UC1でいいかどうかあとでチェック
-    void set_zero_img_projected(double _height, double _width) { img_projected = cv::Mat::zeros(static_cast<int>(_height), static_cast<int>(_width), CV_8UC1); }
+    void set_zero_img_projected(int _height, int _width)
+    {
+        img_projected = cv::Mat::zeros(_height, _width, CV_8UC1);
+        set_height(_height);
+        set_width(_width);
+    }
     void set_point_projected(int x, int y)
     {
         img_projected.at<u_char>(y, x) = 255;
@@ -67,5 +75,8 @@ public:
         // img_projected.at<cv::Vec3b>(y, x)[1] = 255;
         // img_projected.at<cv::Vec3b>(y, x)[2] = 255;
     }
+
+    void ply_to_img(PointSet &);
+    void shift(int, int, cv::Mat &);
 };
 #endif

@@ -49,8 +49,8 @@ void LidarImg::edge_detect_sobel()
     // cv::Canny(img_projected, tmp, 50, 200, 3, true);
 
     cv::GaussianBlur(img_projected, sobel_tmp, cv::Size(5, 5), 0, 0, cv::BORDER_DEFAULT);
-    cv::Sobel(sobel_tmp, sobel_x, CV_8U, 1, 1, 3);
-    cv::Sobel(sobel_tmp, sobel_y, CV_8U, 0, 1, 3);
+    cv::Sobel(sobel_tmp, sobel_x, CV_8U, 1, 1, 5);
+    cv::Sobel(sobel_tmp, sobel_y, CV_8U, 0, 1, 5);
 
     cv::add(sobel_x, sobel_y, tmp);
     // tmp = img_projected;
@@ -164,4 +164,54 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
 
     // std::cout << dest[0] << " " << dest_ssim[0] << std::endl;
     return dest[0];
+}
+
+void LidarImg::ply_to_img(PointSet &ply_point)
+{
+    // 極座標から画像へ投影
+    for (auto &point : ply_point.get_point_all_polar())
+    {
+        double u_dash = point(2) / (2.0 * M_PI);
+        double v_dash = point(1) / M_PI;
+
+        // で、おそらく画像は視点座標系で左手系になるので、
+        // 右手系と合わせるために、 反転して、90度回転させる
+        int u = static_cast<int>(-(u_dash * width) + (width / 4));
+        int v = static_cast<int>(v_dash * height);
+
+        if (u > width)
+        {
+            u -= static_cast<int>(width);
+        }
+
+        set_point_projected(u, v);
+    }
+}
+
+void LidarImg::shift(int x, int y, cv::Mat &out_mat)
+{
+
+    for (int v = 0; v < height; v++)
+    {
+        for (int u = 0; u < width; u++)
+        {
+            uchar *ptr = img_projected.data + img_projected.step * v;
+            if (ptr[u] != 0)
+            {
+                int new_u = u + x;
+                int new_v = v + y;
+
+                if (new_u > img_projected.cols)
+                {
+                    new_u -= img_projected.cols;
+                }
+                if (new_v > img_projected.rows)
+                {
+                    new_v -= img_projected.rows;
+                }
+
+                out_mat.at<u_char>(new_v, new_u) = ptr[u];
+            }
+        }
+    }
 }
