@@ -82,6 +82,9 @@ public:
     void test_location();
     void test_location_two();
 
+    // mode切り替えしない関数
+    void remove_pointset_floor(PointSet &, PointSet &, Eigen::Vector3d);
+
     // FIXME: 後でちゃんと関数化しよう
     void projection_to_sphere();
     // switch文回避のための map

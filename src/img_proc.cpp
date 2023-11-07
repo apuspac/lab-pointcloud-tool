@@ -41,19 +41,26 @@ void InstaImg::canny()
     cv::waitKey(0);
 }
 
-void LidarImg::canny_projected()
+void LidarImg::edge_detect_sobel()
 {
-    cv::Mat output, tmp;
-    // cv::Laplacian(img, tmp, CV_32F, 3);
-    // cv::GaussianBlur(img, tmp, cv::Size(3, 3), 3, 3);
+    cv::Mat output, sobel_x, sobel_y, sobel_tmp, tmp;
 
-    cv::Canny(img_projected, tmp, 50, 200, 3, true);
+    // Cannyを使うとなぜだめなのかはメモ参照
+    // cv::Canny(img_projected, tmp, 50, 200, 3, true);
+
+    cv::GaussianBlur(img_projected, sobel_tmp, cv::Size(5, 5), 0, 0, cv::BORDER_DEFAULT);
+    cv::Sobel(sobel_tmp, sobel_x, CV_8U, 1, 1, 3);
+    cv::Sobel(sobel_tmp, sobel_y, CV_8U, 0, 1, 3);
+
+    cv::add(sobel_x, sobel_y, tmp);
+    // tmp = img_projected;
     img_edge = tmp;
 
     cv::convertScaleAbs(tmp, output, 1, 0);
     cv::resize(output, output, cv::Size(), 0.25, 0.25);
 
-    // cv::imshow("canny", output);
+    cv::imshow("lidar_edge", output);
+    cv::imwrite("lidar_edge.jpg", output);
     // cv::waitKey(0);
 }
 
@@ -142,8 +149,8 @@ void InstaImg::img_alpha_blending(const cv::Mat &blend_a, const cv::Mat &blend_b
     cv::resize(output, output, cv::Size(), 0.25, 0.25);
 
     // show
-    // cv::imshow("alpha blending", output);
-    // cv::imwrite("output_image.jpg", output);
+    cv::imshow("alpha blending", output);
+    cv::imwrite("output_image.jpg", output);
     cv::waitKey(0);
 }
 

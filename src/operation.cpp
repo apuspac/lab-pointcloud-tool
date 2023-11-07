@@ -833,7 +833,7 @@ double img_projection(PointSet &ply_point, LidarImg &lidar_img, InstaImg &image)
     // std::cout << image.get_width() << "::" << image.get_height() << std::endl;
     // std::cout << ply_point.get_point(0).transpose() << std::endl;
 
-    // 極座標から画像の
+    // 極座標から画像へ投影
     for (auto &point : ply_point.get_point_all_polar())
     {
         // thetaをxy平面からではなく、天頂角の名前のように上からの角度に変えた方がいいのかと思ったけど
@@ -857,12 +857,12 @@ double img_projection(PointSet &ply_point, LidarImg &lidar_img, InstaImg &image)
         lidar_img.set_point_projected(u, v);
     }
 
-    lidar_img.canny_projected();
+    lidar_img.edge_detect_sobel();
 
     cv::Mat show;
     cv::resize(lidar_img.get_mat_edge(), show, cv::Size(), 0.25, 0.25);
-    // cv::imshow("lidar_img", show);
-    // cv::waitKey(0);
+    cv::imshow("lidar_img", show);
+    cv::waitKey(0);
     // 画像を重ね合わせてみる
     image.img_alpha_blending(image.get_mat_edge(), lidar_img.get_mat_edge(), 0.5);
 
@@ -900,6 +900,12 @@ void PointOperation::test_location()
     InstaImg image;
     image.load_img(img_file_path.at(0));
 
+    // 床の点を除去
+    // HACK: 本当はここも平面当てはめ PCAなどでできそうではある。
+    Eigen::Vector3d floor_height = {0, 0, -1.070};
+    PointSet removed_floor_ply_point;
+    remove_pointset_floor(ply_point, removed_floor_ply_point, floor_height);
+
     // ========== ここから img 処理 ==========
     std::cout << "img edge detection" << std::endl;
 
@@ -913,19 +919,18 @@ void PointOperation::test_location()
     PointSet img_projection_unisphere;
     image.convert_to_unitsphere(img_projection_unisphere);
 
-    // うまく行かないので いろいろチェックする状態
-
-    // そのままのplyでの結果
+    // CHECK: そのままのplyでの結果
     LidarImg lidar_img;
-    ply_point.convert_to_polar();
+    removed_floor_ply_point.convert_to_polar();
     lidar_img.set_zero_img_projected(image.get_height(), image.get_width());
-    ply_point.transform(Eigen::Vector3d(0.0, 0.0, 0.06));
-    double eva = img_projection(ply_point, lidar_img, image);
-
+    double eva = img_projection(removed_floor_ply_point, lidar_img, image);
     std::cout << "nochange_eva" << eva << std::endl;
-    // 同じ画像でやってみる。
-    // double mse = image.compute_MSE(image.get_mat_edge(), image.get_mat_edge());
 
+    std::string continue_step = 0;
+    std::cin >> continue_step;
+
+    // CHECK: 同じ画像でやってみる。
+    // double mse = image.compute_MSE(image.get_mat_edge(), image.get_mat_edge());
     // std::cout << "same_imgmse" << mse << std::endl;
     // cv::Mat show;
     // cv::resize(image.get_mat_edge(), show, cv::Size(), 0.25, 0.25);
@@ -934,11 +939,25 @@ void PointOperation::test_location()
 
     // =========== LiDAR 処理 ===========
 
+    std::cout << "RESULT" << std::endl
+              << "transform" << std::endl
+              << best_transform.transpose() << std::endl
+              << "rotate" << std::endl
+              << best_rotate << std::endl
+              << "eva" << eva_img << std::endl;
+}
+
+/*
+ * @brief 対比
+ *
+void lidar_search_all_position()
+{
+
     // translate search
 
     // xyz 探索範囲
     // 0.1 なら ±0.1の範囲を探索
-    // NOTE: 一時的に 0 にして 回転に集中
+    // 一時的に 0 にして 回転に集中
     double x_limit = 0.01;
     double y_limit = 0.01;
     double z_limit = 0.01;
@@ -948,7 +967,7 @@ void PointOperation::test_location()
     double y_split = 0.005;
     double z_split = 0.005;
 
-    ply_point.transform(Eigen::Vector3d(-x_limit, -y_limit, -z_limit));
+    removed_floor_ply_point.transform(Eigen::Vector3d(-x_limit, -y_limit, -z_limit));
     double eva_img = 100000;
     Eigen::Vector3d best_transform = {0, 0, 0};
     Eigen::Matrix3d best_rotate = Eigen::Matrix3d::Identity();
@@ -962,7 +981,7 @@ void PointOperation::test_location()
             {
                 // 並進の適用
                 Eigen::Vector3d transform = {x_split, y_split, z_split};
-                ply_point.transform(transform);
+                removed_floor_ply_point.transform(transform);
 
                 // rotate seartch
                 // z軸回転の実装
@@ -973,8 +992,8 @@ void PointOperation::test_location()
                 for (double angle = 0; angle < 360; angle += angle_split)
                 {
 
-                    ply_point.rotate(rotate_mat);
-                    ply_point.convert_to_polar_overwrite();
+                    removed_floor_ply_point.rotate(rotate_mat);
+                    removed_floor_ply_point.convert_to_polar_overwrite();
 
                     // ここから点群と画像の比較処理
 
@@ -982,7 +1001,7 @@ void PointOperation::test_location()
                     lidar_img.set_zero_img_projected(image.get_height(), image.get_width());
                     std::cout << count++ << ":" << transform.transpose() << std::endl
                               << rotate_mat << std::endl;
-                    double eva_tmp = img_projection(ply_point, lidar_img, image);
+                    double eva_tmp = img_projection(removed_floor_ply_point, lidar_img, image);
                     if (eva_img > eva_tmp)
                     {
                         best_transform = transform;
@@ -993,13 +1012,27 @@ void PointOperation::test_location()
             }
         }
     }
+}
 
-    std::cout << "RESULT" << std::endl
-              << "transform" << std::endl
-              << best_transform.transpose() << std::endl
-              << "rotate" << std::endl
-              << best_rotate << std::endl
-              << "eva" << eva_img << std::endl;
+*/
+
+/**
+ * @brief floor_heightの数値より高い点群を残し、他の点群を除去する. 床点群を除去したくて作成
+ *
+ * @param origin_point
+ * @param floor_height Eigen::Vector3dで指定
+ * @return PointSet&  今回戻り値が参照型なので、 戻り値をそのまま使う場合は、同じ参照で受け取る必要あり。
+ */
+void PointOperation::remove_pointset_floor(PointSet &origin_point, PointSet &out_point, Eigen::Vector3d floor_height)
+{
+
+    for (auto &point : origin_point.get_point_all())
+    {
+        if (point(2) > floor_height(2))
+        {
+            out_point.add_point(point);
+        }
+    }
 }
 
 void PointOperation::test_location_two()

@@ -56,7 +56,7 @@ public:
     ~LidarImg() {}
     void show() { cv::imshow(name, img_projected); }
     cv::Mat get_mat_projected() { return img_projected; };
-    void canny_projected();
+    void edge_detect_sobel();
 
     // REVIEW: バイトサイズがCV_8UC1でいいかどうかあとでチェック
     void set_zero_img_projected(double _height, double _width) { img_projected = cv::Mat::zeros(static_cast<int>(_height), static_cast<int>(_width), CV_8UC1); }
