@@ -21,7 +21,7 @@ void PointOperation::mode_select()
     switch_func[5] = std::bind(&PointOperation::capture_segmentation_point, this);
     switch_func[6] = std::bind(&PointOperation::capture_pointset, this);
     switch_func[9] = std::bind(&PointOperation::test_location, this);
-    switch_func[10] = std::bind(&PointOperation::test_location_two, this);
+    switch_func[10] = std::bind(&PointOperation::test_location, this);
     switch_func[get_mode()]();
 }
 
@@ -866,7 +866,10 @@ double img_projection(PointSet &ply_point, LidarImg &lidar_img, InstaImg &image)
     // 画像を重ね合わせてみる
     image.img_alpha_blending(image.get_mat_edge(), lidar_img.get_mat_edge(), 0.5);
 
-    double mse = image.compute_MSE(image.get_mat_edge(), lidar_img.get_mat_edge());
+    std::cout << "ok" << std::endl;
+
+    double mse = image.compute_MSE(image.get_mat_edge(), lidar_img.get_mat_projected());
+    std::cout << "mse:" << mse << std::endl;
     return mse;
 }
 
@@ -904,22 +907,30 @@ void PointOperation::test_location()
     std::cout << image.get_name() << std::endl;
 
     // ガウシアンのブラーかけてノイズ除去してからCanney法
-    // またopenCVに頼って... ガハハ
     image.canny();
 
     // 画像のedgeの点を球の画像にプロットする
     PointSet img_projection_unisphere;
     image.convert_to_unitsphere(img_projection_unisphere);
 
-    // 同じ画像でやってみる。
-    double mse = image.compute_MSE(image.get_mat_edge(), image.get_mat_edge());
-    std::cout << mse << std::endl;
-    cv::Mat show;
-    cv::resize(image.get_mat_edge(), show, cv::Size(), 0.25, 0.25);
-    cv::imshow("lidar_img", show);
-    cv::waitKey(0);
-
     // うまく行かないので いろいろチェックする状態
+
+    // そのままのplyでの結果
+    LidarImg lidar_img;
+    ply_point.convert_to_polar();
+    lidar_img.set_zero_img_projected(image.get_height(), image.get_width());
+    ply_point.transform(Eigen::Vector3d(0.0, 0.0, 0.06));
+    double eva = img_projection(ply_point, lidar_img, image);
+
+    std::cout << "nochange_eva" << eva << std::endl;
+    // 同じ画像でやってみる。
+    // double mse = image.compute_MSE(image.get_mat_edge(), image.get_mat_edge());
+
+    // std::cout << "same_imgmse" << mse << std::endl;
+    // cv::Mat show;
+    // cv::resize(image.get_mat_edge(), show, cv::Size(), 0.25, 0.25);
+    // cv::imshow("lidar_img", show);
+    // cv::waitKey(0);
 
     // =========== LiDAR 処理 ===========
 
@@ -928,14 +939,14 @@ void PointOperation::test_location()
     // xyz 探索範囲
     // 0.1 なら ±0.1の範囲を探索
     // NOTE: 一時的に 0 にして 回転に集中
-    double x_limit = 0;
-    double y_limit = 0;
-    double z_limit = 0;
+    double x_limit = 0.01;
+    double y_limit = 0.01;
+    double z_limit = 0.01;
 
     // // 刻み幅
-    double x_split = 0;
-    double y_split = 0;
-    double z_split = 0;
+    double x_split = 0.005;
+    double y_split = 0.005;
+    double z_split = 0.005;
 
     ply_point.transform(Eigen::Vector3d(-x_limit, -y_limit, -z_limit));
     double eva_img = 100000;
@@ -957,22 +968,20 @@ void PointOperation::test_location()
                 // z軸回転の実装
                 CalcPointSet calc;
                 double angle_split = 1;
-
+                Eigen::Vector3d rotate_axis = {0, 0, 1.0};
+                Eigen::Matrix3d rotate_mat = calc.calc_theory_value_Rotation_Matrix(rotate_axis, angle_split);
                 for (double angle = 0; angle < 360; angle += angle_split)
                 {
 
-                    Eigen::Vector3d rotate_axis = {0, 0, 1.0};
-                    Eigen::Matrix3d rotate_mat = calc.calc_theory_value_Rotation_Matrix(rotate_axis, angle);
                     ply_point.rotate(rotate_mat);
                     ply_point.convert_to_polar_overwrite();
 
                     // ここから点群と画像の比較処理
 
-                    // std::cout << count++ << ":" << transform.transpose() << std::endl
-                    //           << rotate_mat << std::endl;
-
                     LidarImg lidar_img;
                     lidar_img.set_zero_img_projected(image.get_height(), image.get_width());
+                    std::cout << count++ << ":" << transform.transpose() << std::endl
+                              << rotate_mat << std::endl;
                     double eva_tmp = img_projection(ply_point, lidar_img, image);
                     if (eva_img > eva_tmp)
                     {
@@ -995,5 +1004,5 @@ void PointOperation::test_location()
 
 void PointOperation::test_location_two()
 {
-    std::cout << "test_location_two"
+    std::cout << "test_location_two";
 }

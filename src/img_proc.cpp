@@ -143,7 +143,8 @@ void InstaImg::img_alpha_blending(const cv::Mat &blend_a, const cv::Mat &blend_b
 
     // show
     // cv::imshow("alpha blending", output);
-    // cv::waitKey(0);
+    // cv::imwrite("output_image.jpg", output);
+    cv::waitKey(0);
 }
 
 double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison)
