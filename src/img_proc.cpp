@@ -49,10 +49,12 @@ void LidarImg::edge_detect_sobel()
     // cv::Canny(img_projected, tmp, 50, 200, 3, true);
 
     cv::GaussianBlur(img_projected, sobel_tmp, cv::Size(5, 5), 0, 0, cv::BORDER_DEFAULT);
-    cv::Sobel(sobel_tmp, sobel_x, CV_8U, 1, 1, 5);
-    cv::Sobel(sobel_tmp, sobel_y, CV_8U, 0, 1, 5);
+    cv::Sobel(sobel_tmp, tmp, CV_8UC1, 1, 1, 5);
 
-    cv::add(sobel_x, sobel_y, tmp);
+    // cv::Sobel(sobel_tmp, sobel_x, CV_8U, 1, 1, 5);
+    // cv::Sobel(sobel_tmp, sobel_y, CV_8U, 0, 1, 5);
+
+    // cv::add(sobel_x, sobel_y, tmp);
     // tmp = img_projected;
     img_edge = tmp;
 

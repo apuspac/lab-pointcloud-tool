@@ -927,8 +927,8 @@ void PointOperation::test_location()
     // std::cout << "nochange_eva" << eva << std::endl;
 
     // NOTE: 一旦ストップ
-    // std::string continue_step = 0;
-    // std::cin >> continue_step;
+    std::string continue_step = 0;
+    std::cin >> continue_step;
 
     // CHECK: 同じ画像でやってみる。
     // double mse = image.compute_MSE(image.get_mat_edge(), image.get_mat_edge());
@@ -940,89 +940,59 @@ void PointOperation::test_location()
 
     // =========== LiDAR 処理 ===========
 
-    // translate search
-    // xyz 探索範囲
-    // 0.1 なら ±0.1の範囲を探索
-    // 一時的に 0 にして 回転に集中
-    double x_limit = 0.01;
-    double y_limit = 0.01;
-    double z_limit = 0.01;
-
-    // // 刻み幅
-    double x_split = 0.005;
-    double y_split = 0.005;
-    double z_split = 0.005;
-
-    removed_floor_ply_point.transform(Eigen::Vector3d(-x_limit, -y_limit, -z_limit));
     double eva_img = 100000;
-    Eigen::Vector3d best_transform = {0, 0, 0};
-    Eigen::Matrix3d best_rotate = Eigen::Matrix3d::Identity();
     int count = 0;
 
-    for (double x = -x_limit; x < x_limit; x += x_split)
+    // 並進の適用
+    Eigen::Vector3d transform = {x_split, y_split, z_split};
+    removed_floor_ply_point.transform(transform);
+    std::cout << count++ << ":" << transform.transpose() << std::endl;
+
+    // ply to img
+    removed_floor_ply_point.convert_to_polar_overwrite();
+    LidarImg lidar_img;
+    lidar_img.set_zero_img_projected(image.get_height(), image.get_width());
+    lidar_img.ply_to_img(removed_floor_ply_point);
+
+    cv::imwrite("ply2img_origin.png", lidar_img.get_mat_projected());
+    // rotate seartch
+    // z軸回転 は 画像のshiftで対応する
+    int shift_x = 1;
+    int shift_y = 1;
+
+    for (int i = 0; i < image.get_width(); i++)
     {
-        for (double y = -y_limit; y < y_limit; y += y_split)
+        cv::Mat shift_img = cv::Mat::zeros(image.get_height(), image.get_width(), CV_8UC1);
+        lidar_img.shift(shift_x, shift_y, shift_img);
+        lidar_img.edge_detect_sobel();
+
+        if (i == 1 || i == 100)
         {
-            for (double z = -z_limit; z < z_limit; z += z_split)
-            {
-                // 並進の適用
-                Eigen::Vector3d transform = {x_split, y_split, z_split};
-                removed_floor_ply_point.transform(transform);
-                std::cout << count++ << ":" << transform.transpose() << std::endl;
 
-                // ply to img
-                removed_floor_ply_point.convert_to_polar_overwrite();
-                LidarImg lidar_img;
-                lidar_img.set_zero_img_projected(image.get_height(), image.get_width());
-                lidar_img.ply_to_img(removed_floor_ply_point);
-
-                // rotate seartch
-                // z軸回転 は 画像のshiftで対応する
-                int shift_x = 1;
-                int shift_y = 1;
-
-                for (int i = 0; i < image.get_width(); i++)
-                {
-                    cv::Mat shift_img = cv::Mat::zeros(image.get_height(), image.get_width(), CV_8UC1);
-                    lidar_img.shift(shift_x, shift_y, shift_img);
-                    lidar_img.edge_detect_sobel();
-
-                    if (i == 1 || i == 100)
-                    {
-
-                        cv::Mat output;
-                        lidar_img.get_mat_projected().copyTo(output);
-                        cv::resize(output, output, cv::Size(), 0.25, 0.25);
-                        cv::imshow("shifted", output);
-                        cv::waitKey(0);
-                    }
-
-                    // lidar_img.edge_detect_sobel();
-                }
-
-                std::cout << "ok" << std::endl;
-
-                // ここから点群と画像の比較処理
-                // double eva_tmp = img_projection(removed_floor_ply_point, lidar_img, image);
-                // if (eva_img > eva_tmp)
-                // {
-                //     best_transform = transform;
-                //     best_rotate = rotate_mat;
-                //     eva_img = eva_tmp;
-                // }
-            }
+            cv::Mat output;
+            lidar_img.get_mat_projected().copyTo(output);
+            cv::resize(output, output, cv::Size(), 0.25, 0.25);
+            cv::imshow("shifted", output);
+            cv::waitKey(0);
         }
+
+        // lidar_img.edge_detect_sobel();
     }
-    std::cout << "RESULT" << std::endl
-              << "transform" << std::endl
-              << best_transform.transpose() << std::endl
-              << "rotate" << std::endl
-              << best_rotate << std::endl
-              << "eva" << eva_img << std::endl;
+
+    std::cout << "ok" << std::endl;
+
+    // ここから点群と画像の比較処理
+    // double eva_tmp = img_projection(removed_floor_ply_point, lidar_img, image);
+    // if (eva_img > eva_tmp)
+    // {
+    //     best_transform = transform;
+    //     best_rotate = rotate_mat;
+    //     eva_img = eva_tmp;
+    // }
 }
 
 /*
- * @brief 対比
+ * @brief 退避
  *
 void lidar_search_all_position()
 {
@@ -1086,6 +1056,13 @@ void lidar_search_all_position()
             }
         }
     }
+
+    std::cout << "RESULT" << std::endl
+              << "transform" << std::endl
+              << best_transform.transpose() << std::endl
+              << "rotate" << std::endl
+              << best_rotate << std::endl
+              << "eva" << eva_img << std::endl;
 }
 
 */
