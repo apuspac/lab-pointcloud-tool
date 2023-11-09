@@ -16,7 +16,6 @@ class InstaImg
 {
 protected:
     cv::Mat img;
-    cv::Mat img_edge;
 
     // cols, rows
     int height;
@@ -45,6 +44,16 @@ public:
     void img_alpha_blending(const cv::Mat &, const cv::Mat &, double);
     double compute_MSE(const cv::Mat &, const cv::Mat &);
 };
+
+class EdgeImg : public InstaImg
+{
+private:
+    cv::Mat img_edge;
+
+public:
+    // imgとの紐付けを行いたいので、 コンストラクタのときに、元img
+    EdgeImg() : InstaImg(), img_edge(cv::Mat()) {}
+}
 
 class LidarImg : public InstaImg
 {
