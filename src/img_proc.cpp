@@ -25,17 +25,31 @@ void InstaImg::load_img(std::string img_path)
     }
 }
 
-void InstaImg::canny()
+void InstaImg::show(std::string window_name, double scale)
+{
+    cv::Mat output;
+    cv::resize(img, output, cv::Size(), scale, scale);
+    cv::imshow(window_name, output);
+    cv::waitKey(0);
+}
+
+void InstaImg::set_pixel_255(int u, int v)
+{
+    assrt(img.type() == CV_8UC1, "img type is not CV_8UC1");
+    img.at<u_char>(v, u) = 255;
+}
+
+void EdgeImg::canny(cv::Mat origin_img)
 {
     cv::Mat output, tmp;
     // cv::Laplacian(img, tmp, CV_32F, 3);
     // cv::GaussianBlur(img, tmp, cv::Size(3, 3), 3, 3);
 
-    cv::Canny(img, tmp, 50, 200, 3, true);
+    cv::Canny(origin_img, tmp, 50, 200, 3, true);
     img_edge = tmp;
 
-    cv::convertScaleAbs(tmp, output, 1, 0);
-    cv::resize(output, output, cv::Size(), 0.25, 0.25);
+    // cv::convertScaleAbs(tmp, output, 1, 0);
+    // cv::resize(output, output, cv::Size(), 0.25, 0.25);
 
     cv::imshow("canny", output);
     cv::waitKey(0);

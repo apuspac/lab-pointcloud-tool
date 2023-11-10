@@ -12,6 +12,11 @@
 #include <opencv2/quality.hpp>
 #include <opencv2/core/types.hpp>
 
+/**
+ * @brief メインの画像クラス
+ * //HACK: Instaとか言ってるが、メインの画像クラス
+ * こんがらがるだろ やめとけ やめとけ
+ */
 class InstaImg
 {
 protected:
@@ -25,67 +30,63 @@ protected:
 
 public:
     InstaImg() : img(cv::Mat()), height(0), width(0), name("none") {}
-    ~InstaImg() {}
+    InstaImg(int _width, int _height) : height(_height), width(_width), name("none") {}
+    virtual ~InstaImg() { img.release(); }
+
     void load_img(std::string);
     std::array<int, 2> get_img_size() { return {height, width}; };
     std::string get_name() { return name; };
     int get_height() { return height; };
     int get_width() { return width; };
     cv::Mat get_mat() { return img; };
-    cv::Mat get_mat_edge() { return img_edge; };
 
     void set_height(int _height) { height = _height; };
     void set_width(int _width) { width = _width; };
 
-    void show() { cv::imshow(name, img); }
+    void show(std::string, double);
     // 画像処理
-    void canny();
+    void shift(int, int, cv::Mat &);
     void convert_to_unitsphere(PointSet &);
     void img_alpha_blending(const cv::Mat &, const cv::Mat &, double);
     double compute_MSE(const cv::Mat &, const cv::Mat &);
+    void set_pixel_255(int, int);
 };
 
+/**
+ * @brief edge画像クラス
+ *
+ */
 class EdgeImg : public InstaImg
 {
 private:
-    cv::Mat img_edge;
-
 public:
-    // imgとの紐付けを行いたいので、 コンストラクタのときに、元img
-    EdgeImg() : InstaImg(), img_edge(cv::Mat()) {}
+    EdgeImg() : InstaImg() {}
+    ~EdgeImg() {}
+    void canny(cv::Mat);
 }
 
+/**
+ * @brief LiDAR画像クラス
+ *
+ *
+ */
 class LidarImg : public InstaImg
 {
-private:
-    cv::Mat img_projected;
+    // private:
+    //     cv::Mat img_projected;
 
 public:
-    LidarImg() : InstaImg(), img_projected(cv::Mat()) {}
+    LidarImg() : InstaImg() {}
     ~LidarImg() {}
-    void show() { cv::imshow(name, img_projected); }
-    cv::Mat get_mat_projected() { return img_projected; };
-    void edge_detect_sobel();
 
-    // override
-    cv::Mat get_mat() { return img_projected; };
-
-    // REVIEW: バイトサイズがCV_8UC1でいいかどうかあとでチェック
     void set_zero_img_projected(int _height, int _width)
     {
-        img_projected = cv::Mat::zeros(_height, _width, CV_8UC1);
+        img = cv::Mat::zeros(_height, _width, CV_8UC1);
         set_height(_height);
         set_width(_width);
     }
-    void set_point_projected(int x, int y)
-    {
-        img_projected.at<u_char>(y, x) = 255;
-        // img_projected.at<cv::Vec3b>(y, x)[0] = 255;
-        // img_projected.at<cv::Vec3b>(y, x)[1] = 255;
-        // img_projected.at<cv::Vec3b>(y, x)[2] = 255;
-    }
 
     void ply_to_img(PointSet &);
-    void shift(int, int, cv::Mat &);
+    void detect_pointedge_with_sobel();
 };
 #endif
