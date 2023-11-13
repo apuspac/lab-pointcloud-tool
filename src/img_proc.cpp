@@ -77,6 +77,28 @@ void InstaImg::set_pixel_255(int u, int v)
     img.at<u_char>(v, u) = 255;
 }
 
+void Dilation(int, void *)
+{
+    int dilation_type = 0;
+    if (dilation_elem == 0)
+    {
+        dilation_type = MORPH_RECT;
+    }
+    else if (dilation_elem == 1)
+    {
+        dilation_type = MORPH_CROSS;
+    }
+    else if (dilation_elem == 2)
+    {
+        dilation_type = MORPH_ELLIPSE;
+    }
+    Mat element = getStructuringElement(dilation_type,
+                                        Size(2 * dilation_size + 1, 2 * dilation_size + 1),
+                                        Point(dilation_size, dilation_size));
+    dilate(src, dilation_dst, element);
+    imshow("Dilation Demo", dilation_dst);
+}
+
 /**
  * @brief canny法によってエッジ検出
  *
