@@ -50,6 +50,7 @@ public:
     void set_class_name(std::string _name) { class_name = _name; }
     void set_class_num(int _num) { class_num = _num; }
 
+    // get
     long unsigned int get_point_num() { return point3.size(); }
     long unsigned int get_edge_num() { return edge2.size(); }
     int get_class_num() { return class_num; }
@@ -84,7 +85,6 @@ public:
 
     // calc
     void convert_to_polar();
-    void convert_to_polar_overwrite();
     void create_histgram();
     void calc_center_of_gravity();
     void rotate(Eigen::Matrix3d);

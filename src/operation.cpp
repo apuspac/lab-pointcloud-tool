@@ -807,11 +807,11 @@ void PointOperation::projection_to_sphere()
 
     // ガウシアンのブラーかけてノイズ除去してからCanney法
     // またopenCVに頼って... ガハハ
-    image.canny();
+    EdgeImg insta_edge;
+    insta_edge.detect_edge_with_canny(imge.get_mat_img());
 
     // 画像のedgeの点を球の画像にプロットする
     PointSet img_projection_unisphere;
-
     image.convert_to_unitsphere(img_projection_unisphere);
     // img_projection_unisphere.print();
 
@@ -857,14 +857,14 @@ double img_projection(PointSet &ply_point, LidarImg &lidar_img, InstaImg &image)
         lidar_img.set_point_projected(u, v);
     }
 
-    lidar_img.edge_detect_sobel();
+    EdgeImg LiDAR_edge;
+    LiDAR_edge.detect_edge_with_sobel(lidar_img.get_mat());
 
-    cv::Mat show;
-    cv::resize(lidar_img.get_mat_edge(), show, cv::Size(), 0.25, 0.25);
-    cv::imshow("lidar_img", show);
-    cv::waitKey(0);
-    // 画像を重ね合わせてみる
-    image.img_alpha_blending(image.get_mat_edge(), lidar_img.get_mat_edge(), 0.5);
+    lidar_img.edge_detect_sobel();
+    lidar_img.show("lidar", 0.25)
+
+        // 画像を重ね合わせてみる
+        image.img_alpha_blending(image.get_mat_edge(), lidar_img.get_mat_edge(), 0.5);
 
     std::cout << "ok" << std::endl;
 
@@ -913,7 +913,8 @@ void PointOperation::test_location()
     std::cout << image.get_name() << std::endl;
 
     // ガウシアンのブラーかけてノイズ除去してからCanney法
-    image.canny();
+    EdgeImg insta_edge;
+    insta_edge.canny(image.get_mat());
 
     // 画像のedgeの点を球の画像にプロットする
     PointSet img_projection_unisphere;
@@ -944,14 +945,14 @@ void PointOperation::test_location()
     int count = 0;
 
     // 並進の適用
-    Eigen::Vector3d transform = {x_split, y_split, z_split};
-    removed_floor_ply_point.transform(transform);
-    std::cout << count++ << ":" << transform.transpose() << std::endl;
+    // Eigen::Vector3d transform = {x_split, y_split, z_split};
+    // removed_floor_ply_point.transform(transform);
+    // std::cout << count++ << ":" << transform.transpose() << std::endl;
 
     // ply to img
-    removed_floor_ply_point.convert_to_polar_overwrite();
+    removed_floor_ply_point.convert_to_polar();
     LidarImg lidar_img;
-    lidar_img.set_zero_img_projected(image.get_height(), image.get_width());
+    lidar_img.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
     lidar_img.ply_to_img(removed_floor_ply_point);
 
     cv::imwrite("ply2img_origin.png", lidar_img.get_mat_projected());
@@ -970,7 +971,7 @@ void PointOperation::test_location()
         {
 
             cv::Mat output;
-            lidar_img.get_mat_projected().copyTo(output);
+            lidar_img.get_mat().copyTo(output);
             cv::resize(output, output, cv::Size(), 0.25, 0.25);
             cv::imshow("shifted", output);
             cv::waitKey(0);
@@ -992,7 +993,7 @@ void PointOperation::test_location()
 }
 
 /*
- * @brief 退避
+ * @brief LiDARの探索のやつ いったん退避したけど、 回転先にするので 結局書き直すことになりそう
  *
 void lidar_search_all_position()
 {

@@ -7,6 +7,11 @@
 
 #include "img_proc.hpp"
 
+/**
+ * @brief img_pathから画像を読み込む
+ *
+ * @param img_path 画像の相対パス
+ */
 void InstaImg::load_img(std::string img_path)
 {
     img = cv::imread(img_path);
@@ -25,6 +30,12 @@ void InstaImg::load_img(std::string img_path)
     }
 }
 
+/**
+ * @brief 画像を表示する
+ *
+ * @param window_name
+ * @param scale resizeするときの倍率(今回は0.25がちょうどよい)
+ */
 void InstaImg::show(std::string window_name, double scale)
 {
     cv::Mat output;
@@ -33,55 +44,94 @@ void InstaImg::show(std::string window_name, double scale)
     cv::waitKey(0);
 }
 
-void InstaImg::set_pixel_255(int u, int v)
+/**
+ * @brief cv::Matを0で初期化する
+ *
+ * @param _height
+ * @param _width
+ * @param color_type ２値画像ならCV_8UC1
+ */
+void InstaImg::set_zero_imgMat(int _height, int _width, int color_type)
 {
-    assrt(img.type() == CV_8UC1, "img type is not CV_8UC1");
-    img.at<u_char>(v, u) = 255;
+    img = cv::Mat::zeros(_height, _width, color_type);
+    set_height(_height);
+    set_width(_width);
 }
 
-void EdgeImg::canny(cv::Mat origin_img)
+/**
+ * @brief 2値画像の指定したpixelを255にする
+ *
+ * @param u
+ * @param v
+ */
+void InstaImg::set_pixel_255(int u, int v)
+{
+    if (img.type() != CV_8UC1)
+    {
+        std::cout << "img type is not CV_8UC1:  " << img.name() << " " << img.type() << std::endl;
+    }
+    if (u > img.cols || v > img.rows)
+    {
+        std::cout << "u or v is over img size: " << u << " " << v << "img_size: " << img.cols << " " << img.rows << std::endl;
+    }
+    assrt()
+        img.at<u_char>(v, u) = 255;
+}
+
+/**
+ * @brief canny法によってエッジ検出
+ *
+ * @param origin_img Canny法を適用する画像
+ */
+void EdgeImg::detect_edge_with_canny(cv::Mat origin_img)
 {
     cv::Mat output, tmp;
-    // cv::Laplacian(img, tmp, CV_32F, 3);
-    // cv::GaussianBlur(img, tmp, cv::Size(3, 3), 3, 3);
 
     cv::Canny(origin_img, tmp, 50, 200, 3, true);
     img_edge = tmp;
 
-    // cv::convertScaleAbs(tmp, output, 1, 0);
-    // cv::resize(output, output, cv::Size(), 0.25, 0.25);
-
-    cv::imshow("canny", output);
-    cv::waitKey(0);
+    show("canny", 0.25);
 }
 
+/**
+ * @brief sobelフィルタを適用してedge検出
+ *
+ */
 void LidarImg::edge_detect_sobel()
 {
     cv::Mat output, sobel_x, sobel_y, sobel_tmp, tmp;
 
     // Cannyを使うとなぜだめなのかはメモ参照
-    // cv::Canny(img_projected, tmp, 50, 200, 3, true);
 
     cv::GaussianBlur(img_projected, sobel_tmp, cv::Size(5, 5), 0, 0, cv::BORDER_DEFAULT);
     cv::Sobel(sobel_tmp, tmp, CV_8UC1, 1, 1, 5);
 
+    // NOTE: これ別々にやる必要があるかは 後で調べる
     // cv::Sobel(sobel_tmp, sobel_x, CV_8U, 1, 1, 5);
     // cv::Sobel(sobel_tmp, sobel_y, CV_8U, 0, 1, 5);
-
     // cv::add(sobel_x, sobel_y, tmp);
-    // tmp = img_projected;
+
     img_edge = tmp;
 
     cv::convertScaleAbs(tmp, output, 1, 0);
-    cv::resize(output, output, cv::Size(), 0.25, 0.25);
+    show("sobel:" + name, 0.25);
 
-    cv::imshow("lidar_edge", output);
     cv::imwrite("lidar_edge.jpg", output);
     // cv::waitKey(0);
 }
 
+/**
+ * @brief 単位球に投影する
+ * 点群を極座標に変換し、 r=1の3次元座標に投影する
+ *
+ * @param projected_img
+ */
 void InstaImg::convert_to_unitsphere(PointSet &projected_img)
 {
+    /**
+     * @brief uv座標をr=1の極座標に変換に変換する
+     *
+     */
     auto equirectangular_to_sphere = [=](double u, double v)
     {
         u /= width;
@@ -90,16 +140,13 @@ void InstaImg::convert_to_unitsphere(PointSet &projected_img)
         double phi = u * 2 * M_PI;
         double theta = v * M_PI;
 
-        // REVIEW: ここ thetaにabsかけてもいいんですか？
+        // NOTE: ここ thetaにabsかけてもいいんですか？
         Eigen::Vector3d p = {abs(sin(theta)) * sin(phi), abs(sin(theta)) * cos(phi), cos(theta)};
 
         return p;
     };
 
     std::cout << "convert_to_unitsphere" << std::endl;
-
-    // cv::Mat gray_img;
-    // cv::cvtColor(img_edge, gray_img, cv::COLOR_BGR2GRAY);
 
     for (int v = 0; v < img_edge.rows; v++)
     {
@@ -108,35 +155,26 @@ void InstaImg::convert_to_unitsphere(PointSet &projected_img)
             uchar *ptr = img_edge.data + img_edge.step * v;
             if (ptr[u] != 0)
             {
-                // static_cast<int>(ptr[u])
-                // std::cout << v << "." << u << " " << std::endl;
                 projected_img.add_point(equirectangular_to_sphere(v, u));
             }
         }
-
-        // std::cout << width << " " << height << std::endl;
     }
-
-    // uchar *ptr = image.data + image.step * y;
-    // uchar Blue = ptr[n * x];
-    // uchar Green = ptr[n * x + 1];
-    // uchar Red = ptr[n * x + 2];
-
-    // img.forEach<u_char>([&projected_img, equirectangular_to_sphere](u_char &p, const int *position) -> void
-    //                     {
-    //     // double x = position[0];
-    //     // double y = position[1];
-    //     // projected_img.add_point(equirectangular_to_sphere(p[0], p[1]));
-    //     // std::cout << p[0]  << " " << p[1] << " " << p[2] << std::endl;
-    //     std::cout << p << " " << std::endl; });
 }
 
+/**
+ * @brief 2つの二値化画像をalpha_blendingする(重ね合わせる). 一つはgreen, もう一つはwhite
+ *
+ * @param blend_a
+ * @param blend_b
+ * @param weight 重み(0~1だが、 1.0でOK)
+ */
 void InstaImg::img_alpha_blending(const cv::Mat &blend_a, const cv::Mat &blend_b, double weight)
 {
 
     cv::Mat out_a = cv::Mat::zeros(blend_a.rows, blend_a.cols, CV_8UC3);
     cv::Mat out_b = cv::Mat::zeros(blend_b.rows, blend_b.cols, CV_8UC3);
 
+    // もしグレースケールであれば 変更する
     (blend_a.channels() == 1) ? cv::cvtColor(blend_a, out_a, cv::COLOR_GRAY2BGR) : blend_a.copyTo(out_a);
     (blend_b.channels() == 1) ? cv::cvtColor(blend_b, out_b, cv::COLOR_GRAY2BGR) : blend_b.copyTo(out_b);
 
@@ -152,37 +190,51 @@ void InstaImg::img_alpha_blending(const cv::Mat &blend_a, const cv::Mat &blend_b
                 out_a.at<cv::Vec3b>(v, u)[1] = 255;
                 out_a.at<cv::Vec3b>(v, u)[2] = 181;
             }
-            // blend_b white
-            // out_b.at<cv::Vec3b>(v, u)[0] = 255;
-            // out_b.at<cv::Vec3b>(v, u)[1] = 255;
-            // out_b.at<cv::Vec3b>(v, u)[2] = 255;
         }
     }
     // alpha blending
     cv::Mat output = cv::Mat::zeros(blend_a.rows, blend_a.cols, CV_8UC3);
     // cv::addWeighted(out_a, weight, out_b, 1.0 - weight, 0, output);
-    cv::addWeighted(out_a, 1.0, out_b, 1.0, 0, output);
-    cv::resize(output, output, cv::Size(), 0.25, 0.25);
+    cv::addWeighted(out_a, weight, out_b, weight, 0, output);
 
     // show
-    cv::imshow("alpha blending", output);
+    show("alpha blending:" + name, 0.25);
     cv::imwrite("output_image.jpg", output);
-    cv::waitKey(0);
 }
 
+/**
+ * @brief MSEを計算する
+ *
+ * @param reference 真の画像
+ * @param comparison 真の画像にどれだけ近いかを計算する画像
+ * @return double MSEの値
+ */
 double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison)
 {
-    // std::cout << reference.size() << " " << comparison.size() << std::endl;
-    // std::cout << reference.channels() << " " << comparison.channels() << std::endl;
+
+    if (reference.size() != comparison.size())
+    {
+        std::cout << "size not same" << std::endl;
+        std::exit(-1);
+    }
+    if (reference.channels() != comparison.channels())
+    {
+        std::cout << "channel not same" << std::endl;
+        std::exit(-1);
+    }
 
     cv::Scalar_<double> dest = cv::quality::QualityMSE::compute(reference, comparison, cv::noArray());
     cv::Scalar_<double> dest_ssim = cv::quality::QualitySSIM::compute(reference, comparison, cv::noArray());
 
-    // std::cout << dest[0] << " " << dest_ssim[0] << std::endl;
     return dest[0];
 }
 
-void LidarImg::ply_to_img(PointSet &ply_point)
+/**
+ * @brief plyから得られる点群を全方位画像に投影する
+ *
+ * @param ply_point 変換する画像
+ */
+void LidarImg::ply_to_360paranoma_img(PointSet &ply_point)
 {
     // 極座標から画像へ投影
     for (auto &point : ply_point.get_point_all_polar())
@@ -200,11 +252,18 @@ void LidarImg::ply_to_img(PointSet &ply_point)
             u -= static_cast<int>(width);
         }
 
-        set_point_projected(u, v);
+        set_pixel_255(u, v);
     }
 }
 
-void LidarImg::shift(int x, int y, cv::Mat &out_mat)
+/**
+ * @brief 画像を平行移動する はみ出した場所は反対側に移動
+ *
+ * @param x
+ * @param y
+ * @param out_mat
+ */
+void InstaImg::shift(int x, int y, cv::Mat &out_mat)
 {
 
     for (int v = 0; v < height; v++)
