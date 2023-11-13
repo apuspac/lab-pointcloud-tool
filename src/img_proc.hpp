@@ -58,7 +58,7 @@ public:
     void convert_to_unitsphere(PointSet &);
     void img_alpha_blending(const cv::Mat &, const cv::Mat &, double);
     double compute_MSE(const cv::Mat &, const cv::Mat &);
-    void dilation();
+    void dilation(int, int);
 };
 
 /**

@@ -77,26 +77,37 @@ void InstaImg::set_pixel_255(int u, int v)
     img.at<u_char>(v, u) = 255;
 }
 
-void Dilation(int, void *)
+void InstaImg::dilation(int dilation_elem, int dilation_size)
 {
+    cv::Mat dilation_dst;
     int dilation_type = 0;
     if (dilation_elem == 0)
     {
-        dilation_type = MORPH_RECT;
+        // 長方形(全部埋めてる)
+        dilation_type = cv::MORPH_RECT;
     }
     else if (dilation_elem == 1)
     {
-        dilation_type = MORPH_CROSS;
+        // 十字型
+        dilation_type = cv::MORPH_CROSS;
     }
     else if (dilation_elem == 2)
     {
-        dilation_type = MORPH_ELLIPSE;
+        // 楕円ぽい感じ
+        dilation_type = cv::MORPH_ELLIPSE;
     }
-    Mat element = getStructuringElement(dilation_type,
-                                        Size(2 * dilation_size + 1, 2 * dilation_size + 1),
-                                        Point(dilation_size, dilation_size));
-    dilate(src, dilation_dst, element);
-    imshow("Dilation Demo", dilation_dst);
+
+    // カーネル作成
+    // shape, kernel size, anchor
+    // カーネルサイズは1で3*3 2で5*5 3で7*7
+    // anchorは注目画素をどこにするか。指定しないとカーネル中心を注目画素にする
+    cv::Mat element = cv::getStructuringElement(
+        dilation_type,
+        cv::Size(2 * dilation_size + 1, 2 * dilation_size + 1),
+        cv::Point(dilation_size, dilation_size));
+
+    cv::dilate(img, img, element);
+    show("dilation demo", 0.25);
 }
 
 /**

@@ -925,6 +925,11 @@ void PointOperation::test_location()
     removed_floor_ply_point.convert_to_polar();
     lidar_img.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
     lidar_img.ply_to_360paranoma_img(removed_floor_ply_point);
+    cv::imwrite("ply2img_origin.png", lidar_img.get_mat());
+    lidar_img.dilation(0, 1);
+    cv::imwrite("ply2img_dilation.png", lidar_img.get_mat());
+    lidar_img.show("lidar", 0.25);
+
     EdgeImg lidar_edge;
     lidar_edge.detect_edge_with_sobel(lidar_img.get_mat());
 
