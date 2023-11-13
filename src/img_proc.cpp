@@ -68,14 +68,13 @@ void InstaImg::set_pixel_255(int u, int v)
 {
     if (img.type() != CV_8UC1)
     {
-        std::cout << "img type is not CV_8UC1:  " << img.name() << " " << img.type() << std::endl;
+        std::cout << "img type is not CV_8UC1:  " << name << " " << img.type() << std::endl;
     }
     if (u > img.cols || v > img.rows)
     {
         std::cout << "u or v is over img size: " << u << " " << v << "img_size: " << img.cols << " " << img.rows << std::endl;
     }
-    assrt()
-        img.at<u_char>(v, u) = 255;
+    img.at<u_char>(v, u) = 255;
 }
 
 /**
@@ -83,27 +82,37 @@ void InstaImg::set_pixel_255(int u, int v)
  *
  * @param origin_img Canny法を適用する画像
  */
-void EdgeImg::detect_edge_with_canny(cv::Mat origin_img)
+void EdgeImg::detect_edge_with_canny(const cv::Mat &origin_img)
 {
     cv::Mat output, tmp;
 
     cv::Canny(origin_img, tmp, 50, 200, 3, true);
-    img_edge = tmp;
+    img = tmp;
 
     show("canny", 0.25);
 }
 
 /**
- * @brief sobelフィルタを適用してedge検出
+ * @brief sobelフィルタを適用してedge検出, 結果はEdgeImg::imgに格納
  *
  */
-void LidarImg::edge_detect_sobel()
+void EdgeImg::detect_edge_with_sobel(const cv::Mat &origin_img)
 {
     cv::Mat output, sobel_x, sobel_y, sobel_tmp, tmp;
 
     // Cannyを使うとなぜだめなのかはメモ参照
 
-    cv::GaussianBlur(img_projected, sobel_tmp, cv::Size(5, 5), 0, 0, cv::BORDER_DEFAULT);
+    // チャンネル数が1出ない場合は、グレースケールに変換
+    if (origin_img.type() != CV_8UC1)
+    {
+        cv::cvtColor(origin_img, sobel_tmp, cv::COLOR_BGR2GRAY);
+    }
+    else
+    {
+        origin_img.copyTo(sobel_tmp);
+    }
+
+    cv::GaussianBlur(sobel_tmp, sobel_tmp, cv::Size(5, 5), 0, 0, cv::BORDER_DEFAULT);
     cv::Sobel(sobel_tmp, tmp, CV_8UC1, 1, 1, 5);
 
     // NOTE: これ別々にやる必要があるかは 後で調べる
@@ -111,13 +120,11 @@ void LidarImg::edge_detect_sobel()
     // cv::Sobel(sobel_tmp, sobel_y, CV_8U, 0, 1, 5);
     // cv::add(sobel_x, sobel_y, tmp);
 
-    img_edge = tmp;
+    cv::convertScaleAbs(tmp, tmp, 1, 0);
 
-    cv::convertScaleAbs(tmp, output, 1, 0);
+    img = tmp;
     show("sobel:" + name, 0.25);
-
-    cv::imwrite("lidar_edge.jpg", output);
-    // cv::waitKey(0);
+    cv::imwrite("sobel:" + name + ".jpg", img);
 }
 
 /**
@@ -148,14 +155,16 @@ void InstaImg::convert_to_unitsphere(PointSet &projected_img)
 
     std::cout << "convert_to_unitsphere" << std::endl;
 
-    for (int v = 0; v < img_edge.rows; v++)
+    for (int v = 0; v < img.rows; v++)
     {
-        for (int u = 0; u < img_edge.cols; u++)
+        for (int u = 0; u < img.cols; u++)
         {
-            uchar *ptr = img_edge.data + img_edge.step * v;
+            uchar *ptr = img.data + img.step * v;
             if (ptr[u] != 0)
             {
-                projected_img.add_point(equirectangular_to_sphere(v, u));
+                // NOTE: ここv, uの順番 逆じゃない？
+                // projected_img.add_point(equirectangular_to_sphere(v, u));
+                projected_img.add_point(equirectangular_to_sphere(u, v));
             }
         }
     }
@@ -178,11 +187,11 @@ void InstaImg::img_alpha_blending(const cv::Mat &blend_a, const cv::Mat &blend_b
     (blend_a.channels() == 1) ? cv::cvtColor(blend_a, out_a, cv::COLOR_GRAY2BGR) : blend_a.copyTo(out_a);
     (blend_b.channels() == 1) ? cv::cvtColor(blend_b, out_b, cv::COLOR_GRAY2BGR) : blend_b.copyTo(out_b);
 
-    for (int v = 0; v < img_edge.rows; v++)
+    for (int v = 0; v < img.rows; v++)
     {
-        for (int u = 0; u < img_edge.cols; u++)
+        for (int u = 0; u < img.cols; u++)
         {
-            uchar *ptr = img_edge.data + img_edge.step * v;
+            uchar *ptr = img.data + img.step * v;
             if (ptr[u] != 0)
             {
                 // blend_a greeen
@@ -219,7 +228,10 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
     }
     if (reference.channels() != comparison.channels())
     {
-        std::cout << "channel not same" << std::endl;
+        std::cout << "channel not same" << std::endl
+                  << "reference: " << reference.channels() << std::endl
+                  << "comparison: " << comparison.channels() << std::endl;
+
         std::exit(-1);
     }
 
@@ -263,30 +275,26 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point)
  * @param y
  * @param out_mat
  */
-void InstaImg::shift(int x, int y, cv::Mat &out_mat)
+cv::Mat InstaImg::shift(int x, int y)
 {
+    cv::Mat out_mat;
+    out_mat = cv::Mat::zeros(img.rows, img.cols, img.type());
 
-    for (int v = 0; v < height; v++)
+    std::cout << img.rows << " " << img.cols << std::endl;
+
+    for (int v = 0; v < img.rows; v++)
     {
-        for (int u = 0; u < width; u++)
+        for (int u = 0; u < img.cols; u++)
         {
-            uchar *ptr = img_projected.data + img_projected.step * v;
+            uchar *ptr = img.data + img.step * v;
             if (ptr[u] != 0)
             {
-                int new_u = u + x;
-                int new_v = v + y;
+                int new_u = (u + x + img.cols) % img.cols; // はみ出した場合は反対側に移動
+                int new_v = (v + y + img.rows) % img.rows;
 
-                if (new_u > img_projected.cols)
-                {
-                    new_u -= img_projected.cols;
-                }
-                if (new_v > img_projected.rows)
-                {
-                    new_v -= img_projected.rows;
-                }
-
-                out_mat.at<u_char>(new_v, new_u) = ptr[u];
+                out_mat.at<uchar>(new_v, new_u) = ptr[u];
             }
         }
     }
+    return out_mat;
 }

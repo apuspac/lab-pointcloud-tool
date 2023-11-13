@@ -808,7 +808,7 @@ void PointOperation::projection_to_sphere()
     // ガウシアンのブラーかけてノイズ除去してからCanney法
     // またopenCVに頼って... ガハハ
     EdgeImg insta_edge;
-    insta_edge.detect_edge_with_canny(imge.get_mat_img());
+    insta_edge.detect_edge_with_canny(image.get_mat());
 
     // 画像のedgeの点を球の画像にプロットする
     PointSet img_projection_unisphere;
@@ -854,21 +854,20 @@ double img_projection(PointSet &ply_point, LidarImg &lidar_img, InstaImg &image)
             u -= static_cast<int>(image.get_width());
         }
 
-        lidar_img.set_point_projected(u, v);
+        lidar_img.set_pixel_255(u, v);
     }
 
     EdgeImg LiDAR_edge;
     LiDAR_edge.detect_edge_with_sobel(lidar_img.get_mat());
 
-    lidar_img.edge_detect_sobel();
-    lidar_img.show("lidar", 0.25)
+    lidar_img.show("lidar", 0.25);
 
-        // 画像を重ね合わせてみる
-        image.img_alpha_blending(image.get_mat_edge(), lidar_img.get_mat_edge(), 0.5);
+    // 画像を重ね合わせてみる
+    image.img_alpha_blending(image.get_mat(), lidar_img.get_mat(), 0.5);
 
     std::cout << "ok" << std::endl;
 
-    double mse = image.compute_MSE(image.get_mat_edge(), lidar_img.get_mat_projected());
+    double mse = image.compute_MSE(image.get_mat(), lidar_img.get_mat());
     std::cout << "mse:" << mse << std::endl;
     return mse;
 }
@@ -907,37 +906,45 @@ void PointOperation::test_location()
     remove_pointset_floor(ply_point, removed_floor_ply_point, floor_height);
 
     // ========== ここから img 処理 ==========
-    std::cout << "img edge detection" << std::endl;
-
-    // image edge
+    std::cout << std::endl
+              << "img edge detection" << std::endl;
     std::cout << image.get_name() << std::endl;
 
     // ガウシアンのブラーかけてノイズ除去してからCanney法
-    EdgeImg insta_edge;
-    insta_edge.canny(image.get_mat());
+    EdgeImg insta_edge("insta_edge");
+    insta_edge.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
+    insta_edge.detect_edge_with_sobel(image.get_mat());
 
     // 画像のedgeの点を球の画像にプロットする
-    PointSet img_projection_unisphere;
-    image.convert_to_unitsphere(img_projection_unisphere);
+    // PointSet img_projection_unisphere;
+    // image.convert_to_unitsphere(img_projection_unisphere);
 
     // CHECK: そのままのplyでの結果
-    // LidarImg lidar_img;
-    // removed_floor_ply_point.convert_to_polar();
-    // lidar_img.set_zero_img_projected(image.get_height(), image.get_width());
-    // double eva = img_projection(removed_floor_ply_point, lidar_img, image);
-    // std::cout << "nochange_eva" << eva << std::endl;
+    std::cout << "LiDAR edge detection" << std::endl;
+    LidarImg lidar_img("lidar_edge");
+    removed_floor_ply_point.convert_to_polar();
+    lidar_img.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
+    lidar_img.ply_to_360paranoma_img(removed_floor_ply_point);
+    EdgeImg lidar_edge;
+    lidar_edge.detect_edge_with_sobel(lidar_img.get_mat());
+
+    // double mse = insta_edge.compute_MSE(insta_edge.get_mat(), lidar_edge.get_mat());
+    // std::cout << "nochange_eva" << mse << std::endl;
+
+    // CHECK: 同じ画像でやってみる。
+    // double mse_same = image.compute_MSE(image.get_mat(), image.get_mat());
+    // std::cout << "same_imgmse" << mse_same << std::endl;
+
+    // shift処理 テスト
+    std::cout << "shift_Test" << std::endl;
+    EdgeImg shift_("shift_test");
+    shift_.set_mat(lidar_edge.shift(500, 0));
+    shift_.show("shift", 0.25);
+    cv::imwrite("shift.png", shift_.get_mat());
 
     // NOTE: 一旦ストップ
     std::string continue_step = 0;
     std::cin >> continue_step;
-
-    // CHECK: 同じ画像でやってみる。
-    // double mse = image.compute_MSE(image.get_mat_edge(), image.get_mat_edge());
-    // std::cout << "same_imgmse" << mse << std::endl;
-    // cv::Mat show;
-    // cv::resize(image.get_mat_edge(), show, cv::Size(), 0.25, 0.25);
-    // cv::imshow("lidar_img", show);
-    // cv::waitKey(0);
 
     // =========== LiDAR 処理 ===========
 
@@ -951,11 +958,11 @@ void PointOperation::test_location()
 
     // ply to img
     removed_floor_ply_point.convert_to_polar();
-    LidarImg lidar_img;
+    // LidarImg lidar_img;
     lidar_img.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
-    lidar_img.ply_to_img(removed_floor_ply_point);
+    lidar_img.ply_to_360paranoma_img(removed_floor_ply_point);
 
-    cv::imwrite("ply2img_origin.png", lidar_img.get_mat_projected());
+    cv::imwrite("ply2img_origin.png", lidar_img.get_mat());
     // rotate seartch
     // z軸回転 は 画像のshiftで対応する
     int shift_x = 1;
@@ -963,9 +970,12 @@ void PointOperation::test_location()
 
     for (int i = 0; i < image.get_width(); i++)
     {
-        cv::Mat shift_img = cv::Mat::zeros(image.get_height(), image.get_width(), CV_8UC1);
-        lidar_img.shift(shift_x, shift_y, shift_img);
-        lidar_img.edge_detect_sobel();
+        // cv::Mat shift_img = cv::Mat::zeros(image.get_height(), image.get_width(), CV_8UC1);
+        // lidar_img.shift(shift_x, shift_y, shift_img);
+
+        // EdgeImg search_edge;
+        // search_edge.detect_edge_with_sobel()
+        // lidar_img.detect_edge_with_sobel();
 
         if (i == 1 || i == 100)
         {

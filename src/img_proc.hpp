@@ -30,6 +30,7 @@ protected:
 public:
     InstaImg() : img(cv::Mat()), height(0), width(0), name("none") {}
     InstaImg(int _width, int _height) : height(_height), width(_width), name("none") {}
+    InstaImg(std::string _name) : name(_name) {}
     virtual ~InstaImg() { img.release(); }
 
     // 入出力
@@ -45,6 +46,7 @@ public:
     // set
     void set_height(int _height) { height = _height; };
     void set_width(int _width) { width = _width; };
+    void set_mat(cv::Mat _mat) { img = _mat; };
     void set_zero_imgMat(int, int, int);
     void set_pixel_255(int, int);
 
@@ -52,7 +54,7 @@ public:
     void show(std::string, double);
 
     // 画像処理
-    void shift(int, int, cv::Mat &);
+    cv::Mat shift(int, int);
     void convert_to_unitsphere(PointSet &);
     void img_alpha_blending(const cv::Mat &, const cv::Mat &, double);
     double compute_MSE(const cv::Mat &, const cv::Mat &);
@@ -68,9 +70,10 @@ class EdgeImg : public InstaImg
 private:
 public:
     EdgeImg() : InstaImg() {}
+    EdgeImg(std::string _name) : InstaImg(_name) {}
     ~EdgeImg() {}
-    void detect_edge_with_canny(cv::Mat &);
-    void detect_edge_with_sobel(cv::Mat &);
+    void detect_edge_with_canny(const cv::Mat &);
+    void detect_edge_with_sobel(const cv::Mat &);
 };
 
 /**
@@ -85,8 +88,10 @@ class LidarImg : public InstaImg
 
 public:
     LidarImg() : InstaImg() {}
+    LidarImg(std::string _name) : InstaImg(_name) {}
     ~LidarImg() {}
 
     void ply_to_360paranoma_img(PointSet &);
 };
+
 #endif
