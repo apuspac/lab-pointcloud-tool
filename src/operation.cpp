@@ -910,11 +910,11 @@ void PointOperation::test_location()
               << "img edge detection" << std::endl;
     std::cout << image.get_name() << std::endl;
 
-    // ガウシアンのブラーかけてノイズ除去してからCanney法
+    // edge検出
     EdgeImg insta_edge("insta_edge");
     insta_edge.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
-    insta_edge.detect_edge_with_sobel(image.get_mat());
-
+    insta_edge.detect_edge_with_canny(image.get_mat());
+    // insta_edge.detect_edge_with_sobel(image.get_mat());
     // 画像のedgeの点を球の画像にプロットする
     // PointSet img_projection_unisphere;
     // image.convert_to_unitsphere(img_projection_unisphere);
@@ -928,9 +928,10 @@ void PointOperation::test_location()
     cv::imwrite("ply2img_origin.png", lidar_img.get_mat());
     lidar_img.dilation(0, 1);
     cv::imwrite("ply2img_dilation.png", lidar_img.get_mat());
-    lidar_img.show("lidar", 0.25);
+    // lidar_img.erosion(0, 1);
+    // cv::imwrite("ply2img_erosion.png", lidar_img.get_mat());
 
-    EdgeImg lidar_edge;
+    EdgeImg lidar_edge("lidar_edge");
     lidar_edge.detect_edge_with_sobel(lidar_img.get_mat());
 
     // double mse = insta_edge.compute_MSE(insta_edge.get_mat(), lidar_edge.get_mat());
@@ -941,25 +942,32 @@ void PointOperation::test_location()
     // std::cout << "same_imgmse" << mse_same << std::endl;
 
     // shift処理 テスト
-    std::cout << "shift_Test" << std::endl;
-    EdgeImg shift_("shift_test");
-    shift_.set_mat(lidar_edge.shift(500, 0));
-    shift_.show("shift", 0.25);
-    cv::imwrite("shift.png", shift_.get_mat());
+    // std::cout << "shift_Test" << std::endl;
+    // EdgeImg shift_("shift_test");
+    // shift_.set_mat(lidar_edge.shift(500, 0));
+    // shift_.show("shift", 0.25);
+    // cv::imwrite("shift.png", shift_.get_mat());
 
-    // NOTE: 一旦ストップ
-    std::string continue_step = 0;
-    std::cin >> continue_step;
+    insta_edge.compute_MSE(insta_edge.get_mat(), lidar_edge.get_mat());
 
     // =========== LiDAR 処理 ===========
 
     double eva_img = 100000;
     int count = 0;
 
-    // 並進の適用
-    // Eigen::Vector3d transform = {x_split, y_split, z_split};
-    // removed_floor_ply_point.transform(transform);
-    // std::cout << count++ << ":" << transform.transpose() << std::endl;
+    // z軸回転想定
+    for (int i = 0; i < image.get_width(); i++)
+    {
+        // 1画素ずつ動かす
+        EdgeImg moved_edge("moved_edge");
+        moved_edge.set_mat(lidar_edge.shift(i, 0));
+        double mse = insta_edge.compute_MSE(insta_edge.get_mat(), moved_edge.get_mat());
+        std::cout << "i::mse" << i << " " << mse << std::endl;
+    }
+
+    // NOTE: 一旦ストップ
+    std::string continue_step = 0;
+    std::cin >> continue_step;
 
     // ply to img
     removed_floor_ply_point.convert_to_polar();

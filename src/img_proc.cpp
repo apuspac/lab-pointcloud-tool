@@ -77,6 +77,33 @@ void InstaImg::set_pixel_255(int u, int v)
     img.at<u_char>(v, u) = 255;
 }
 
+void InstaImg::erosion(int erosion_elem, int erosion_size)
+{
+    int erosion_type = 0;
+    if (erosion_elem == 0)
+    {
+        erosion_type = cv::MORPH_RECT;
+    }
+    else if (erosion_elem == 1)
+    {
+        erosion_type = cv::MORPH_CROSS;
+    }
+    else if (erosion_elem == 2)
+    {
+        erosion_type = cv::MORPH_ELLIPSE;
+    }
+
+    // カーネル作成
+    // shape, kernel size, anchor
+    // カーネルサイズは1で3*3 2で5*5 3で7*7
+    // anchorは注目画素をどこにするか。指定しないとカーネル中心を注目画素にする
+    cv::Mat element = cv::getStructuringElement(erosion_type,
+                                                cv::Size(2 * erosion_size + 1, 2 * erosion_size + 1),
+                                                cv::Point(erosion_size, erosion_size));
+    cv::erode(img, img, element);
+    // show("Erosion Demo", 0.25);
+}
+
 void InstaImg::dilation(int dilation_elem, int dilation_size)
 {
     cv::Mat dilation_dst;
@@ -107,7 +134,7 @@ void InstaImg::dilation(int dilation_elem, int dilation_size)
         cv::Point(dilation_size, dilation_size));
 
     cv::dilate(img, img, element);
-    show("dilation demo", 0.25);
+    // show("dilation demo", 0.25);
 }
 
 /**
@@ -122,7 +149,7 @@ void EdgeImg::detect_edge_with_canny(const cv::Mat &origin_img)
     cv::Canny(origin_img, tmp, 50, 200, 3, true);
     img = tmp;
 
-    show("canny", 0.25);
+    // show("canny", 0.25);
 }
 
 /**
@@ -156,7 +183,7 @@ void EdgeImg::detect_edge_with_sobel(const cv::Mat &origin_img)
     cv::convertScaleAbs(tmp, tmp, 1, 0);
 
     img = tmp;
-    show("sobel:" + name, 0.25);
+    // show("sobel:" + name, 0.25);
     cv::imwrite("sobel:" + name + ".jpg", img);
 }
 

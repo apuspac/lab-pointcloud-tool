@@ -59,6 +59,7 @@ public:
     void img_alpha_blending(const cv::Mat &, const cv::Mat &, double);
     double compute_MSE(const cv::Mat &, const cv::Mat &);
     void dilation(int, int);
+    void erosion(int, int);
 };
 
 /**
