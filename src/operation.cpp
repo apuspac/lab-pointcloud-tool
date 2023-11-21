@@ -915,7 +915,8 @@ void PointOperation::test_location()
     insta_edge.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
     // insta_edge.detect_edge_with_canny(image.get_mat());
     insta_edge.detect_edge_with_sobel(image.get_mat());
-    insta_edge.show("insta_sobel", 0.25);
+    insta
+        insta_edge.show("insta_sobel", 0.25);
     cv::imwrite("instaimg_sobel.png", insta_edge.get_mat());
     // 画像のedgeの点を球の画像にプロットする
     // PointSet img_projection_unisphere;
