@@ -550,3 +550,30 @@ int ObjectIO::load_detection_json_file(std::string filepath, DetectionData &dete
 
     return 0;
 }
+
+void ObjectIO::output_csv(std::string filename, std::vector<std::vector<double>> csv_data)
+{
+    std::ofstream outputFile(filename);
+
+    if (!outputFile.is_open())
+    {
+        std::cout << "failed to open file" << std::endl;
+    }
+
+    for (const auto &row : csv_data)
+    {
+        for (size_t i = 0; i < row.size(); ++i)
+        {
+            outputFile << row[i];
+
+            // 最後の列でない場合はカンマを追加
+            if (i < row.size() - 1)
+            {
+                outputFile << ",";
+            }
+        }
+        outputFile << std::endl; // 行の終わり
+    }
+
+    std::cout << "output csv file complete: " << filename << std::endl;
+}
