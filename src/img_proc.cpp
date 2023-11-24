@@ -45,6 +45,21 @@ void InstaImg::show(std::string window_name, double scale)
 }
 
 /**
+ * @brief 画像を表示する
+ *
+ * @param window_name
+ * @param scale resizeするときの倍率(今回は0.25がちょうどよい)
+ * @param img 表示する画像
+ */
+void InstaImg::show(std::string window_name, double scale, const cv::Mat out_img)
+{
+    cv::Mat output;
+    cv::resize(out_img, output, cv::Size(), scale, scale);
+    cv::imshow(window_name, output);
+    cv::waitKey(0);
+}
+
+/**
  * @brief cv::Matを0で初期化する
  *
  * @param _height
@@ -77,6 +92,12 @@ void InstaImg::set_pixel_255(int u, int v)
     img.at<u_char>(v, u) = 255;
 }
 
+/**
+ * @brief 縮小処理
+ *
+ * @param erosin_elem: 0: 長方形 1: 十字型 2: 楕円ぽい感じ
+ * @param erosion_size  カーネルサイズは1で3*3 2で5*5 3で7*7
+ */
 void InstaImg::erosion(int erosion_elem, int erosion_size)
 {
     int erosion_type = 0;
@@ -104,6 +125,12 @@ void InstaImg::erosion(int erosion_elem, int erosion_size)
     // show("Erosion Demo", 0.25);
 }
 
+/**
+ * @brief 膨張処理
+ *
+ * @param dilation_elem : 0: 長方形 1: 十字型 2: 楕円ぽい感じ
+ * @param dilation_size : カーネルサイズは1で3*3 2で5*5 3で7*7
+ */
 void InstaImg::dilation(int dilation_elem, int dilation_size)
 {
     cv::Mat dilation_dst;
@@ -266,8 +293,48 @@ void InstaImg::img_alpha_blending(const cv::Mat &blend_a, const cv::Mat &blend_b
     cv::addWeighted(out_a, weight, out_b, weight, 0, output);
 
     // show
-    show("alpha blending:" + name, 0.25);
+    show("alpha blending:" + name, 0.25, output);
     cv::imwrite("output_image.jpg", output);
+}
+
+/**
+ * @brief closing処理(膨張->収縮)
+ *
+ * @param count 処理を行う回数
+ * @param elem : 0: 長方形 1: 十字型 2: 楕円ぽい感じの
+ * @param size カーネルサイズ
+ */
+void InstaImg::closing(int count, int elem, int size)
+{
+    for (int i = 0; i < count; i++)
+    {
+        dilation(elem, size);
+    }
+    for (int i = 0; i < count; i++)
+    {
+
+        erosion(elem, size);
+    }
+}
+
+/**
+ * @brief opening処理(収縮->膨張)
+ *
+ * @param count 処理を行う回数
+ * @param elem : 0: 長方形 1: 十字型 2: 楕円ぽい感じの
+ * @param size カーネルサイズ
+ */
+void InstaImg::opening(int count, int elem, int size)
+{
+    for (int i = 0; i < count; i++)
+    {
+        erosion(elem, size);
+    }
+    for (int i = 0; i < count; i++)
+    {
+
+        dilation(elem, size);
+    }
 }
 
 /**
@@ -339,7 +406,7 @@ cv::Mat InstaImg::shift(int x, int y)
     cv::Mat out_mat;
     out_mat = cv::Mat::zeros(img.rows, img.cols, img.type());
 
-    std::cout << img.rows << " " << img.cols << std::endl;
+    // std::cout << img.rows << " " << img.cols << std::endl;
 
     for (int v = 0; v < img.rows; v++)
     {

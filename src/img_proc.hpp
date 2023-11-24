@@ -52,6 +52,7 @@ public:
 
     // 表示
     void show(std::string, double);
+    void show(std::string, double, const cv::Mat);
 
     // 画像処理
     cv::Mat shift(int, int);
@@ -60,6 +61,8 @@ public:
     double compute_MSE(const cv::Mat &, const cv::Mat &);
     void dilation(int, int);
     void erosion(int, int);
+    void closing(int, int, int);
+    void opening(int, int, int);
 };
 
 /**
