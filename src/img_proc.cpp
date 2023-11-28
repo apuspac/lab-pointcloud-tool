@@ -199,7 +199,7 @@ void EdgeImg::detect_edge_with_sobel(const cv::Mat &origin_img)
         origin_img.copyTo(sobel_tmp);
     }
 
-    cv::GaussianBlur(sobel_tmp, sobel_tmp, cv::Size(5, 5), 0, 0, cv::BORDER_DEFAULT);
+    // cv::GaussianBlur(sobel_tmp, sobel_tmp, cv::Size(3, 3), 0, 0, cv::BORDER_DEFAULT);
 
     // NOTE: これ別々にやる必要があるかは 後で調べる
     cv::Sobel(sobel_tmp, sobel_x, CV_8U, 1, 0, 3);

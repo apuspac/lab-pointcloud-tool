@@ -176,7 +176,7 @@ void PointSet::create_histgram()
 
         double tmp_dis_center = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0));
 
-        if (tmp_dis_center > (first_peak - 0.1) && tmp_dis_center < (first_peak + 0.1))
+        if (tmp_dis_center > (first_peak - 0.3) && tmp_dis_center < (first_peak + 0.3))
         {
             // std::cout << tmp_dis_center << std::endl;
             point3_filtered.push_back(point);

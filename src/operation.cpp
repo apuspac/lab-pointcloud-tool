@@ -20,8 +20,8 @@ void PointOperation::mode_select()
     switch_func[4] = std::bind(&PointOperation::capture_boxpoint, this);
     switch_func[5] = std::bind(&PointOperation::capture_segmentation_point, this);
     switch_func[6] = std::bind(&PointOperation::capture_pointset, this);
+    switch_func[7] = std::bind(&PointOperation::capture_point_inner_bbox, this);
     switch_func[9] = std::bind(&PointOperation::test_location, this);
-    switch_func[10] = std::bind(&PointOperation::test_location, this);
     switch_func[get_mode()]();
 }
 
@@ -127,6 +127,9 @@ void PointOperation::transform_rotate()
     obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), corresp_img_point);
     corresp_img_point.print();
 
+    set_date();
+    obj_io.create_dir("out/" + date);
+
     // load 元のplyファイル(回転並進させる用)
     PointSet ply_point("plyfile");
     obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
@@ -180,7 +183,7 @@ void PointOperation::transform_rotate()
     ply_point.rotate(matrix_R);
     ply_point.transform(translation_vector);
 
-    obj_io.output_ply(ply_point, default_dir_path + "match-" + ply_point.get_name() + ".ply");
+    obj_io.output_ply(ply_point, "out/" + date + "/" + "match-" + ply_point.get_name() + ".ply");
 }
 
 /**
@@ -637,14 +640,39 @@ void PointOperation::capture_point_inner_bbox()
 
     // load plydata
     PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
+
+    // ply_point.print();
+
+    CalcPointSet calc;
+    Eigen::Matrix3d matrix_R_1 = calc.calc_theory_value_Rotation_Matrix(Eigen::Vector3d(0, 0, 1), 23.0);
+    // matrix_R_1 << 0.948577875082123, -0.276966456237335, 0.153263162645223,
+    //     0.281128427105882, 0.959652958205339, -0.00574519631639421,
+    //     -0.145488220752254, 0.0485363979614587, 0.988168708113786;
+
+    // 5
+    Eigen::Matrix3d matrix_R_2 = calc.calc_theory_value_Rotation_Matrix(Eigen::Vector3d(0, 1, 0), 2);
+
+    Eigen::Matrix3d matrix_R_3 = calc.calc_theory_value_Rotation_Matrix(Eigen::Vector3d(1, 0, 0), -1.0);
+    // Eigen::Matrix3d matrix_R_3 = calc.calc_theory_value_Rotation_Matrix(Eigen::Vector3d(0, 0, 1), 10.0);
+    calc.calc_rotation_axis_from_matrix_R(matrix_R_1);
+
+    ply_point.rotate(matrix_R_1);
+    ply_point.rotate(matrix_R_2);
+    ply_point.rotate(matrix_R_3);
 
     // HACK: ply_point 移動
-    // ply_point.transform(Eigen::Vector3d(0, 0, 0.06));
+    ply_point.transform(Eigen::Vector3d(0, 0, 0.05));
+    // // NOTE: 一旦ストップ
+    // std::string continue_step = 0;
+    // std::cin >> continue_step;
 
     // load bbox
     DetectionData detect;
     obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
+
+    set_date();
+    obj_io.create_dir("out/" + date);
 
     // すべてのパーツごとの点群を格納
     std::vector<std::vector<PointSet>> all_captured_point;
@@ -729,7 +757,7 @@ void PointOperation::capture_point_inner_bbox()
             // check_ply.add_geometry_pointset(bbox.get_point_all(), bbox.get_class_num());
             // check_ply.add_line_origin(bbox.get_point_all(), bbox.get_class_num());
             check_ply.add_geometry_pointset(bbox.get_point_all(), 3);
-            check_ply.add_line_origin(bbox.get_point_all(), 3);
+            check_ply.add_line_origin(bbox.get_point_all(), 4);
             std::cout << "bbox_vis_num" << bbox.get_point_num() << std::endl;
         }
     }
@@ -784,7 +812,7 @@ void PointOperation::capture_point_inner_bbox()
     {
         if (parts_point.get_point_num() != 0)
         {
-            obj_io.output_ply(parts_point, default_dir_path + parts_point.get_class_name() + "-" + std::to_string(parts_point.get_class_num()) + ".ply");
+            obj_io.output_ply(parts_point, "out/" + date + "/" + parts_point.get_class_name() + "-" + std::to_string(parts_point.get_class_num()) + ".ply");
         }
     }
 }
@@ -931,14 +959,7 @@ void PointOperation::test_location()
     std::cout << date << std::endl;
     obj_io.create_dir("out/" + date);
 
-    // NOTE: 一旦ストップ
-    std::string continue_step = 0;
-    std::cin >> continue_step;
-
     // ========== ここから img 処理 ==========
-    std::cout << std::endl
-              << "img edge detection" << std::endl;
-    std::cout << image.get_name() << std::endl;
 
     // edge検出
     EdgeImg insta_edge("insta_edge");
@@ -947,7 +968,7 @@ void PointOperation::test_location()
     insta_edge.closing(5, 0, 1);
     // insta_edge.detect_edge_with_sobel(image.get_mat());
     insta_edge.show("insta_sobel", 0.25);
-    cv::imwrite("instaimg_canny.jpg", insta_edge.get_mat());
+    cv::imwrite("out/" + date + "/" + " instaimg_sobel.jpg", insta_edge.get_mat());
 
     // 画像のedgeの点を球の画像にプロットする
     // PointSet img_projection_unisphere;
@@ -960,16 +981,19 @@ void PointOperation::test_location()
     removed_floor_ply_point.convert_to_polar();
     lidar_img.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
     lidar_img.ply_to_360paranoma_img(removed_floor_ply_point);
-    cv::imwrite("ply2img_origin.jpg", lidar_img.get_mat());
+    cv::imwrite("out/" + date + "/" + "ply2img_origin.jpg", lidar_img.get_mat());
+
+    // 追加
     lidar_img.closing(3, 0, 1);
-    cv::imwrite("ply2img_closing.png", lidar_img.get_mat());
+    cv::imwrite("out/" + date + "/" + "ply2img_closing.png", lidar_img.get_mat());
     // lidar_img.erosion(0, 1);
     // cv::imwrite("ply2img_erosion.png", lidar_img.get_mat());
 
     EdgeImg lidar_edge("lidar_edge");
-    lidar_edge.set_mat(lidar_img.get_mat());
+    // lidar_edge.set_mat(lidar_img.get_mat());
     // lidar_edge.detect_edge_with_sobel(lidar_img.get_mat());
-    // cv::imwrite("ply2img_closing_sobel.png", lidar_edge.get_mat());
+    lidar_edge.detect_edge_with_canny(lidar_img.get_mat());
+    cv::imwrite("out/" + date + "/" + "ply2img_closing_canny.png", lidar_edge.get_mat());
 
     // double mse = insta_edge.compute_MSE(insta_edge.get_mat(), lidar_edge.get_mat());
     // std::cout << "nochange_eva" << mse << std::endl;
@@ -989,7 +1013,11 @@ void PointOperation::test_location()
 
     // double mse_shift = insta_edge.compute_MSE(insta_edge.get_mat(), lidar_edge.get_mat());
     // std::cout << mse_shift << std::endl;
-    // =========== LiDAR 処理 ===========
+
+    // ===== mse
+    std::cout << std::endl
+              << "img edge detection" << std::endl;
+    std::cout << image.get_name() << std::endl;
 
     double eva_img = 100000;
     int count = 0;
@@ -1013,7 +1041,7 @@ void PointOperation::test_location()
         }
     }
 
-    obj_io.output_csv("evaimg.csv", eva_img_vec);
+    obj_io.output_csv("out/" + date + "/" + date + "evaimg.csv", eva_img_vec);
     std::cout << "RESULT : mse: " << count << " " << eva_img << std::endl;
 
     /**
