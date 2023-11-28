@@ -25,6 +25,29 @@ void PointOperation::mode_select()
     switch_func[get_mode()]();
 }
 
+void PointOperation::set_date()
+{
+    std::string data_s = get_localtime();
+    date = data_s;
+}
+
+std::string PointOperation::get_localtime()
+{
+    std::cout << "get_date" << std::endl;
+    time_t t = time(nullptr);
+    const tm *local_time = localtime(&t);
+    std::stringstream ss;
+    ss << local_time->tm_year + 1900;
+    ss << local_time->tm_mon + 1;
+    ss << local_time->tm_mday;
+    ss << "_";
+    ss << local_time->tm_hour;
+    ss << local_time->tm_min;
+    // ss << local_time->tm_sec;
+
+    return ss.str();
+}
+
 /**
  * @brief 読み込むファイル名, pathをprintする
  *
@@ -891,7 +914,6 @@ void PointOperation::test_location()
 {
 
     ObjectIO obj_io;
-    // std::cout << "projection to sphere" << std::endl;
 
     // load plydata img
     PointSet ply_point("plydata");
@@ -904,6 +926,14 @@ void PointOperation::test_location()
     Eigen::Vector3d floor_height = {0, 0, -1.070};
     PointSet removed_floor_ply_point;
     remove_pointset_floor(ply_point, removed_floor_ply_point, floor_height);
+
+    set_date();
+    std::cout << date << std::endl;
+    obj_io.create_dir("out/" + date);
+
+    // NOTE: 一旦ストップ
+    std::string continue_step = 0;
+    std::cin >> continue_step;
 
     // ========== ここから img 処理 ==========
     std::cout << std::endl
@@ -959,10 +989,6 @@ void PointOperation::test_location()
 
     // double mse_shift = insta_edge.compute_MSE(insta_edge.get_mat(), lidar_edge.get_mat());
     // std::cout << mse_shift << std::endl;
-
-    // NOTE: 一旦ストップ
-    std::string continue_step = 0;
-    std::cin >> continue_step;
     // =========== LiDAR 処理 ===========
 
     double eva_img = 100000;

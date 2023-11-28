@@ -13,6 +13,8 @@
 #include "viewer.hpp"
 #include "img_proc.hpp"
 
+#include <iomanip>
+
 #include "open3d/Open3D.h"
 
 // 相互依存
@@ -33,12 +35,11 @@ private:
     std::vector<std::string> corresp_img_file_name;
     // plyファイル対応点 ファイル名
     std::vector<std::string> corresp_ply_file_name;
-    // plyファイル名
     std::vector<std::string> ply_file_name;
-    // 画像ファイル名
     std::vector<std::string> img_file_path;
     // デフォルトdir(1つのフォルダに上のplyファイルをまとめる)
     std::string default_dir_path;
+    std::string date;
     // jsonファイル名
     std::string json_file_path;
 
@@ -57,6 +58,7 @@ public:
     // モード取得
     int get_mode() { return std::stoi(mode); }
     void mode_select();
+    std::string get_localtime();
 
     // set
     void set_corresp_img_file_name(std::string name) { corresp_img_file_name.push_back(name); }
@@ -66,6 +68,8 @@ public:
     void set_default_dir_path(std::string name) { default_dir_path = name; }
     void set_json_path(std::string name) { json_file_path = name; }
     void set_mode(std::string mode_) { mode = mode_; }
+    void set_date(std::string date_) { date = date_; }
+    void set_date();
 
     // ファイル名を出力
     void print();

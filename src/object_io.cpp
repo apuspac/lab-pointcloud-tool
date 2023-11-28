@@ -577,3 +577,10 @@ void ObjectIO::output_csv(std::string filename, std::vector<std::vector<double>>
 
     std::cout << "output csv file complete: " << filename << std::endl;
 }
+
+void ObjectIO::create_dir(std::string dir_path)
+{
+    bool result = std::filesystem::create_directories(dir_path);
+
+    assert(result);
+}

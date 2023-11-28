@@ -39,8 +39,8 @@
 
 # exeFile
 
-# 実行結果データ
-./out
+# 実行結果データは共有しない。
+out/
 
 # Created by https://www.toptal.com/developers/gitignore/api/cmake
 # Edit at https://www.toptal.com/developers/gitignore?templates=cmake
@@ -65,7 +65,7 @@ _deps
 *.json
 
 
-# dataファイルは追跡
+# dataファイルなどの 元データは追跡
 !data/
 !data/*.json
 !python/json_data/*.json

@@ -1,8 +1,0 @@
-位置合わせ
-./Rotation --mode 0 --ply_cp corresp-kyoiku.ply --img_cp corresp-img.dat --ply kyoiku.ply --img ../../img/kyoiku.JPG --dir ../../ply_data/capture_seg_kyoiku/ >! ../../ply_data/capture_seg_kyoiku/out.dat
-
-bbox
-./Rotation --mode 4 --img_cp bbox_check.dat --ply match-plyfile.ply --img ../../img/kyoiku.JPG --dir ../../ply_data/capture_seg_kyoiku/ >! ../../ply_data/capture_seg_kyoiku/out_bbox.dat
-
-segline_point
-./Rotation --mode 5 --img_cp bbox_check.dat --ply match-plyfile.ply --img ../../img/kyoiku.JPG --dir ../../ply_data/capture_seg_kyoiku/ >! ../../ply_data/capture_seg_kyoiku/out_seg.dat

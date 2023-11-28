@@ -35,6 +35,7 @@ public:
     Eigen::Vector3d extend_distance_from_point_and_origin(Eigen::Vector3d, double);
     int load_detection_json_file(std::string, DetectionData &, std::string);
     void output_csv(std::string, std::vector<std::vector<double>>);
+    void create_dir(std::string);
 };
 
 #endif
