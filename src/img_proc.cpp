@@ -204,10 +204,10 @@ void EdgeImg::detect_edge_with_sobel(const cv::Mat &origin_img)
     // NOTE: これ別々にやる必要があるかは 後で調べる
     // cv::Sobel(sobel_tmp, sobel_x, CV_8U, 1, 0, 3);
     // cv::Sobel(sobel_tmp, sobel_y, CV_8U, 0, 1, 3);
-    cv::Scharr(sobel_tmp, sobel_x, CV_8UC1, 1, 0);
-    cv::Scharr(sobel_tmp, sobel_y, CV_8UC1, 1, 0);
+    cv::Scharr(sobel_tmp, sobel_x, CV_8SC1, 1, 0);
+    cv::Scharr(sobel_tmp, sobel_y, CV_8SC1, 1, 0);
 
-    cv::addWeighted(sobel_x, sobel_y, tmp);
+    cv::addWeighted(sobel_x, 1.0, sobel_y, 1.0, tmp);
 
     // cv::convertScaleAbs(tmp, tmp, 1, 0);
 
