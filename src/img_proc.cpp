@@ -202,15 +202,23 @@ void EdgeImg::detect_edge_with_sobel(const cv::Mat &origin_img)
     // cv::GaussianBlur(sobel_tmp, sobel_tmp, cv::Size(3, 3), 0, 0, cv::BORDER_DEFAULT);
 
     // NOTE: これ別々にやる必要があるかは 後で調べる
-    cv::Sobel(sobel_tmp, sobel_x, CV_8U, 1, 0, 3);
-    cv::Sobel(sobel_tmp, sobel_y, CV_8U, 0, 1, 3);
-    cv::add(sobel_x, sobel_y, tmp);
+    // cv::Sobel(sobel_tmp, sobel_x, CV_8U, 1, 0, 3);
+    // cv::Sobel(sobel_tmp, sobel_y, CV_8U, 0, 1, 3);
+    cv::Scharr(sobel_tmp, sobel_x, CV_8UC1, 1, 0);
+    cv::Scharr(sobel_tmp, sobel_y, CV_8UC1, 1, 0);
 
-    cv::convertScaleAbs(tmp, tmp, 1, 0);
+    cv::addWeighted(sobel_x, sobel_y, tmp);
 
-    img = tmp;
+    // cv::convertScaleAbs(tmp, tmp, 1, 0);
+
+    tmp.copyTo(img);
+    // img = tmp;
+
+    std::cout << "sobel" << img.size() << std::endl;
+    std::cout << "soble" << img.channels() << std::endl;
     // show("sobel:" + name, 0.25);
-    cv::imwrite("sobel:" + name + ".jpg", img);
+
+    // cv::imwrite("sobel:" + name + ".png", img);
 }
 
 /**

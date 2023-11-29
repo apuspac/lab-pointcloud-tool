@@ -628,7 +628,7 @@ void PointOperation::capture_pointset()
  *              --img_cp img.dat,
  *              --ply_cp, ply.dat,
  *              --ply, plyfile.ply,
- *              --img, img/pic_point1.jpg,
+ *              --img, img/pic_point1.png,
  *              --dir, data/test/,
  *              --json, data/detections_test.json,
  *              --mode, 9,
@@ -933,7 +933,7 @@ double img_projection(PointSet &ply_point, LidarImg &lidar_img, InstaImg &image)
  *              --img_cp img.dat,
  *              --ply_cp, ply.dat,
  *              --ply, plyfile.ply,
- *              --img, img/pic_point1.jpg,
+ *              --img, img/pic_point1.png,
  *              --dir, data/test/,
  *              --json, data/detections_test.json,
  *              --mode, 9,
@@ -964,15 +964,11 @@ void PointOperation::test_location()
     // edge検出
     EdgeImg insta_edge("insta_edge");
     insta_edge.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
-    insta_edge.detect_edge_with_canny(image.get_mat());
-    insta_edge.closing(5, 0, 1);
-    // insta_edge.detect_edge_with_sobel(image.get_mat());
+    // insta_edge.detect_edge_with_canny(image.get_mat());
+    // insta_edge.closing(5, 0, 1);
+    insta_edge.detect_edge_with_sobel(image.get_mat());
     insta_edge.show("insta_sobel", 0.25);
-    cv::imwrite("out/" + date + "/" + " instaimg_sobel.jpg", insta_edge.get_mat());
-
-    // 画像のedgeの点を球の画像にプロットする
-    // PointSet img_projection_unisphere;
-    // image.convert_to_unitsphere(img_projection_unisphere);
+    cv::imwrite("out/" + date + "/" + " instaimg_sobel.png", insta_edge.get_mat());
 
     // CHECK: そのままのplyでの結果
     std::cout << std::endl
@@ -981,26 +977,18 @@ void PointOperation::test_location()
     removed_floor_ply_point.convert_to_polar();
     lidar_img.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
     lidar_img.ply_to_360paranoma_img(removed_floor_ply_point);
-    cv::imwrite("out/" + date + "/" + "ply2img_origin.jpg", lidar_img.get_mat());
+    cv::imwrite("out/" + date + "/" + "ply2img_origin.png", lidar_img.get_mat());
 
     // 追加
     lidar_img.closing(3, 0, 1);
     cv::imwrite("out/" + date + "/" + "ply2img_closing.png", lidar_img.get_mat());
-    // lidar_img.erosion(0, 1);
-    // cv::imwrite("ply2img_erosion.png", lidar_img.get_mat());
 
     EdgeImg lidar_edge("lidar_edge");
-    // lidar_edge.set_mat(lidar_img.get_mat());
-    // lidar_edge.detect_edge_with_sobel(lidar_img.get_mat());
-    lidar_edge.detect_edge_with_canny(lidar_img.get_mat());
-    cv::imwrite("out/" + date + "/" + "ply2img_closing_canny.png", lidar_edge.get_mat());
-
-    // double mse = insta_edge.compute_MSE(insta_edge.get_mat(), lidar_edge.get_mat());
-    // std::cout << "nochange_eva" << mse << std::endl;
-
-    // CHECK: 同じ画像でやってみる。
-    // double mse_same = image.compute_MSE(image.get_mat(), image.get_mat());
-    // std::cout << "same_imgmse" << mse_same << std::endl;
+    lidar_edge.set_mat(lidar_img.get_mat());
+    lidar_edge.detect_edge_with_sobel(lidar_img.get_mat());
+    // lidar_edge.detect_edge_with_canny(lidar_img.get_mat());
+    lidar_edge.show("lidar_sobel", 0.25);
+    cv::imwrite("out/" + date + "/" + "ply2img_closing_sobel.png", lidar_edge.get_mat());
 
     // shift処理 テスト
     // std::cout << "shift_Test" << std::endl;
@@ -1013,6 +1001,10 @@ void PointOperation::test_location()
 
     // double mse_shift = insta_edge.compute_MSE(insta_edge.get_mat(), lidar_edge.get_mat());
     // std::cout << mse_shift << std::endl;
+
+    std::string userInput;
+    std::getline(std::cin, userInput);
+    assert(userInput == "y");
 
     // ===== mse
     std::cout << std::endl
@@ -1043,6 +1035,10 @@ void PointOperation::test_location()
 
     obj_io.output_csv("out/" + date + "/" + date + "evaimg.csv", eva_img_vec);
     std::cout << "RESULT : mse: " << count << " " << eva_img << std::endl;
+
+    // 画像のedgeの点を球の画像にプロットする
+    // PointSet img_projection_unisphere;
+    // image.convert_to_unitsphere(img_projection_unisphere);
 
     /**
 
