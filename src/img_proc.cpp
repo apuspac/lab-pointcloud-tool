@@ -64,7 +64,7 @@ void InstaImg::show(std::string window_name, double scale, const cv::Mat out_img
  *
  * @param _height
  * @param _width
- * @param color_type ２値画像ならCV_8UC1
+ * @param color_type gray画像ならCV_8UC1
  */
 void InstaImg::set_zero_imgMat(int _height, int _width, int color_type)
 {
@@ -165,6 +165,16 @@ void InstaImg::dilation(int dilation_elem, int dilation_size)
 }
 
 /**
+ * @brief ガウシアンフィルタを適用する
+ *
+ * @param kernel_size カーネルサイズ
+ */
+void InstaImg::gaussian_blur(int kernel_size)
+{
+    cv::GaussianBlur(img, img, cv::Size(kernel_size, kernel_size), 0, 0, cv::BORDER_DEFAULT);
+}
+
+/**
  * @brief canny法によってエッジ検出
  *
  * @param origin_img Canny法を適用する画像
@@ -196,29 +206,37 @@ void EdgeImg::detect_edge_with_sobel(const cv::Mat &origin_img)
     }
     else
     {
+        // cv::cvtColor(origin_img, sobel_tmp, cv::COLOR_BGR2GRAY);
         origin_img.copyTo(sobel_tmp);
     }
 
-    // cv::GaussianBlur(sobel_tmp, sobel_tmp, cv::Size(3, 3), 0, 0, cv::BORDER_DEFAULT);
+    cv::GaussianBlur(sobel_tmp, sobel_tmp, cv::Size(3, 3), 0, 0, cv::BORDER_DEFAULT);
 
     // NOTE: これ別々にやる必要があるかは 後で調べる
-    // cv::Sobel(sobel_tmp, sobel_x, CV_8U, 1, 0, 3);
-    // cv::Sobel(sobel_tmp, sobel_y, CV_8U, 0, 1, 3);
-    cv::Scharr(sobel_tmp, sobel_x, CV_8SC1, 1, 0);
-    cv::Scharr(sobel_tmp, sobel_y, CV_8SC1, 1, 0);
+    cv::Sobel(sobel_tmp, sobel_x, CV_64F, 1, 0, 3);
+    // cv::Sobel(sobel_tmp, sobel_y, CV_64F, 0, 1, 3);
 
-    cv::addWeighted(sobel_x, 1.0, sobel_y, 1.0, tmp);
+    // sobel 関数は　karnel3のとき cv::Scharr関数を使ってるらしい
+    // cv::Scharr(sobel_tmp, sobel_x, CV_8SC1, 1, 0);
+    // cv::Scharr(sobel_tmp, sobel_y, CV_8SC1, 1, 0);
 
-    // cv::convertScaleAbs(tmp, tmp, 1, 0);
+    // cv::addWeighted(sobel_x, 1.0, sobel_y, 1.0, 0.0, tmp);
+    sobel_x.copyTo(tmp);
+    cv::imshow("sobel", tmp);
+
+    cv::convertScaleAbs(tmp, tmp);
 
     tmp.copyTo(img);
+    show("sobel", 0.25);
+
+    // tmp.copyTo(img);
     // img = tmp;
 
-    std::cout << "sobel" << img.size() << std::endl;
-    std::cout << "soble" << img.channels() << std::endl;
+    // std::cout << "sobel" << img.size() << std::endl;
+    // std::cout << "soble" << img.channels() << std::endl;
     // show("sobel:" + name, 0.25);
 
-    // cv::imwrite("sobel:" + name + ".png", img);
+    // cv::imwrite("sobel:" + name + ".png", tmp);
 }
 
 /**
@@ -302,7 +320,9 @@ void InstaImg::img_alpha_blending(const cv::Mat &blend_a, const cv::Mat &blend_b
 
     // show
     show("alpha blending:" + name, 0.25, output);
-    cv::imwrite("output_image.jpg", output);
+    output.copyTo(img);
+    // img = output;
+    // cv::imwrite("output_image.png", output);
 }
 
 /**

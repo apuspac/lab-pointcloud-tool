@@ -63,6 +63,7 @@ public:
     void erosion(int, int);
     void closing(int, int, int);
     void opening(int, int, int);
+    void gaussian_blur(int);
 };
 
 /**
