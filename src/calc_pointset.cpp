@@ -30,9 +30,9 @@ Eigen::Matrix3d CalcPointSet::calc_theory_value_Rotation_Matrix(Eigen::Vector3d 
     // ロドリゲスの回転公式
     Matrix_R = Matrix_I + sin(radian) * Matrix_Kn + (1 - cos(radian)) * Matrix_Kn2;
 
-    std::cout << "理論値" << std::endl
-              << Matrix_R << std::endl
-              << std::endl;
+    // std::cout << "理論値" << std::endl
+    //           << Matrix_R << std::endl
+    //           << std::endl;
 
     return Matrix_R;
 }

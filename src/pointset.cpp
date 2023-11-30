@@ -23,6 +23,17 @@ void PointSet::print()
     }
 }
 
+void PointSet::print_polar()
+{
+
+    std::cout << "Point_polar: " << name << std::endl;
+
+    for (const auto &tmp : point3_polar)
+    {
+        std::cout << std::setprecision(15) << tmp.transpose() << std::endl;
+    }
+}
+
 void PointSet::add_point(PointSet add_pointset)
 {
     add_pointset.get_point_all();
@@ -47,7 +58,8 @@ void PointSet::add_point(PointSet add_pointset)
  */
 void PointSet::rotate(Eigen::Matrix3d rotate_matrix)
 {
-    std::cout << name << " point_rotated:" << rotate_matrix << std::endl;
+    // std::cout << name << " point_rotated:" << std::endl
+    //           << rotate_matrix << std::endl;
     for (Eigen::Vector3d &tmp : point3)
     {
         tmp = rotate_matrix * tmp;
@@ -61,7 +73,7 @@ void PointSet::rotate(Eigen::Matrix3d rotate_matrix)
  */
 void PointSet::transform(Eigen::Vector3d transform_vec)
 {
-    std::cout << name << " point_transformed:" << transform_vec.transpose() << std::endl;
+    // std::cout << name << " point_transformed:" << transform_vec.transpose() << std::endl;
     for (Eigen::Vector3d &tmp : point3)
     {
         tmp = transform_vec + tmp;
@@ -164,7 +176,7 @@ void PointSet::create_histgram()
 
         double tmp_dis_center = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0));
 
-        if (tmp_dis_center > (first_peak - 0.1) && tmp_dis_center < (first_peak + 0.1))
+        if (tmp_dis_center > (first_peak - 0.3) && tmp_dis_center < (first_peak + 0.3))
         {
             // std::cout << tmp_dis_center << std::endl;
             point3_filtered.push_back(point);
@@ -186,4 +198,34 @@ void PointSet::output_hist(std::string count)
     }
 
     output_data.close();
+}
+
+/**
+ * @brief xyz -> r, phi, theta and save to point3_polar
+ *
+ */
+void PointSet::convert_to_polar()
+{
+    std::cout << "convert_to_polar" << std::endl;
+
+    for (auto &point : point3)
+    {
+        double r = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0) + std::pow(point(2), 2.0));
+
+        double theta = std::acos(point(2) / r);
+        double phi = std::atan2(point(1), point(0));
+
+        int index = &point - &point3[0];
+
+        if (point3_polar.size() < point3.size())
+        {
+            // point3_polar.reserve(point3.size());
+            point3_polar.push_back(Eigen::Vector3d(r, theta, phi));
+        }
+        else
+        {
+
+            point3_polar.at(index) = Eigen::Vector3d(r, theta, phi);
+        }
+    }
 }

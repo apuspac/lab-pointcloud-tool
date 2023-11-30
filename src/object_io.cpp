@@ -227,7 +227,7 @@ void ObjectIO::load_ply_point_file(std::string file_name, std::string dir_path, 
 }
 
 /**
- * @brief Get the img width height
+ * @brief Get img width height
  *
  * @param img_path 画像の相対パス
  * @return std::array<double, 2> 画像の幅, 画像の高さの順に取得
@@ -549,4 +549,38 @@ int ObjectIO::load_detection_json_file(std::string filepath, DetectionData &dete
     fclose(fp);
 
     return 0;
+}
+
+void ObjectIO::output_csv(std::string filename, std::vector<std::vector<double>> csv_data)
+{
+    std::ofstream outputFile(filename);
+
+    if (!outputFile.is_open())
+    {
+        std::cout << "failed to open file" << std::endl;
+    }
+
+    for (const auto &row : csv_data)
+    {
+        for (size_t i = 0; i < row.size(); ++i)
+        {
+            outputFile << row[i];
+
+            // 最後の列でない場合はカンマを追加
+            if (i < row.size() - 1)
+            {
+                outputFile << ",";
+            }
+        }
+        outputFile << std::endl; // 行の終わり
+    }
+
+    std::cout << "output csv file complete: " << filename << std::endl;
+}
+
+void ObjectIO::create_dir(std::string dir_path)
+{
+    bool result = std::filesystem::create_directories(dir_path);
+
+    assert(result);
 }
