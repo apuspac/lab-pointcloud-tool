@@ -39,8 +39,6 @@
 
 # exeFile
 
-# 実行結果データは共有しない。
-out/
 
 # Created by https://www.toptal.com/developers/gitignore/api/cmake
 # Edit at https://www.toptal.com/developers/gitignore?templates=cmake
@@ -75,3 +73,6 @@ _deps
 
 # End of https://www.toptal.com/developers/gitignore/api/cmake
 src/build/Rotation
+
+# 実行結果データは共有しない。
+out/
