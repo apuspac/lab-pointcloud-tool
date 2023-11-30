@@ -984,9 +984,9 @@ void PointOperation::test_location()
     cv::imwrite("out/" + date + "/" + "ply2img_closing.png", lidar_img.get_mat());
 
     EdgeImg lidar_edge("lidar_edge");
-    lidar_edge.set_mat(lidar_img.get_mat());
+    // lidar_edge.set_mat(lidar_img.get_mat());
     // lidar_edge.detect_edge_with_sobel(lidar_img.get_mat());
-    // lidar_edge.detect_edge_with_canny(lidar_img.get_mat());
+    lidar_edge.detect_edge_with_canny(lidar_img.get_mat());
     lidar_edge.show("lidar_sobel", 0.25);
     cv::imwrite("out/" + date + "/" + "ply2img_closing_canny.png", lidar_edge.get_mat());
 
@@ -997,44 +997,34 @@ void PointOperation::test_location()
     std::getline(std::cin, userInput);
     assert(userInput == "y");
 
+    std::cout << std::endl
+              << "img edge detection" << std::endl;
+    std::cout << image.get_name() << std::endl;
+
+    double eva_img = 100000;
     int count = 0;
 
-    if (userInput == "x")
+    std::vector<std::vector<double>> eva_img_vec;
+
+    // z軸回転想定
+    for (int i = 0; i < image.get_width(); i++)
     {
+        // 1画素ずつ動かす
+        EdgeImg moved_edge("moved_edge");
+        moved_edge.set_mat(lidar_edge.shift(i, 0));
+        double mse = insta_edge.compute_MSE(insta_edge.get_mat(), moved_edge.get_mat());
+        std::cout << "i: " << i << " mse: " << mse << std::endl;
+        eva_img_vec.push_back({static_cast<double>(i), mse});
 
-        std::cout << std::endl
-                  << "img edge detection" << std::endl;
-        std::cout << image.get_name() << std::endl;
-
-        double eva_img = 100000;
-        int count = 0;
-
-        std::vector<std::vector<double>> eva_img_vec;
-
-        // z軸回転想定
-        for (int i = 0; i < image.get_width(); i++)
+        if (eva_img > mse)
         {
-            // 1画素ずつ動かす
-            EdgeImg moved_edge("moved_edge");
-            moved_edge.set_mat(lidar_edge.shift(i, 0));
-            double mse = insta_edge.compute_MSE(insta_edge.get_mat(), moved_edge.get_mat());
-            std::cout << "i: " << i << " mse: " << mse << std::endl;
-            eva_img_vec.push_back({static_cast<double>(i), mse});
-
-            if (eva_img > mse)
-            {
-                eva_img = mse;
-                count = i;
-            }
+            eva_img = mse;
+            count = i;
         }
+    }
 
-        obj_io.output_csv("out/" + date + "/" + date + "evaimg.csv", eva_img_vec);
-        std::cout << "RESULT : mse: " << count << " " << eva_img << std::endl;
-    }
-    else
-    {
-        count = std::stoi(userInput);
-    }
+    obj_io.output_csv("out/" + date + "/" + date + "evaimg.csv", eva_img_vec);
+    std::cout << "RESULT : mse: " << count << " " << eva_img << std::endl;
 
     double shift_angle = count * 360.0 / image.get_width() - 360;
     std::cout << "angle :" << shift_angle << std::endl;
