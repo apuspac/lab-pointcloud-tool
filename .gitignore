@@ -76,3 +76,6 @@ src/build/Rotation
 
 # 実行結果データは共有しない。
 out/
+
+!.vscode/tasks.json
+!.vscode/launch.json
