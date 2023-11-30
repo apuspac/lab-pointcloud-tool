@@ -1035,7 +1035,7 @@ void PointOperation::test_location()
     shift_.set_mat(lidar_edge.shift(count, 0));
 
     shift_.img_alpha_blending(shift_.get_mat(), insta_edge.get_mat(), 1.0);
-    cv::imwrite("out/" + date + "/" + "shift.png", shift_.get_mat());
+    cv::imwrite("out/" + date + "/" + "shift_.png", shift_.get_mat());
 
     // 画像のedgeの点を球の画像にプロットする
     // PointSet img_projection_unisphere;
