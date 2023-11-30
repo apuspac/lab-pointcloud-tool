@@ -184,7 +184,8 @@ void EdgeImg::detect_edge_with_canny(const cv::Mat &origin_img)
     cv::Mat output, tmp;
 
     cv::Canny(origin_img, tmp, 50, 200, 3, true);
-    img = tmp;
+    // img = tmp;
+    tmp.copyTo(img);
 
     // show("canny", 0.25);
 }

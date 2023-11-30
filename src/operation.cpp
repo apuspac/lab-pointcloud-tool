@@ -1006,7 +1006,7 @@ void PointOperation::test_location()
 
     std::vector<std::vector<double>> eva_img_vec;
 
-    // z軸回転想定
+    // z軸まわりの回転想定
     for (int i = 0; i < image.get_width(); i++)
     {
         // 1画素ずつ動かす
