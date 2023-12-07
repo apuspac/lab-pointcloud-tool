@@ -1006,12 +1006,30 @@ void PointOperation::test_location()
 
     std::vector<std::vector<double>> eva_img_vec;
 
-    // z軸まわりの回転想定
-    for (int i = 0; i < image.get_width(); i++)
+    // 原点が固定, z軸まわりの回転
+    // 中心からプラスマイナス方向に動かす
+    for (int i = 0; i < image.get_width() / 2; i++)
     {
-        // 1画素ずつ動かす
+        // 中心からの動かす
         EdgeImg moved_edge("moved_edge");
         moved_edge.set_mat(lidar_edge.shift(i, 0));
+        double mse = insta_edge.compute_MSE(insta_edge.get_mat(), moved_edge.get_mat());
+        std::cout << "i: " << i << " mse: " << mse << std::endl;
+        eva_img_vec.push_back({static_cast<double>(i), mse});
+
+        if (eva_img > mse)
+        {
+            eva_img = mse;
+            count = i;
+        }
+    }
+
+    // 反対側
+    for (int i = 0; i < image.get_width() / 2; i++)
+    {
+        // 中心からの動かす
+        EdgeImg moved_edge("moved_edge");
+        moved_edge.set_mat(lidar_edge.shift(-i, 0));
         double mse = insta_edge.compute_MSE(insta_edge.get_mat(), moved_edge.get_mat());
         std::cout << "i: " << i << " mse: " << mse << std::endl;
         eva_img_vec.push_back({static_cast<double>(i), mse});
