@@ -985,10 +985,10 @@ void PointOperation::test_location()
 
     EdgeImg lidar_edge("lidar_edge");
     // lidar_edge.set_mat(lidar_img.get_mat());
-    // lidar_edge.detect_edge_with_sobel(lidar_img.get_mat());
-    lidar_edge.detect_edge_with_canny(lidar_img.get_mat());
+    lidar_edge.detect_edge_with_sobel(lidar_img.get_mat());
+    // lidar_edge.detect_edge_with_canny(lidar_img.get_mat());
     lidar_edge.show("lidar_sobel", 0.25);
-    cv::imwrite("out/" + date + "/" + "ply2img_closing_canny.png", lidar_edge.get_mat());
+    cv::imwrite("out/" + date + "/" + "ply2img_closing_sobel.png", lidar_edge.get_mat());
 
     // double mse_shift = insta_edge.compute_MSE(insta_edge.get_mat(), lidar_edge.get_mat());
     // std::cout << mse_shift << std::endl;
@@ -1054,6 +1054,9 @@ void PointOperation::test_location()
 
     shift_.img_alpha_blending(shift_.get_mat(), insta_edge.get_mat(), 1.0);
     cv::imwrite("out/" + date + "/" + "shift_.png", shift_.get_mat());
+
+    // 高さ方法を合わせる
+    // シフトしたときに投影しなおしてから mseの繰り返し。
 
     // 画像のedgeの点を球の画像にプロットする
     // PointSet img_projection_unisphere;
