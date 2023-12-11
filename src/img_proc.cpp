@@ -223,12 +223,12 @@ void EdgeImg::detect_edge_with_sobel(const cv::Mat &origin_img)
 
     // cv::addWeighted(sobel_x, 1.0, sobel_y, 1.0, 0.0, tmp);
     sobel_x.copyTo(tmp);
-    cv::imshow("sobel", tmp);
+    // cv::imshow("sobel", tmp);
 
     cv::convertScaleAbs(tmp, tmp);
 
     tmp.copyTo(img);
-    show("sobel", 0.25);
+    // show("sobel", 0.25);
 
     // tmp.copyTo(img);
     // img = tmp;
@@ -252,7 +252,7 @@ void InstaImg::convert_to_unitsphere(PointSet &projected_img)
      * @brief uv座標をr=1の極座標に変換に変換する
      *
      */
-    auto equirectangular_to_sphere = [=](double u, double v)
+    auto equirectangular_to_sphere = [=, this](double u, double v)
     {
         u /= width;
         v /= height;
@@ -437,19 +437,35 @@ cv::Mat InstaImg::shift(int x, int y)
 
     // std::cout << img.rows << " " << img.cols << std::endl;
 
-    for (int v = 0; v < img.rows; v++)
+    for (int v = 0; v < img.cols; v++)
     {
-        for (int u = 0; u < img.cols; u++)
+        for (int u = 0; u < img.rows; u++)
         {
-            uchar *ptr = img.data + img.step * v;
-            if (ptr[u] != 0)
+            uchar *ptr = img.data + img.step * u;
+            if (ptr[v] != 0)
             {
-                int new_u = (u + x + img.cols) % img.cols; // はみ出した場合は反対側に移動
-                int new_v = (v + y + img.rows) % img.rows;
-
-                out_mat.at<uchar>(new_v, new_u) = ptr[u];
+                int new_u = (u + y + img.rows) % img.rows;
+                int new_v = (v + x + img.cols) % img.cols;
+                out_mat.at<uchar>(new_u, new_v) = ptr[v];
             }
         }
     }
+
     return out_mat;
+
+    // for (int v = 0; v < img.rows; v++)
+    // {
+    //     for (int u = 0; u < img.cols; u++)
+    //     {
+    //         uchar *ptr = img.data + img.step * v;
+    //         if (ptr[u] != 0)
+    //         {
+    //             int new_u = (u + x + img.cols) % img.cols; // はみ出した場合は反対側に移動
+    //             int new_v = (v + y + img.rows) % img.rows;
+
+    //             out_mat.at<uchar>(new_v, new_u) = ptr[u];
+    //         }
+    //     }
+    // }
+    // return out_mat;
 }

@@ -952,8 +952,9 @@ void PointOperation::test_location()
     // 床の点を除去
     // HACK: 本当はここも平面当てはめ PCAなどでできそうではある。
     Eigen::Vector3d floor_height = {0, 0, -1.070};
-    PointSet removed_floor_ply_point;
+    PointSet removed_floor_ply_point, rmfloor_point;
     remove_pointset_floor(ply_point, removed_floor_ply_point, floor_height);
+    remove_pointset_floor(ply_point, rmfloor_point, floor_height);
 
     set_date();
     std::cout << date << std::endl;
@@ -970,16 +971,16 @@ void PointOperation::test_location()
     insta_edge.show("insta_sobel", 0.25);
     cv::imwrite("out/" + date + "/" + " instaimg_sobel.png", insta_edge.get_mat());
 
-    // CHECK: そのままのplyでの結果
+    //============ LiDAR処理
     std::cout << std::endl
               << "LiDAR edge detection" << std::endl;
     LidarImg lidar_img("lidar_edge");
     removed_floor_ply_point.convert_to_polar();
     lidar_img.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
+
     lidar_img.ply_to_360paranoma_img(removed_floor_ply_point);
     cv::imwrite("out/" + date + "/" + "ply2img_origin.png", lidar_img.get_mat());
 
-    // 追加
     lidar_img.closing(3, 0, 1);
     cv::imwrite("out/" + date + "/" + "ply2img_closing.png", lidar_img.get_mat());
 
@@ -995,27 +996,107 @@ void PointOperation::test_location()
 
     std::string userInput;
     std::getline(std::cin, userInput);
-    assert(userInput == "y");
+    // assert(userInput == "x");
 
-    std::cout << std::endl
-              << "img edge detection" << std::endl;
-    std::cout << image.get_name() << std::endl;
-
-    double eva_img = 100000;
-    int count = 0;
-
-    std::vector<std::vector<double>> eva_img_vec;
-
-    // 原点が固定, z軸まわりの回転
-    // 中心からプラスマイナス方向に動かす
-    for (int i = 0; i < image.get_width() / 2; i++)
+    if (userInput == "y")
     {
-        // 中心からの動かす
-        EdgeImg moved_edge("moved_edge");
-        moved_edge.set_mat(lidar_edge.shift(i, 0));
-        double mse = insta_edge.compute_MSE(insta_edge.get_mat(), moved_edge.get_mat());
+
+        std::cout << std::endl
+                  << "img edge detection" << std::endl;
+        std::cout << image.get_name() << std::endl;
+
+        double eva_img = 100000;
+        int count = 0;
+
+        std::vector<std::vector<double>> eva_img_vec;
+
+        // 原点が固定, z軸まわりの回転
+        // 中心からプラスマイナス方向に動かす
+        for (int i = 0; i < image.get_width() / 2; i++)
+        {
+            // 中心からの動かす
+            EdgeImg moved_edge("moved_edge");
+            moved_edge.set_mat(lidar_edge.shift(i, 0));
+            double mse = insta_edge.compute_MSE(insta_edge.get_mat(), moved_edge.get_mat());
+            std::cout << "i: " << i << " mse: " << mse << std::endl;
+            eva_img_vec.push_back({static_cast<double>(i), mse});
+
+            if (eva_img > mse)
+            {
+                eva_img = mse;
+                count = i;
+            }
+        }
+
+        // 反対側
+        for (int i = 0; i < image.get_width() / 2; i++)
+        {
+            // 中心からの動かす
+            EdgeImg moved_edge("moved_edge");
+            moved_edge.set_mat(lidar_edge.shift(-i, 0));
+            double mse = insta_edge.compute_MSE(insta_edge.get_mat(), moved_edge.get_mat());
+            std::cout << "i: " << -i << " mse: " << mse << std::endl;
+            eva_img_vec.push_back({static_cast<double>(i), mse});
+
+            if (eva_img > mse)
+            {
+                eva_img = mse;
+                count = -i;
+            }
+        }
+
+        obj_io.output_csv("out/" + date + "/" + date + "evaimg.csv", eva_img_vec);
+        std::cout << "RESULT : mse: " << count << " " << eva_img << std::endl;
+
+        double shift_angle = count * 360.0 / image.get_width() - 360;
+        std::cout << "angle :" << shift_angle << std::endl;
+    }
+
+    int count = -498;
+    double eva_img = 899.035681593153;
+
+    std::cout << "shift_horizontal" << std::endl;
+    EdgeImg shift_horizontal("shift_horizontal");
+    shift_horizontal.set_mat(lidar_edge.shift(count, 0));
+
+    shift_horizontal.img_alpha_blending(shift_horizontal.get_mat(), insta_edge.get_mat(), 1.0);
+    cv::imwrite("out/" + date + "/" + "shift_horizontal.png", shift_horizontal.get_mat());
+
+    // ====== change the height of lidar point
+    std::cout << "==============vertical_check" << std::endl;
+    double split = 0.05;
+    double width_search = 0.2;
+    std::vector<std::vector<double>> eva_img_vec_height;
+
+    for (int i = 0; i < static_cast<int>(width_search / split); i++)
+    {
+        PointSet move_point;
+        rmfloor_point.transform(Eigen::Vector3d(0, 0, -split));
+        move_point.add_point(rmfloor_point);
+        move_point.convert_to_polar();
+        LidarImg lidar_img_height_change("lidar_change_height");
+        LidarImg tmp;
+        lidar_img_height_change.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
+
+        tmp.ply_to_360paranoma_img(move_point);
+        // move_point.print();
+        lidar_img_height_change.set_mat(tmp.shift(count, 0));
+        cv::imwrite("out/" + date + "/" + "move_ply2img_origin.png", lidar_img_height_change.get_mat());
+        std::cout << "==============vertical_check" << std::endl;
+
+        lidar_img_height_change.closing(3, 0, 1);
+        cv::imwrite("out/" + date + "/" + "move_ply2img_closing.png", lidar_img_height_change.get_mat());
+
+        EdgeImg lidar_edge_height_change("lidar_edge");
+        // lidar_edge_height_change.set_mat(lidar_img_height_change.get_mat());
+        lidar_edge_height_change.detect_edge_with_sobel(lidar_img_height_change.get_mat());
+        // lidar_edge_height_change.detect_edge_with_canny(lidar_img_height_change.get_mat());
+        lidar_edge_height_change.show("lidar_sobel", 0.25);
+        cv::imwrite("out/" + date + "/" + "move_ply2img_closing_sobel.png", lidar_edge_height_change.get_mat());
+
+        double mse = insta_edge.compute_MSE(insta_edge.get_mat(), lidar_edge_height_change.get_mat());
         std::cout << "i: " << i << " mse: " << mse << std::endl;
-        eva_img_vec.push_back({static_cast<double>(i), mse});
+        eva_img_vec_height.push_back({static_cast<double>(i), mse});
 
         if (eva_img > mse)
         {
@@ -1024,39 +1105,11 @@ void PointOperation::test_location()
         }
     }
 
-    // 反対側
-    for (int i = 0; i < image.get_width() / 2; i++)
-    {
-        // 中心からの動かす
-        EdgeImg moved_edge("moved_edge");
-        moved_edge.set_mat(lidar_edge.shift(-i, 0));
-        double mse = insta_edge.compute_MSE(insta_edge.get_mat(), moved_edge.get_mat());
-        std::cout << "i: " << i << " mse: " << mse << std::endl;
-        eva_img_vec.push_back({static_cast<double>(i), mse});
-
-        if (eva_img > mse)
-        {
-            eva_img = mse;
-            count = i;
-        }
-    }
-
-    obj_io.output_csv("out/" + date + "/" + date + "evaimg.csv", eva_img_vec);
+    obj_io.output_csv("out/" + date + "/" + date + "evaimg_vertical.csv", eva_img_vec_height);
     std::cout << "RESULT : mse: " << count << " " << eva_img << std::endl;
 
-    double shift_angle = count * 360.0 / image.get_width() - 360;
-    std::cout << "angle :" << shift_angle << std::endl;
-
-    // shift処理 テスト
-    std::cout << "shift_" << std::endl;
-    EdgeImg shift_("shift_test");
-    shift_.set_mat(lidar_edge.shift(count, 0));
-
-    shift_.img_alpha_blending(shift_.get_mat(), insta_edge.get_mat(), 1.0);
-    cv::imwrite("out/" + date + "/" + "shift_.png", shift_.get_mat());
-
-    // 高さ方法を合わせる
-    // シフトしたときに投影しなおしてから mseの繰り返し。
+    // double shift_angle = count * 360.0 / image.get_width() - 360;
+    // std::cout << "angle :" << shift_angle << std::endl;
 
     // 画像のedgeの点を球の画像にプロットする
     // PointSet img_projection_unisphere;
