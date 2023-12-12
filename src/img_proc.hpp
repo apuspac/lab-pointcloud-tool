@@ -53,6 +53,7 @@ public:
     // 表示
     void show(std::string, double);
     void show(std::string, double, const cv::Mat);
+    void check_pixel_value();
 
     // 画像処理
     cv::Mat shift(int, int);

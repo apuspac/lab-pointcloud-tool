@@ -223,11 +223,12 @@ void EdgeImg::detect_edge_with_sobel(const cv::Mat &origin_img)
 
     // cv::addWeighted(sobel_x, 1.0, sobel_y, 1.0, 0.0, tmp);
     sobel_x.copyTo(tmp);
-    // cv::imshow("sobel", tmp);
+    // show("sobel", 0.25);
+    tmp.copyTo(img);
 
+    // 絶対値処理をしない場合は、負の値が出てくるので、showは右側のエッジが出てこない。
     cv::convertScaleAbs(tmp, tmp);
 
-    tmp.copyTo(img);
     // show("sobel", 0.25);
 
     // tmp.copyTo(img);
@@ -468,4 +469,27 @@ cv::Mat InstaImg::shift(int x, int y)
     //     }
     // }
     // return out_mat;
+}
+
+void InstaImg::check_pixel_value()
+{
+    std::cout << "pixel value:" << std::endl;
+
+    for (int i = 1000; i < img.rows / 50; ++i)
+    {
+        for (int j = 500; j < img.cols / 50; ++j)
+        {
+            // 画素の値を取得
+            // cv::Vec3b pixel = img.at<cv::Vec3b>(i, j);
+
+            // // 各チャンネルの値を表示
+            // std::cout << "(" << static_cast<int>(pixel[0]) << ", "
+            //           << static_cast<int>(pixel[1]) << ", "
+            //           << static_cast<int>(pixel[2]) << ") ";
+
+            // もしグレースケール画像なら channel は 1
+            std::cout << img.at<double>(i, j) << " ";
+        }
+        std::cout << std::endl;
+    }
 }

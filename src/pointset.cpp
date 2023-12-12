@@ -36,7 +36,7 @@ void PointSet::print_polar()
 
 void PointSet::add_point(PointSet add_pointset)
 {
-    add_pointset.get_point_all();
+    // add_pointset.get_point_all();
 
     for (auto point : add_pointset.get_point_all())
     {

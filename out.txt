@@ -1,0 +1,40 @@
+mode:9
+
+default_dir_path: data/projection/
+
+jsonfile_path: data/20230711-bbox/20240711-bbox.json
+
+corresp_img_file_name: 
+img.dat
+
+corresp_ply_file_name: 
+ply.dat
+
+img_file_path: 
+img/PIC_20230711.jpg
+
+ply_file_path: 
+Frame_20230711_nowall.ply
+mode select
+invalid argument:format
+invalid argument:ascii
+invalid argument:element
+invalid argument:vertex
+invalid argument:property
+invalid argument:float
+invalid argument:x
+invalid argument:property
+invalid argument:float
+invalid argument:y
+invalid argument:property
+invalid argument:float
+invalid argument:z
+Success load image: img/PIC_20230711.jpg
+get_date
+20231212_1750
+pixel value:
+
+LiDAR edge detection
+convert_to_polar
+pixel value:
+pixel value:
