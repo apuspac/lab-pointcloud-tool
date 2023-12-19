@@ -13,17 +13,6 @@ int main(int argc, char *argv[])
 {
     // ./Rotation --img_cp img.dat --ply_cp ply.dat --ply kyoiku.ply --img ../../img/kyoiku.JPG --dir ../../ply_data/test_idou/
 
-    // 有効桁数
-    std::cout << std::setprecision(15);
-
-    PointOperation opt;
-    ObjectIO::option_process(argc, argv, opt);
-    opt.print();
-    opt.mode_select();
-    
-
-    
-
     // auto sphere = open3d::geometry::TriangleMesh::CreateSphere(1.0);
     // sphere->ComputeVertexNormals();
     // sphere->PaintUniformColor({0.0, 1.0, 0.0});
@@ -37,9 +26,17 @@ int main(int argc, char *argv[])
 
     // pointcloud->points_ = test_point;
     // pointcloud->colors_ = test_color;
-
-    // std::cout << "OK" << std::endl;
+    // // std::cout << "OK" << std::endl;
     // open3d::visualization::DrawGeometries({pointcloud});
+
+    // 有効桁数
+    std::cout << std::setprecision(15);
+
+    PointOperation opt;
+    ObjectIO::option_process(argc, argv, opt);
+    opt.print();
+    opt.mode_select();
+
     //
 
     // grid

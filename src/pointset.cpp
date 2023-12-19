@@ -100,7 +100,7 @@ void PointSet::create_histgram()
 
     std::vector<double> distance_from_center;
 
-    // 中心からの距離でヒストグラムを作成する
+    // 点群の中心からの距離を計算
     for (const auto &point : point3)
     {
         double tmp_dis_center = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0));
@@ -113,6 +113,7 @@ void PointSet::create_histgram()
     auto is_within_roomrange = [](double x)
     { return (x < 1000.0 && x > 0.0); };
 
+    // 各点の距離をintervalで割って、histgram_intervalsに格納
     for (const auto &distance : distance_from_center)
     {
         // std::cout << (distance / interval) << "    ";
@@ -125,10 +126,10 @@ void PointSet::create_histgram()
 
     std::cout << "histgram_distance_from_center" << std::endl;
 
-    for (unsigned int i = 0; i < histgram_intervals.size(); i++)
-    {
-        // std::cout << i * interval << ", " << histgram_intervals.at(i) << std::endl;
-    }
+    // for (unsigned int i = 0; i < histgram_intervals.size(); i++)
+    // {
+    // std::cout << i * interval << ", " << histgram_intervals.at(i) << std::endl;
+    // }
 
     std::array<int, 500> histgram_one_diff = {};
 
@@ -161,7 +162,7 @@ void PointSet::create_histgram()
             // std::cout << std::distance(histgram_one_diff.begin(), itr) * interval << std::endl;
             if (flag == false)
             {
-                auto peak_range = std::distance(histgram_one_diff.begin(), itr) * interval;
+                auto peak_range = static_cast<double>(std::distance(histgram_one_diff.begin(), itr)) * interval;
                 std::cout << "first peak:" << peak_range << std::endl;
                 first_peak = peak_range;
                 flag = true;
@@ -206,7 +207,7 @@ void PointSet::output_hist(std::string count)
  */
 void PointSet::convert_to_polar()
 {
-    std::cout << "convert_to_polar" << std::endl;
+    // std::cout << "convert_to_polar" << std::endl;
 
     for (auto &point : point3)
     {
@@ -215,7 +216,7 @@ void PointSet::convert_to_polar()
         double theta = std::acos(point(2) / r);
         double phi = std::atan2(point(1), point(0));
 
-        int index = &point - &point3[0];
+        int index = static_cast<int>(&point - &point3[0]);
 
         if (point3_polar.size() < point3.size())
         {

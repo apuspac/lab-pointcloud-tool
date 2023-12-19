@@ -119,7 +119,7 @@
                 "9",
             ],
         },{
-            "label": "projection_3d",
+            "label": "projection_1213",
             "type": "shell",
             "command": "src/build/Rotation",
             "args": [
@@ -128,15 +128,15 @@
                 "--ply_cp",
                 "ply.dat",
                 "--ply",
-                "out.ply",
+                "out-1.ply",
                 "--img",
-                "img/PIC_20230711.jpg",
+                "img/20231213/PIC_20231213_point1.jpg",
                 "--dir",
-                "data/projection_3d/",
+                "data/20231213/",
                 "--json",
                 "data/20230711-bbox/20230711-bbox.json",
                 "--mode",
-                "10",
+                "9",
             ],
         },
         {

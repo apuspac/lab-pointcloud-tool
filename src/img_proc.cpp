@@ -224,11 +224,11 @@ void EdgeImg::detect_edge_with_sobel(const cv::Mat &origin_img)
     // cv::addWeighted(sobel_x, 1.0, sobel_y, 1.0, 0.0, tmp);
     sobel_x.copyTo(tmp);
     // show("sobel", 0.25);
-    tmp.copyTo(img);
 
     // 絶対値処理をしない場合は、負の値が出てくるので、showは右側のエッジが出てこない。
     cv::convertScaleAbs(tmp, tmp);
 
+    tmp.copyTo(img);
     // show("sobel", 0.25);
 
     // tmp.copyTo(img);

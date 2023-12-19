@@ -41,8 +41,8 @@ std::string PointOperation::get_localtime()
     ss << local_time->tm_mon + 1;
     ss << local_time->tm_mday;
     ss << "_";
-    ss << local_time->tm_hour;
-    ss << local_time->tm_min;
+    ss << std::setw(2) << std::setfill('0') << local_time->tm_hour;
+    ss << std::setw(2) << std::setfill('0') << local_time->tm_min;
     // ss << local_time->tm_sec;
 
     return ss.str();
@@ -943,7 +943,7 @@ void PointOperation::test_location()
 
     ObjectIO obj_io;
 
-    // load plydata img
+    // load
     PointSet ply_point("plydata");
     obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
     InstaImg image;
@@ -951,51 +951,62 @@ void PointOperation::test_location()
 
     // 床の点を除去
     // HACK: 本当はここも平面当てはめ PCAなどでできそうではある。
-    Eigen::Vector3d floor_height = {0, 0, -1.070};
+    Eigen::Vector3d floor_height = {0, 0, -1.10};
     PointSet removed_floor_ply_point, rmfloor_point;
     remove_pointset_floor(ply_point, removed_floor_ply_point, floor_height);
     remove_pointset_floor(ply_point, rmfloor_point, floor_height);
+    // obj_io.output_ply(rmfloor_point, std::string("plypoint") + ".ply");
 
+    // create out_dir
     set_date();
     std::cout << date << std::endl;
     obj_io.create_dir("out/" + date);
 
     // ========== ここから img 処理 ==========
 
-    // edge検出
-    EdgeImg insta_edge("insta_edge");
-    insta_edge.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
-    // insta_edge.detect_edge_with_canny(image.get_mat());
-    // insta_edge.closing(5, 0, 1);
-    insta_edge.detect_edge_with_sobel(image.get_mat());
-    // insta_edge.show("insta_sobel", 0.25);
-    cv::imwrite("out/" + date + "/" + " instaimg_sobel.png", insta_edge.get_mat());
-    insta_edge.check_pixel_value();
+    /**
+     * @brief sobel フィルタを使ってedge検出
+     *
+     */
+    auto insta_img_edge_detection = [this](EdgeImg &_insta_edge, InstaImg &_image)
+    {
+        _insta_edge.set_zero_imgMat(_image.get_height(), _image.get_width(), CV_8UC1);
+        _insta_edge.detect_edge_with_sobel(_image.get_mat());
+        cv::imwrite("out/" + date + "/" + "instaimg_sobel.png", _insta_edge.get_mat());
+    };
 
-    //============ LiDAR処理
+    /**
+     * @brief LiDAR点群を360度画像に投影してsobleフィルタによるedge検出
+     *
+     */
+    auto lidar_img_edge_detection = [this](EdgeImg &_lidar_edge, PointSet &_removed_floor_ply_point, InstaImg &_image)
+    {
+        LidarImg lidar_img("lidar_edge");
+        _removed_floor_ply_point.convert_to_polar();
+        lidar_img.set_zero_imgMat(_image.get_height(), _image.get_width(), CV_8UC1);
+        lidar_img.ply_to_360paranoma_img(_removed_floor_ply_point);
+        cv::imwrite("out/" + date + "/" + "ply2img_origin.png", lidar_img.get_mat());
+
+        lidar_img.closing(3, 0, 1);
+        cv::imwrite("out/" + date + "/" + "ply2img_closing.png", lidar_img.get_mat());
+        _lidar_edge.detect_edge_with_sobel(lidar_img.get_mat());
+        cv::imwrite("out/" + date + "/" + "ply2img_closing_sobel.png", _lidar_edge.get_mat());
+    };
+
+    EdgeImg insta_edge("insta_edge");
+    insta_img_edge_detection(insta_edge, image);
+
+    // ========== ここから LiDAR 処理 ==========
     std::cout << std::endl
               << "LiDAR edge detection" << std::endl;
-    LidarImg lidar_img("lidar_edge");
-    removed_floor_ply_point.convert_to_polar();
-    lidar_img.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
-
-    lidar_img.ply_to_360paranoma_img(removed_floor_ply_point);
-    cv::imwrite("out/" + date + "/" + "ply2img_origin.png", lidar_img.get_mat());
-    lidar_img.check_pixel_value();
-
-    lidar_img.closing(3, 0, 1);
-    cv::imwrite("out/" + date + "/" + "ply2img_closing.png", lidar_img.get_mat());
-
     EdgeImg lidar_edge("lidar_edge");
-    // lidar_edge.set_mat(lidar_img.get_mat());
-    lidar_edge.detect_edge_with_sobel(lidar_img.get_mat());
-    // lidar_edge.detect_edge_with_canny(lidar_img.get_mat());
-    // lidar_edge.show("lidar_sobel", 0.25);
-    cv::imwrite("out/" + date + "/" + "ply2img_closing_sobel.png", lidar_edge.get_mat());
-    lidar_edge.check_pixel_value();
+    lidar_img_edge_detection(lidar_edge, removed_floor_ply_point, image);
 
-    // double mse_shift = insta_edge.compute_MSE(insta_edge.get_mat(), lidar_edge.get_mat());
-    // std::cout << mse_shift << std::endl;
+    EdgeImg non_shift("no_shift");
+    non_shift.set_mat(lidar_edge.get_mat());
+
+    non_shift.img_alpha_blending(non_shift.get_mat(), insta_edge.get_mat(), 1.0);
+    cv::imwrite("out/" + date + "/" + "non_shift.png", non_shift.get_mat());
 
     std::string userInput;
     std::getline(std::cin, userInput);
@@ -1039,7 +1050,7 @@ void PointOperation::test_location()
         moved_edge.set_mat(lidar_edge.shift(-i, 0));
         double mse = insta_edge.compute_MSE(insta_edge.get_mat(), moved_edge.get_mat());
         std::cout << "i: " << -i << " mse: " << mse << std::endl;
-        eva_img_vec.push_back({static_cast<double>(i), mse});
+        eva_img_vec.push_back({static_cast<double>(-i), mse});
 
         if (eva_img > mse)
         {
@@ -1063,7 +1074,7 @@ void PointOperation::test_location()
     EdgeImg shift_horizontal("shift_horizontal");
     shift_horizontal.set_mat(lidar_edge.shift(count, 0));
 
-    // shift_horizontal.img_alpha_blending(shift_horizontal.get_mat(), insta_edge.get_mat(), 1.0);
+    shift_horizontal.img_alpha_blending(shift_horizontal.get_mat(), insta_edge.get_mat(), 1.0);
     cv::imwrite("out/" + date + "/" + "shift_horizontal.png", shift_horizontal.get_mat());
 
     // ====== change the height of lidar point
@@ -1102,13 +1113,13 @@ void PointOperation::test_location()
         // cv::imwrite("out/" + date + "/" + "move_ply2img_closing_sobel-" + file_name + ".png", lidar_edge_height_change.get_mat());
 
         double mse = insta_edge.compute_MSE(insta_edge.get_mat(), lidar_edge_height_change.get_mat());
-        std::cout << "i: " << i << " mse: " << mse << std::endl;
-        eva_img_vec_height.push_back({static_cast<double>(i), mse});
+        std::cout << "i: " << -i << " mse: " << mse << std::endl;
+        eva_img_vec_height.push_back({static_cast<double>(-i), mse});
 
         if (eva_img > mse)
         {
             eva_img = mse;
-            count_vertical = i;
+            count_vertical = -i;
         }
     }
 
@@ -1128,10 +1139,10 @@ void PointOperation::test_location()
 
         shift_tmp.ply_to_360paranoma_img(move_point);
         lidar_img_height_change.set_mat(shift_tmp.shift(count, 0));
-        cv::imwrite("out/" + date + "/" + "move_ply2img_origin.png", lidar_img_height_change.get_mat());
+        // cv::imwrite("out/" + date + "/" + "move_ply2img_origin.png", lidar_img_height_change.get_mat());
 
         lidar_img_height_change.closing(3, 0, 1);
-        cv::imwrite("out/" + date + "/" + "move_ply2img_closing.png", lidar_img_height_change.get_mat());
+        // cv::imwrite("out/" + date + "/" + "move_ply2img_closing.png", lidar_img_height_change.get_mat());
 
         EdgeImg lidar_edge_height_change("lidar_edge");
         // lidar_edge_height_change.set_mat(lidar_img_height_change.get_mat());
@@ -1157,6 +1168,32 @@ void PointOperation::test_location()
     obj_io.output_csv("out/" + date + "/" + date + "evaimg_vertical.csv", eva_img_vec_height);
     std::cout << "RESULT : mse: " << count << " " << count_vertical << " " << eva_img << std::endl;
 
+    // 初期位置に戻す
+    rmfloor_point.transform(Eigen::Vector3d(0, 0, -width_search));
+
+    PointSet move_point;
+    rmfloor_point.transform(Eigen::Vector3d(0, 0, split * count_vertical));
+    move_point.add_point(rmfloor_point);
+    move_point.convert_to_polar();
+    LidarImg lidar_img_height_change("lidar_change_height");
+    LidarImg shift_tmp;
+    lidar_img_height_change.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
+    shift_tmp.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
+
+    shift_tmp.ply_to_360paranoma_img(move_point);
+    lidar_img_height_change.set_mat(shift_tmp.shift(count, 0));
+    cv::imwrite("out/" + date + "/" + "move_ply2img_origin.png", lidar_img_height_change.get_mat());
+
+    lidar_img_height_change.closing(3, 0, 1);
+    cv::imwrite("out/" + date + "/" + "move_ply2img_closing.png", lidar_img_height_change.get_mat());
+
+    EdgeImg lidar_edge_height_change("lidar_edge");
+    // lidar_edge_height_change.set_mat(lidar_img_height_change.get_mat());
+    lidar_edge_height_change.detect_edge_with_sobel(lidar_img_height_change.get_mat());
+
+    lidar_edge_height_change.img_alpha_blending(lidar_edge_height_change.get_mat(), insta_edge.get_mat(), 1.0);
+    cv::imwrite("out/" + date + "/" + "shift_vertical.png", lidar_edge_height_change.get_mat());
+
     // double shift_angle = count * 360.0 / image.get_width() - 360;
     // std::cout << "angle :" << shift_angle << std::endl;
 
@@ -1164,7 +1201,7 @@ void PointOperation::test_location()
     // PointSet img_projection_unisphere;
     // image.convert_to_unitsphere(img_projection_unisphere);
 
-    std::cout << "end" << std::endl;
+    std::cout << "end more" << std::endl;
 }
 
 /**
