@@ -321,7 +321,7 @@ void InstaImg::img_alpha_blending(const cv::Mat &blend_a, const cv::Mat &blend_b
     cv::addWeighted(out_a, weight, out_b, weight, 0, output);
 
     // show
-    show("alpha blending:" + name, 0.25, output);
+    // show("alpha blending:" + name, 0.25, output);
     output.copyTo(img);
     // img = output;
     // cv::imwrite("output_image.png", output);
@@ -425,6 +425,38 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point)
 }
 
 /**
+ * @brief plyから得られる点群を全方位画像に投影する
+ *
+ * @param ply_point 変換する画像
+ */
+void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
+{
+    std::vector store_info(width, std::vector(height, std::vector<Eigen::Vector3d>()));
+    if (flag == true)
+    {
+        std::vector store_info(width, std::vector(height, std::vector<Eigen::Vector3d>()));
+        // 極座標から画像へ投影
+        for (auto &point : ply_point.get_point_all_polar())
+        {
+            double u_dash = point(2) / (2.0 * M_PI);
+            double v_dash = point(1) / M_PI;
+            // で、おそらく画像は視点座標系で左手系になるので、
+            // 右手系と合わせるために、 反転して、90度回転させる
+            int u = static_cast<int>(-(u_dash * width) + (width / 4));
+            int v = static_cast<int>(v_dash * height);
+
+            if (u > width)
+            {
+                u -= static_cast<int>(width);
+            }
+
+            store_info[u][v].push_back(point);
+            set_pixel_255(u, v);
+        }
+    }
+}
+
+/**
  * @brief 画像を平行移動する はみ出した場所は反対側に移動
  *
  * @param x
@@ -497,8 +529,78 @@ void InstaImg::check_pixel_value()
 void InstaImg::diff_pixel(const cv::Mat &_img)
 {
     std::cout << "diff_pixel" << std::endl;
-    cv::Mat diff_img;
-    cv::absdiff(img, _img, diff_img);
+    cv::Mat diff_img(img.rows, img.cols, CV_8UC1, cv::Scalar(0));
+
+    struct Pixel_info
+    {
+        int i;
+        int j;
+        int pixel_value;
+    };
+
+    std::vector<Pixel_info> list_255;
+
+    for (int j = 0; j < img.cols; ++j)
+    {
+        for (int i = 0; i < img.rows; ++i)
+        {
+            // 画素の値を取得
+            uchar *ptr = img.data + img.step * i + img.channels() * j;
+            uchar *_ptr = _img.data + _img.step * i + _img.channels() * j;
+
+            if (ptr[0] > 200)
+            {
+                // std::cout << "pixel: " << static_cast<double>(ptr[0]) << " _pixel: " << static_cast<double>(_ptr[0]) << std::endl;
+
+                // diff_img.at<u_char>(i, j) = 255;
+                Pixel_info tmp;
+                tmp.i = i;
+                tmp.j = j;
+                tmp.pixel_value = _ptr[0];
+                list_255.push_back(tmp);
+            }
+
+            // もしグレースケール画像なら channel は 1
+            // diff_img.at<double>(i, j) = img.at<double>(i, j) - _img.at<double>(i, j);
+        }
+    }
+
+    // 高い順にソート
+    // 比較関数を定義
+    // bool comparePixelValue(const PixelInfo& a, const PixelInfo& b) {
+    //     return a.pixelValue < b.pixelValue;
+    // }
+    // 比較関数はラムダ式で書いているが、定義することも可能
+    std::sort(list_255.begin(), list_255.end(), [](Pixel_info a, Pixel_info b)
+              { return a.pixel_value > b.pixel_value; });
+
+    // ソート後のベクトルの内容を表示
+    int count = 0;
+
+    // for (const auto &pixel : list_255)
+    // {
+    //     std::cout << "{i: " << pixel.i << ", j: " << pixel.j << ", pixelValue: " << pixel.pixel_value << "} ";
+    // if(count < 20){
+    //     diff_img.at<u_char>(pixel.i, pixel.j) = 255;
+    //     count++ /*  */;
+    // }else{
+    //     break;
+    // }
+    // }
+
+    for (const auto &pixel : list_255)
+    {
+        std::cout << "{i: " << pixel.i << ", j: " << pixel.j << ", pixelValue: " << pixel.pixel_value << "} ";
+        if (count < 30)
+        {
+            diff_img.at<u_char>(pixel.i, pixel.j) = 255;
+            count++ /*  */;
+        }
+        else
+        {
+            break;
+        }
+    }
 
     cv::imwrite("diff.png", diff_img);
 }

@@ -46,7 +46,12 @@ public:
     // set
     void set_height(int _height) { height = _height; };
     void set_width(int _width) { width = _width; };
-    void set_mat(cv::Mat _mat) { img = _mat; };
+    void set_mat(cv::Mat _mat)
+    {
+        img = _mat;
+        height = img.rows;
+        width = img.cols;
+    };
     void set_zero_imgMat(int, int, int);
     void set_pixel_255(int, int);
 
@@ -92,15 +97,20 @@ public:
  */
 class LidarImg : public InstaImg
 {
-    // private:
-    //     cv::Mat img_projected;
+private:
+    std::vector<std::vector<std::vector<EIgen::Vector3d>>> store_info;
 
 public:
     LidarImg() : InstaImg() {}
     LidarImg(std::string _name) : InstaImg(_name) {}
     ~LidarImg() {}
 
+    void set_store_info(int, int, Eigen::Vector3d);
+    const Eigen::Vector3d &get_store_info(int x, int y, int index) { return sotre_info[x][y][index]; }
+    const std::vector<std::vector<std::vector<Eigen::Vector3d>>> &get_store_info() const { return store_info; }
+
     void ply_to_360paranoma_img(PointSet &);
+    void ply_to_360paranoma_img(PointSet &, int);
 };
 
 #endif
