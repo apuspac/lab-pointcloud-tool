@@ -65,6 +65,8 @@ public:
     void closing(int, int, int);
     void opening(int, int, int);
     void gaussian_blur(int);
+    void diff_pixel(const cv::Mat &);
+    void diff_img(const cv::Mat &);
 };
 
 /**

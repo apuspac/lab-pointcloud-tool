@@ -493,3 +493,21 @@ void InstaImg::check_pixel_value()
         std::cout << std::endl;
     }
 }
+
+void InstaImg::diff_pixel(const cv::Mat &_img)
+{
+    std::cout << "diff_pixel" << std::endl;
+    cv::Mat diff_img;
+    cv::absdiff(img, _img, diff_img);
+
+    cv::imwrite("diff.png", diff_img);
+}
+
+void InstaImg::diff_img(const cv::Mat &_img)
+{
+    std::cout << "diff_pixel" << std::endl;
+    cv::Mat diff_img;
+    cv::absdiff(img, _img, diff_img);
+
+    cv::imwrite("diff.png", diff_img);
+}
