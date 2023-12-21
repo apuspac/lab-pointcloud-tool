@@ -98,15 +98,15 @@ public:
 class LidarImg : public InstaImg
 {
 private:
-    std::vector<std::vector<std::vector<EIgen::Vector3d>>> store_info;
+    std::vector<std::vector<std::vector<Eigen::Vector3d>>> store_info;
 
 public:
     LidarImg() : InstaImg() {}
     LidarImg(std::string _name) : InstaImg(_name) {}
     ~LidarImg() {}
 
-    void set_store_info(int, int, Eigen::Vector3d);
-    const Eigen::Vector3d &get_store_info(int x, int y, int index) { return sotre_info[x][y][index]; }
+    void set_store_info(int x, int y, Eigen::Vector3d point_data) { store_info[x][y].push_back(point_data); }
+    const Eigen::Vector3d &get_store_info(int x, int y, int index) { return store_info[x][y][index]; }
     const std::vector<std::vector<std::vector<Eigen::Vector3d>>> &get_store_info() const { return store_info; }
 
     void ply_to_360paranoma_img(PointSet &);

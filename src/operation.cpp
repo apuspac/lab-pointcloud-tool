@@ -1153,7 +1153,18 @@ void PointOperation::test_location()
     rmfloor_point.transform(Eigen::Vector3d(0, 0, split * count_vertical));
     move_point.add_point(rmfloor_point);
     EdgeImg lidar_edge_height_change("lidar_change_height");
-    lidar_to_img_edge_detection_shift(lidar_edge_height_change, move_point, image, count);
+    // lidar_to_img_edge_detection_shift(lidar_edge_height_change, move_point, image, count);
+
+    LidarImg lidar_img("lidar_edge");
+    LidarImg shift_tmp("shift_tmp");
+    move_point.convert_to_polar();
+    lidar_img.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
+    shift_tmp.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
+    lidar_img.ply_to_360paranoma_img(move_point, true);
+    shift_tmp.set_mat(lidar_img.shift(count, 0));
+    shift_tmp.closing(3, 0, 1);
+    lidar_edge_height_change.detect_edge_with_sobel(shift_tmp.get_mat());
+    cv::imwrite("out/" + date + "/" + "ply2img_closing_sobel.png", lidar_edge.get_mat());
 
     EdgeImg alpha_img("alpha_img");
     alpha_img.set_mat(lidar_edge_height_change.get_mat());

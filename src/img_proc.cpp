@@ -434,7 +434,7 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
     std::vector store_info(width, std::vector(height, std::vector<Eigen::Vector3d>()));
     if (flag == true)
     {
-        std::vector store_info(width, std::vector(height, std::vector<Eigen::Vector3d>()));
+        // std::vector store_info(width, std::vector(height, std::vector<Eigen::Vector3d>()));
         // 極座標から画像へ投影
         for (auto &point : ply_point.get_point_all_polar())
         {
@@ -450,7 +450,8 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
                 u -= static_cast<int>(width);
             }
 
-            store_info[u][v].push_back(point);
+            // store_info[u][v].push_back(point);
+            set_store_info(u, v, point);
             set_pixel_255(u, v);
         }
     }
