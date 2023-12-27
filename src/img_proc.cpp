@@ -431,7 +431,7 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point)
  */
 void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
 {
-    std::vector store_info(width, std::vector(height, std::vector<Eigen::Vector3d>()));
+    // std::vector store_info(width, std::vector(height, std::vector<Eigen::Vector3d>()));
     if (flag == true)
     {
         // std::vector store_info(width, std::vector(height, std::vector<Eigen::Vector3d>()));

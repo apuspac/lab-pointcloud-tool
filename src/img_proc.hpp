@@ -101,7 +101,8 @@ private:
     std::vector<std::vector<std::vector<Eigen::Vector3d>>> store_info;
 
 public:
-    LidarImg() : InstaImg() {}
+    LidarImg() : InstaImg() { store_info.resize(width, std::vector<std::vector<Eigen::Vector3d>>(height, std::vector<Eigen::Vector3d>())); }
+
     LidarImg(std::string _name) : InstaImg(_name) {}
     ~LidarImg() {}
 
