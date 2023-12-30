@@ -527,6 +527,11 @@ void InstaImg::check_pixel_value()
     }
 }
 
+/**
+ * @brief 同じ点を取ってくる。 輝度値で判断しようとしたが、最小二乗法にはいらないらしい。
+ *
+ * @param _img
+ */
 void InstaImg::diff_pixel(const cv::Mat &_img)
 {
     std::cout << "diff_pixel" << std::endl;
@@ -545,7 +550,7 @@ void InstaImg::diff_pixel(const cv::Mat &_img)
     {
         for (int i = 0; i < img.rows; ++i)
         {
-            // 画素の値を取得
+            // それぞれの画素の値を取得
             uchar *ptr = img.data + img.step * i + img.channels() * j;
             uchar *_ptr = _img.data + _img.step * i + _img.channels() * j;
 
@@ -578,24 +583,13 @@ void InstaImg::diff_pixel(const cv::Mat &_img)
     // ソート後のベクトルの内容を表示
     int count = 0;
 
-    // for (const auto &pixel : list_255)
-    // {
-    //     std::cout << "{i: " << pixel.i << ", j: " << pixel.j << ", pixelValue: " << pixel.pixel_value << "} ";
-    // if(count < 20){
-    //     diff_img.at<u_char>(pixel.i, pixel.j) = 255;
-    //     count++ /*  */;
-    // }else{
-    //     break;
-    // }
-    // }
-
     for (const auto &pixel : list_255)
     {
         std::cout << "{i: " << pixel.i << ", j: " << pixel.j << ", pixelValue: " << pixel.pixel_value << "} ";
         if (count < 30)
         {
             diff_img.at<u_char>(pixel.i, pixel.j) = 255;
-            count++ /*  */;
+            count++;
         }
         else
         {
