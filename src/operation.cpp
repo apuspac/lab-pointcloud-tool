@@ -1171,7 +1171,8 @@ void PointOperation::test_location()
     alpha_img.img_alpha_blending(alpha_img.get_mat(), insta_edge.get_mat(), 1.0);
     cv::imwrite("out/" + date + "/" + "shift_vertical.png", alpha_img.get_mat());
 
-    // 同じ点を取ってきてみる。
+    // LiDARのedge画像に対応した3次元点が欲しい。
+
     lidar_edge_height_change.diff_pixel(insta_edge.get_mat());
 
     std::cout << "end more" << std::endl;
