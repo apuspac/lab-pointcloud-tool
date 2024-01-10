@@ -118,6 +118,8 @@ public:
 
     void ply_to_360paranoma_img(PointSet &);
     void ply_to_360paranoma_img(PointSet &, int);
+
+    void get_corresponding_point(std::vector<Eigen::Vector3d> &, std::vector<std::vector<int>> &, EdgeImg &);
 };
 
 #endif

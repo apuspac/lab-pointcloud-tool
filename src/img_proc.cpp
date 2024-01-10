@@ -632,3 +632,25 @@ void LidarImg::set_store_info(int x, int y, Eigen::Vector3d point_data)
         store_info[x][y].push_back(point_data);
     }
 }
+
+void LidarImg::get_corresponding_point(std::vector<Eigen::Vector3d> &corresp_point, std::vector<std::vector<int>> &corresp_pixel, EdgeImg &edge_img_origin)
+{
+    std::cout << "get_corresponding_point" << std::endl;
+    cv::Mat edge_img = edge_img_origin.get_mat();
+
+    for (int v = 0; v < edge_img.rows; v++)
+    {
+        for (int u = 0; u < edge_img.cols; u++)
+        {
+            uchar *ptr = edge_img.data + edge_img.step * v;
+            if (ptr[u] > 200)
+            {
+                for (auto &point : store_info[v][u])
+                {
+                    corresp_point.push_back(point);
+                }
+                corresp_pixel.push_back({v, u});
+            }
+        }
+    }
+}
