@@ -425,35 +425,33 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point)
 }
 
 /**
- * @brief plyから得られる点群を全方位画像に投影する
+ * @brief plyから得られる点群を全方位画像に投影する。
  *
  * @param ply_point 変換する画像
+ * @param flag 画像に点を投影するかどうか
  */
 void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
 {
-    // std::vector store_info(width, std::vector(height, std::vector<Eigen::Vector3d>()));
-    if (flag == true)
+    // 極座標から画像へ投影
+    for (auto &point : ply_point.get_point_all_polar())
     {
-        // std::vector store_info(width, std::vector(height, std::vector<Eigen::Vector3d>()));
-        // 極座標から画像へ投影
-        for (auto &point : ply_point.get_point_all_polar())
+        double u_dash = point(2) / (2.0 * M_PI);
+        double v_dash = point(1) / M_PI;
+        // で、おそらく画像は視点座標系で左手系になるので、
+        // 右手系と合わせるために、 反転して、90度回転させる
+        int u = static_cast<int>(-(u_dash * width) + (width / 4));
+        int v = static_cast<int>(v_dash * height);
+
+        if (u > width)
         {
-            double u_dash = point(2) / (2.0 * M_PI);
-            double v_dash = point(1) / M_PI;
-            // で、おそらく画像は視点座標系で左手系になるので、
-            // 右手系と合わせるために、 反転して、90度回転させる
-            int u = static_cast<int>(-(u_dash * width) + (width / 4));
-            int v = static_cast<int>(v_dash * height);
-
-            if (u > width)
-            {
-                u -= static_cast<int>(width);
-            }
-
-            // store_info[u][v].push_back(point);
-            set_store_info(u, v, point);
-            set_pixel_255(u, v);
+            u -= static_cast<int>(width);
         }
+
+        if (flag == true)
+        {
+            set_store_info(u, v, point);
+        }
+        set_pixel_255(u, v);
     }
 }
 

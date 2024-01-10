@@ -98,6 +98,7 @@ public:
 class LidarImg : public InstaImg
 {
 private:
+    // 点がどこに投影されたかを格納する。 u, v, (x,y,z)
     std::vector<std::vector<std::vector<Eigen::Vector3d>>> store_info;
 
 public:
@@ -108,6 +109,7 @@ public:
 
     void set_store_info(int x, int y, Eigen::Vector3d point_data) { store_info[x][y].push_back(point_data); }
     const Eigen::Vector3d &get_store_info(int x, int y, int index) { return store_info[x][y][index]; }
+    const std::vector<Eigen::Vector3d> &get_store_info(int x, int y) { return store_info[x][y]; }
     const std::vector<std::vector<std::vector<Eigen::Vector3d>>> &get_store_info() const { return store_info; }
 
     void ply_to_360paranoma_img(PointSet &);
