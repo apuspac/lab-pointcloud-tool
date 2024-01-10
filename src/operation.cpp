@@ -993,6 +993,10 @@ void PointOperation::test_location()
         cv::imwrite("out/" + date + "/" + "ply2img_closing_sobel.png", _lidar_edge.get_mat());
     };
 
+    /**
+     * @brief LiDAR点群を投影して シフトしたあと、edge検出
+     *
+     */
     auto lidar_to_img_edge_detection_shift = [this](EdgeImg &_lidar_edge, PointSet &_removed_floor_ply_point, InstaImg &_image, int shift_count)
     {
         LidarImg lidar_img("lidar_edge");
@@ -1074,7 +1078,7 @@ void PointOperation::test_location()
             }
         }
 
-        obj_io.output_csv("out/" + date + "/" + date + "evaimg.csv", eva_img_vec);
+        obj_io.output_csv_2double("out/" + date + "/" + date + "evaimg.csv", eva_img_vec);
         std::cout << "RESULT : mse: " << count << " " << eva_img << std::endl;
 
         double shift_angle = count * 360.0 / image.get_width() - 360;
@@ -1092,6 +1096,7 @@ void PointOperation::test_location()
         cv::imwrite("out/" + date + "/" + "shift_horizontal.png", shift_horizontal.get_mat());
 
         // ====== change the height of lidar point
+        // 点を動かしてから投影して、edge検出して　mse計算
         std::cout << "==============vertical_check" << std::endl;
         double split = 0.025;
         double width_search = 1.0;
@@ -1137,12 +1142,15 @@ void PointOperation::test_location()
                 count_vertical = i;
             }
         }
-        obj_io.output_csv("out/" + date + "/" + date + "evaimg_vertical.csv", eva_img_vec_height);
+        obj_io.output_csv_2double("out/" + date + "/" + date + "evaimg_vertical.csv", eva_img_vec_height);
         std::cout << "RESULT : mse: " << count << " " << count_vertical << " " << eva_img << std::endl;
 
         // 初期位置に戻す
         rmfloor_point.transform(Eigen::Vector3d(0, 0, -width_search));
     }
+
+    // ============================ テスト環境
+    // 手動でパラメータ打ち込んで テスト  mse合わせた画像を作る
 
     int count = -1962;
     int count_vertical = 0;
@@ -1160,7 +1168,9 @@ void PointOperation::test_location()
     move_point.convert_to_polar();
     lidar_img.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
     shift_tmp.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
+    lidar_img.resize_store_info(image.get_height(), image.get_width());
     lidar_img.ply_to_360paranoma_img(move_point, true);
+    std::cout << "PPPPPPP" << std::endl;
     shift_tmp.set_mat(lidar_img.shift(count, 0));
     shift_tmp.closing(3, 0, 1);
     lidar_edge_height_change.detect_edge_with_sobel(shift_tmp.get_mat());
@@ -1171,9 +1181,29 @@ void PointOperation::test_location()
     alpha_img.img_alpha_blending(alpha_img.get_mat(), insta_edge.get_mat(), 1.0);
     cv::imwrite("out/" + date + "/" + "shift_vertical.png", alpha_img.get_mat());
 
-    // LiDARのedge画像に対応した3次元点が欲しい。
+    // for (auto &point : lidar_img.get_store_info())
+    // {
+    //     for (auto &p : point)
+    //     {
+    //         for(auto &pp : p)
+    //         {
+    //             std::cout << pp.transpose() << std::endl;
+    //         }
+    //     }
+    // }
 
-    lidar_edge_height_change.diff_pixel(insta_edge.get_mat());
+    // 同じ点を取って出力。
+    //
+
+    std::vector<Eigen::Vector3d> corres_point;
+    std::vector<std::vector<int>> corres_img_point;
+
+    corres_point.push_back(Eigen::Vector3d(0.0, 0.0, 0.0));
+    corres_point.push_back(Eigen::Vector3d(1.0, 0.0, 0.0));
+    corres_img_point.push_back({0, 0});
+    corres_img_point.push_back({1, 0});
+    obj_io.output_dat("out/" + date + "/" + date + "ply.dat", corres_point);
+    obj_io.output_dat("out/" + date + "/" + date + "img.dat", corres_img_point);
 
     std::cout << "end more" << std::endl;
 }

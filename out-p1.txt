@@ -1,0 +1,40 @@
+mode:9
+
+default_dir_path: data/20231213/
+
+jsonfile_path: data/20230711-bbox/20240711-bbox.json
+
+corresp_img_file_name: 
+img.dat
+
+corresp_ply_file_name: 
+ply.dat
+
+img_file_path: 
+img/20231213/PIC_20231213_point1-120-hi.jpg
+
+ply_file_path: 
+out-1.ply
+mode select
+invalid argument:format
+invalid argument:ascii
+invalid argument:element
+invalid argument:vertex
+invalid argument:property
+invalid argument:float
+invalid argument:x
+invalid argument:property
+invalid argument:float
+invalid argument:y
+invalid argument:property
+invalid argument:float
+invalid argument:z
+Success load image: img/20231213/PIC_20231213_point1-120-hi.jpg
+get_date
+2024110_1938
+
+LiDAR edge detection
+PPPPPPP
+output point file complete: out/2024110_1938/2024110_1938ply.dat
+output pixel file complete: out/2024110_1938/2024110_1938img.dat
+end more

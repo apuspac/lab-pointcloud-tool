@@ -89,6 +89,10 @@ void InstaImg::set_pixel_255(int u, int v)
     {
         std::cout << "u or v is over img size: " << u << " " << v << "img_size: " << img.cols << " " << img.rows << std::endl;
     }
+    // if (u < 0 || v < 0)
+    // {
+    //     std::cout << "u or v is under 0: " << u << " " << v << std::endl;
+    // }
     img.at<u_char>(v, u) = 255;
 }
 
@@ -449,7 +453,11 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
 
         if (flag == true)
         {
-            set_store_info(u, v, point);
+            int new_u = (u + img.rows) % img.rows;
+            int new_v = (v + img.cols) % img.cols;
+            assert(new_u <= width);
+            assert(new_v <= height);
+            set_store_info(new_u, new_v, point);
         }
         set_pixel_255(u, v);
     }
@@ -526,7 +534,12 @@ void InstaImg::check_pixel_value()
 }
 
 /**
- * @brief 同じ点を取ってくる。 輝度値で判断しようとしたが、最小二乗法はすべて使った方が精度が上がるため、 全部使った方が良いため、別関数を作ります。
+ * @brief 輝度値の高い点をedgeの可能性が高い点として、LiDARedge画像のエッジの画素の座標値のなかから
+ * 高い点をソートして持ってくる関数。
+ *
+ * あとあとの話、
+ * 最小二乗法はすべての点を使った方が精度が上がるため、別関数を作ります。
+ * 一応残しておく。
  *
  * @param _img
  */
@@ -605,4 +618,17 @@ void InstaImg::diff_img(const cv::Mat &_img)
     cv::absdiff(img, _img, diff_img);
 
     cv::imwrite("diff.png", diff_img);
+}
+
+void LidarImg::set_store_info(int x, int y, Eigen::Vector3d point_data)
+{
+    if (x < 0 || x >= static_cast<int>(store_info.size()) || y < 0 || y >= static_cast<int>(store_info[0].size()))
+    {
+        std::cout << "x or y is over store_info size: " << x << " " << y << std::endl;
+        std::exit(-1);
+    }
+    else
+    {
+        store_info[x][y].push_back(point_data);
+    }
 }
