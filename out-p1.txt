@@ -31,11 +31,7 @@ invalid argument:float
 invalid argument:z
 Success load image: img/20231213/PIC_20231213_point1-120-hi.jpg
 get_date
-2024110_2053
+2024111_1343
 
 LiDAR edge detection
-PPPPPPP
-get_corresponding_point
-output point file complete: out/2024110_2053/2024110_2053ply.dat
-output pixel file complete: out/2024110_2053/2024110_2053img.dat
-end more
+2006322

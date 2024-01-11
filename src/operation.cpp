@@ -132,7 +132,7 @@ void PointOperation::transform_rotate()
 
     // load 元のplyファイル(回転並進させる用)
     PointSet ply_point("plyfile");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
 
     CalcPointSet calc;
 
@@ -184,6 +184,8 @@ void PointOperation::transform_rotate()
     ply_point.transform(translation_vector);
 
     obj_io.output_ply(ply_point, "out/" + date + "/" + "match-" + ply_point.get_name() + ".ply");
+    obj_io.output_ply(corresp_ply_point, "out/" + date + "/" + "corresp-" + corresp_ply_point.get_name() + ".ply");
+    obj_io.output_ply(corresp_img_point, "out/" + date + "/" + "corresp-" + corresp_img_point.get_name() + ".ply");
 }
 
 /**

@@ -437,30 +437,68 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point)
 void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
 {
     // 極座標から画像へ投影
-    for (auto &point : ply_point.get_point_all_polar())
+    // for (auto &point : ply_point.get_point_all_polar())
+    // {
+    //     double u_dash = point(2) / (2.0 * M_PI);
+    //     double v_dash = point(1) / M_PI;
+    //     // で、おそらく画像は視点座標系で左手系になるので、
+    //     // 右手系と合わせるために、 反転して、90度回転させる
+    //     int u = static_cast<int>(-(u_dash * width) + (width / 4));
+    //     int v = static_cast<int>(v_dash * height);
+
+    //     if (u > width)
+    //     {
+    //         u -= static_cast<int>(width);
+    //     }
+
+    //     if (flag == true)
+    //     {
+    //         int new_u = (u + img.rows) % img.rows;
+    //         int new_v = (v + img.cols) % img.cols;
+    //         assert(new_u <= width);
+    //         assert(new_v <= height);
+    //         set_store_info(new_u, new_v, point);
+    //     }
+    //     set_pixel_255(u, v);
+    // }
+
+    auto polar_iter = ply_point.get_point_all_polar().begin();
+    std::cout << *polar_iter << std::endl;
+
+    auto polar_end = ply_point.get_point_all_polar().end();
+    // auto point_iter = ply_point.get_point_all().begin();
+
+    while (polar_iter != polar_end)
     {
-        double u_dash = point(2) / (2.0 * M_PI);
-        double v_dash = point(1) / M_PI;
-        // で、おそらく画像は視点座標系で左手系になるので、
-        // 右手系と合わせるために、 反転して、90度回転させる
-        int u = static_cast<int>(-(u_dash * width) + (width / 4));
-        int v = static_cast<int>(v_dash * height);
+        auto &point = *polar_iter;
+        std::cout << point << std::endl;
+        //     // auto &nonpolar = *point_iter;
 
-        if (u > width)
-        {
-            u -= static_cast<int>(width);
-        }
+        //     double u_dash = point(2) / (2.0 * M_PI);
+        //     double v_dash = point(1) / M_PI;
+        //     // で、おそらく画像は視点座標系で左手系になるので、
+        //     // 右手系と合わせるために、 反転して、90度回転させる
+        //     int u = static_cast<int>(-(u_dash * width) + (width / 4));
+        //     int v = static_cast<int>(v_dash * height);
+        //     if (u > width)
+        //     {
+        //         u -= static_cast<int>(width);
+        //     }
+        //     if (flag == true)
+        //     {
+        //         int new_u = (u + img.rows) % img.rows;
+        //         int new_v = (v + img.cols) % img.cols;
+        //         assert(new_u <= width);
+        //         assert(new_v <= height);
+        //         set_store_info(new_u, new_v, point);
+        //     }
 
-        if (flag == true)
-        {
-            int new_u = (u + img.rows) % img.rows;
-            int new_v = (v + img.cols) % img.cols;
-            assert(new_u <= width);
-            assert(new_v <= height);
-            set_store_info(new_u, new_v, point);
-        }
-        set_pixel_255(u, v);
+        //     set_pixel_255(u, v);
+        ++polar_iter;
+        //     ++point_iter;
     }
+
+    exit(0);
 }
 
 /**
@@ -638,6 +676,11 @@ void LidarImg::get_corresponding_point(std::vector<Eigen::Vector3d> &corresp_poi
     std::cout << "get_corresponding_point" << std::endl;
     cv::Mat edge_img = edge_img_origin.get_mat();
 
+    auto compare_distance = [](Eigen::Vector3d a, Eigen::Vector3d b)
+    {
+        return a.norm() < b.norm();
+    };
+
     for (int v = 0; v < edge_img.rows; v++)
     {
         for (int u = 0; u < edge_img.cols; u++)
@@ -645,11 +688,24 @@ void LidarImg::get_corresponding_point(std::vector<Eigen::Vector3d> &corresp_poi
             uchar *ptr = edge_img.data + edge_img.step * v;
             if (ptr[u] > 200)
             {
+
                 for (auto &point : store_info[v][u])
                 {
-                    corresp_point.push_back(point);
+                    std::cout << "point: " << point.transpose() << std::endl;
                 }
-                corresp_pixel.push_back({v, u});
+                auto closest_point = std::min_element(store_info[v][u].begin(), store_info[v][u].end(), compare_distance);
+
+                if (closest_point != store_info[v][u].end())
+                {
+                    std::cout << "closest_point: " << *closest_point << std::endl;
+                    corresp_point.push_back(*closest_point);
+                    corresp_pixel.push_back({v, u});
+                }
+                else
+                {
+                    continue;
+                    std::cout << "point list is empty" << std::endl;
+                }
             }
         }
     }
