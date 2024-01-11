@@ -437,20 +437,55 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point)
 void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
 {
     // 極座標から画像へ投影
-    // for (auto &point : ply_point.get_point_all_polar())
+    for (auto &point : ply_point.get_point_all_polar())
+    {
+        double u_dash = point(2) / (2.0 * M_PI);
+        double v_dash = point(1) / M_PI;
+        // で、おそらく画像は視点座標系で左手系になるので、
+        // 右手系と合わせるために、 反転して、90度回転させる
+        int u = static_cast<int>(-(u_dash * width) + (width / 4));
+        int v = static_cast<int>(v_dash * height);
+
+        int index = &point - &ply_point.get_point_all_polar()[0];
+
+        if (u > width)
+        {
+            u -= static_cast<int>(width);
+        }
+
+        if (flag == true)
+        {
+            int new_u = (u + img.rows) % img.rows;
+            int new_v = (v + img.cols) % img.cols;
+            assert(new_u <= width);
+            assert(new_v <= height);
+            set_store_info(new_u, new_v, ply_point.get_point(index));
+        }
+        set_pixel_255(u, v);
+    }
+
+    // auto polar_iter = ply_point.get_point_all_polar().begin();
+    // std::cout << *polar_iter << std::endl;
+
+    // auto polar_end = ply_point.get_point_all_polar().end();
+    // auto point_iter = ply_point.get_point_all().begin();
+
+    // while (polar_iter != polar_end)
     // {
+    //     auto &point = *polar_iter;
+    //     std::cout << point << std::endl;
+    //     // auto &nonpolar = *point_iter;
+
     //     double u_dash = point(2) / (2.0 * M_PI);
     //     double v_dash = point(1) / M_PI;
     //     // で、おそらく画像は視点座標系で左手系になるので、
     //     // 右手系と合わせるために、 反転して、90度回転させる
     //     int u = static_cast<int>(-(u_dash * width) + (width / 4));
     //     int v = static_cast<int>(v_dash * height);
-
     //     if (u > width)
     //     {
     //         u -= static_cast<int>(width);
     //     }
-
     //     if (flag == true)
     //     {
     //         int new_u = (u + img.rows) % img.rows;
@@ -459,46 +494,13 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
     //         assert(new_v <= height);
     //         set_store_info(new_u, new_v, point);
     //     }
+
     //     set_pixel_255(u, v);
+    // ++polar_iter;
+    //     ++point_iter;
     // }
 
-    auto polar_iter = ply_point.get_point_all_polar().begin();
-    std::cout << *polar_iter << std::endl;
-
-    auto polar_end = ply_point.get_point_all_polar().end();
-    // auto point_iter = ply_point.get_point_all().begin();
-
-    while (polar_iter != polar_end)
-    {
-        auto &point = *polar_iter;
-        std::cout << point << std::endl;
-        //     // auto &nonpolar = *point_iter;
-
-        //     double u_dash = point(2) / (2.0 * M_PI);
-        //     double v_dash = point(1) / M_PI;
-        //     // で、おそらく画像は視点座標系で左手系になるので、
-        //     // 右手系と合わせるために、 反転して、90度回転させる
-        //     int u = static_cast<int>(-(u_dash * width) + (width / 4));
-        //     int v = static_cast<int>(v_dash * height);
-        //     if (u > width)
-        //     {
-        //         u -= static_cast<int>(width);
-        //     }
-        //     if (flag == true)
-        //     {
-        //         int new_u = (u + img.rows) % img.rows;
-        //         int new_v = (v + img.cols) % img.cols;
-        //         assert(new_u <= width);
-        //         assert(new_v <= height);
-        //         set_store_info(new_u, new_v, point);
-        //     }
-
-        //     set_pixel_255(u, v);
-        ++polar_iter;
-        //     ++point_iter;
-    }
-
-    exit(0);
+    // exit(0);
 }
 
 /**

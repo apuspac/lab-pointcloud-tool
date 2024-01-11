@@ -31,7 +31,6 @@ invalid argument:float
 invalid argument:z
 Success load image: img/20231213/PIC_20231213_point1-120-hi.jpg
 get_date
-2024111_1343
+2024111_1430
 
 LiDAR edge detection
-2006322
