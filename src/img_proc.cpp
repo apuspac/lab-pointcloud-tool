@@ -437,29 +437,17 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point)
 void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
 {
     std::cout << ply_point.get_point(0) << std::endl;
-    std::cout << ply_point.get_point(1) << std::endl;
-    std::cout << ply_point.get_point_polar(2) << std::endl;
-    std::cout << ply_point.get_point_polar(3) << std::endl;
+    std::cout << ply_point.get_point_polar(0) << std::endl;
 
     for (int i = 0; i < ply_point.get_point_all().size(); ++i)
     {
-        std::cout << ply_point.get_point(i) << std::endl;
-        std::cout << ply_point.get_point_polar(i) << std::endl;
-    }
-
-    exit(0);
-
-    // 極座標から画像へ投影
-    for (auto &point : ply_point.get_point_all_polar())
-    {
+        Eigen::Vector3d point = ply_point.get_point_polar(i);
         double u_dash = point(2) / (2.0 * M_PI);
         double v_dash = point(1) / M_PI;
-        // で、おそらく画像は視点座標系で左手系になるので、
-        // 右手系と合わせるために、 反転して、90度回転させる
+
+        // たぶんだが、画像は左手系なため、右手と合わせるために 反転して90°回転させる
         int u = static_cast<int>(-(u_dash * width) + (width / 4));
         int v = static_cast<int>(v_dash * height);
-
-        int index = &point - &ply_point.get_point_all_polar()[0];
 
         if (u > width)
         {
@@ -472,12 +460,40 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
             int new_v = (v + img.cols) % img.cols;
             assert(new_u <= width);
             assert(new_v <= height);
-            assert(index > ply_point.get_point_all().size());
-            std::cout << "index: " << index << std::endl;
-            // set_store_info(new_u, new_v, ply_point.get_point(index));
+            set_store_info(new_u, new_v, ply_point.get_point(i));
         }
         set_pixel_255(u, v);
     }
+
+    // 極座標から画像へ投影
+    // for (auto &point : ply_point.get_point_all_polar())
+    // {
+    //     double u_dash = point(2) / (2.0 * M_PI);
+    //     double v_dash = point(1) / M_PI;
+    //     // で、おそらく画像は視点座標系で左手系になるので、
+    //     // 右手系と合わせるために、 反転して、90度回転させる
+    //     int u = static_cast<int>(-(u_dash * width) + (width / 4));
+    //     int v = static_cast<int>(v_dash * height);
+
+    //     int index = &point - &ply_point.get_point_all_polar()[0];
+
+    //     if (u > width)
+    //     {
+    //         u -= static_cast<int>(width);
+    //     }
+
+    //     if (flag == true)
+    //     {
+    //         int new_u = (u + img.rows) % img.rows;
+    //         int new_v = (v + img.cols) % img.cols;
+    //         assert(new_u <= width);
+    //         assert(new_v <= height);
+    //         assert(index > ply_point.get_point_all().size());
+    //         std::cout << "index: " << index << std::endl;
+    //         // set_store_info(new_u, new_v, ply_point.get_point(index));
+    //     }
+    //     set_pixel_255(u, v);
+    // }
 
     // auto polar_iter = ply_point.get_point_all_polar().begin();
     // std::cout << *polar_iter << std::endl;
