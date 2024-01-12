@@ -69,6 +69,7 @@ public:
      * @return Eigen::Vector3d
      */
     Eigen::Vector3d get_point(uint64_t i) { return point3.at(i); }
+    Eigen::Vector3d get_point_polar(uint64_t i) { return point3_polar.at(i); }
     std::array<int, 2> get_edge(uint64_t i) { return edge2.at(i); }
     Eigen::Vector3d get_center_of_gravity() { return center_of_gravity; }
 

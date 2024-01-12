@@ -436,6 +436,19 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point)
  */
 void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
 {
+    std::cout << ply_point.get_point(0) << std::endl;
+    std::cout << ply_point.get_point(1) << std::endl;
+    std::cout << ply_point.get_point_polar(2) << std::endl;
+    std::cout << ply_point.get_point_polar(3) << std::endl;
+
+    for (int i = 0; i < ply_point.get_point_all().size(); ++i)
+    {
+        std::cout << ply_point.get_point(i) << std::endl;
+        std::cout << ply_point.get_point_polar(i) << std::endl;
+    }
+
+    exit(0);
+
     // 極座標から画像へ投影
     for (auto &point : ply_point.get_point_all_polar())
     {
@@ -459,7 +472,9 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
             int new_v = (v + img.cols) % img.cols;
             assert(new_u <= width);
             assert(new_v <= height);
-            set_store_info(new_u, new_v, ply_point.get_point(index));
+            assert(index > ply_point.get_point_all().size());
+            std::cout << "index: " << index << std::endl;
+            // set_store_info(new_u, new_v, ply_point.get_point(index));
         }
         set_pixel_255(u, v);
     }
