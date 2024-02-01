@@ -953,10 +953,10 @@ void PointOperation::test_location()
 
     // 床の点を除去
     // HACK: 本当はここも平面当てはめ PCAなどでできそうではある。
-    // Eigen::Vector3d floor_height = {0, 0, -1.10};
+    Eigen::Vector3d floor_height = {0, 0, -1.10};
 
     // 点数減らしてのテストのため、 一時的に全部の点を使うように
-    Eigen::Vector3d floor_height = {0, 0, -21.0};
+    // Eigen::Vector3d floor_height = {0, 0, -21.0};
     PointSet removed_floor_ply_point, rmfloor_point;
     remove_pointset_floor(ply_point, removed_floor_ply_point, floor_height);
     remove_pointset_floor(ply_point, rmfloor_point, floor_height);
@@ -1174,7 +1174,8 @@ void PointOperation::test_location()
     move_point.convert_to_polar();
     lidar_img.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
     shift_tmp.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
-    lidar_img.resize_store_info(image.get_height(), image.get_width());
+    // lidar_img.resize_store_info(image.get_height(), image.get_width());
+    lidar_img.resize_store_info(move_point.get_point_num());
     lidar_img.ply_to_360paranoma_img(move_point, true);
     shift_tmp.set_mat(lidar_img.shift(count, 0));
     shift_tmp.closing(3, 0, 1);
@@ -1186,24 +1187,13 @@ void PointOperation::test_location()
     alpha_img.img_alpha_blending(alpha_img.get_mat(), insta_edge.get_mat(), 1.0);
     cv::imwrite("out/" + date + "/" + "shift_vertical.png", alpha_img.get_mat());
 
-    // for (auto &point : lidar_img.get_store_info())
-    // {
-    //     for (auto &p : point)
-    //     {
-    //         for(auto &pp : p)
-    //         {
-    //             std::cout << pp.transpose() << std::endl;
-    //         }
-    //     }
-    // }
-
     // 同じ点を取って出力。
     //
 
     std::vector<Eigen::Vector3d> corres_point;
     std::vector<std::vector<int>> corres_img_point;
 
-    lidar_img.get_corresponding_point(corres_point, corres_img_point, lidar_edge_height_change);
+    lidar_img.get_corresponding_point(corres_point, corres_img_point, insta_edge, move_point, count);
 
     obj_io.output_dat("out/" + date + "/" + date + "ply.dat", corres_point);
     obj_io.output_dat("out/" + date + "/" + date + "img.dat", corres_img_point);

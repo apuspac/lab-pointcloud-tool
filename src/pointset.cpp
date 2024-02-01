@@ -209,6 +209,10 @@ void PointSet::convert_to_polar()
 {
     // std::cout << "convert_to_polar" << std::endl;
 
+    point3_polar.reserve(point3.size());
+    assert(point3_polar.size() == point3.size());
+
+    assert(point3_polar.size() == point3.size());
     for (auto &point : point3)
     {
         double r = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0) + std::pow(point(2), 2.0));
@@ -218,16 +222,7 @@ void PointSet::convert_to_polar()
 
         int index = static_cast<int>(&point - &point3[0]);
 
-        // NOTE: ここなんの条件分岐だ？
-        if (point3_polar.size() < point3.size())
-        {
-            // point3_polar.reserve(point3.size());
-            point3_polar.push_back(Eigen::Vector3d(r, theta, phi));
-        }
-        else
-        {
-
-            point3_polar.at(index) = Eigen::Vector3d(r, theta, phi);
-        }
+        // 最初にsizeを確保しておけば push_backじゃなくていいはずなので、 assertでチェックしておく。
+        point3_polar.at(index) = Eigen::Vector3d(r, theta, phi);
     }
 }

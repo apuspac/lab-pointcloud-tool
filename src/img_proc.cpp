@@ -439,9 +439,10 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
     std::cout << ply_point.get_point(0) << std::endl;
     std::cout << ply_point.get_point_polar(0) << std::endl;
 
-    for (int i = 0; i < ply_point.get_point_all().size(); ++i)
+    size_t index = 0;
+
+    for (const auto &point : ply_point.get_point_all_polar())
     {
-        Eigen::Vector3d point = ply_point.get_point_polar(i);
         double u_dash = point(2) / (2.0 * M_PI);
         double v_dash = point(1) / M_PI;
 
@@ -456,15 +457,18 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
 
         if (flag == true)
         {
-            int new_u = (u + img.rows) % img.rows;
-            int new_v = (v + img.cols) % img.cols;
-            assert(new_u <= width);
-            assert(new_v <= height);
+            // 画像の範囲外に出てしまった場合を戻す処理。
+            // 下のset_pixel_255は、opencv側でよしなにしてくれるため、ない。
+            int new_u = (u + width) % width;
+            int new_v = (v + height) % height;
+            int pixel = new_u + new_v * width;
+            std::cout << index << " : " << new_u << " " << new_v << " " << pixel << " " << std::endl;
 
-            std::cout << new_u << " " << new_v << std::endl;
-            set_store_info(new_u, new_v, ply_point.get_point(i));
+            set_store_info(pixel);
         }
         set_pixel_255(u, v);
+
+        index++;
     }
 
     // 極座標から画像へ投影
@@ -693,58 +697,107 @@ void InstaImg::diff_img(const cv::Mat &_img)
     cv::imwrite("diff.png", diff_img);
 }
 
-void LidarImg::set_store_info(int x, int y, Eigen::Vector3d point_data)
+void LidarImg::set_store_info(int u, int v)
 {
-    if (x < 0 || x >= static_cast<int>(store_info.size()) || y < 0 || y >= static_cast<int>(store_info[0].size()))
-    {
-        std::cout << "x or y is over store_info size: " << x << " " << y << std::endl;
-        std::exit(-1);
-    }
-    else
-    {
-        store_info[x][y].push_back(point_data);
-    }
+    int index = v * width + u;
+    store_info.push_back(index);
 }
 
-void LidarImg::get_corresponding_point(std::vector<Eigen::Vector3d> &corresp_point, std::vector<std::vector<int>> &corresp_pixel, EdgeImg &edge_img_origin)
+// void LidarImg::set_store_info(int x, int y, Eigen::Vector3d point_data)
+// {
+//     if (x < 0 || x >= static_cast<int>(store_info.size()) || y < 0 || y >= static_cast<int>(store_info[0].size()))
+//     {
+//         std::cout << "x or y is over store_info size: " << x << " " << y << std::endl;
+//         std::exit(-1);
+//     }
+//     else
+//     {
+//         store_info[x][y].push_back(point_data);
+//     }
+// }
+
+void LidarImg::get_corresponding_point(std::vector<Eigen::Vector3d> &corresp_point, std::vector<std::vector<int>> &corresp_pixel, EdgeImg &edge_img_insta, PointSet &plypoint, int shift_count)
 {
     std::cout << "get_corresponding_point" << std::endl;
-    cv::Mat edge_img = edge_img_origin.get_mat();
+    cv::Mat insta_edge = edge_img_insta.get_mat();
+
+    assert(store_info.size() > 0);
 
     auto compare_distance = [](Eigen::Vector3d a, Eigen::Vector3d b)
     {
         return a.norm() < b.norm();
     };
 
-    for (int v = 0; v < edge_img.rows; v++)
+    std::vector<int> corresp_pixel_candidate;
+
+    for (int v = 0; v < img.rows; v++)
     {
-        for (int u = 0; u < edge_img.cols; u++)
+        for (int u = 0; u < img.cols; u++)
         {
-            uchar *ptr = edge_img.data + edge_img.step * v;
+            // ここのptrは ply_to_panranomaした直後の画像の値
+            uchar *ptr = img.data + img.step * v;
 
-            // 画素値が0でなければ、対応として出力したい。
-            // とりあえず、200以上の画素値を対応として出力する
-            if (ptr[u] > 200)
+            uchar *ptr_insta = insta_edge.data + insta_edge.step * v;
+
+            if (ptr[u] > 0 && ptr_insta[u] > 0)
             {
-
-                for (auto &point : store_info[v][u])
-                {
-                    std::cout << "point: " << point.transpose() << std::endl;
-                }
-                auto closest_point = std::min_element(store_info[v][u].begin(), store_info[v][u].end(), compare_distance);
-
-                if (closest_point != store_info[v][u].end())
-                {
-                    std::cout << "closest_point: " << *closest_point << std::endl;
-                    corresp_point.push_back(*closest_point);
-                    corresp_pixel.push_back({v, u});
-                }
-                else
-                {
-                    continue;
-                    std::cout << "point list is empty" << std::endl;
-                }
+                // 投影したときはshift前なので、変換しておく
+                int new_u = (u - shift_count + img.cols) % img.cols;
+                int new_v = (v - shift_count + img.rows) % img.rows;
+                corresp_pixel_candidate.push_back(new_v * width + new_u);
             }
+        }
+    }
+
+    std::string userInput;
+    std::getline(std::cin, userInput);
+
+    for (auto &point : store_info)
+    {
+        std::cout << point << std::endl;
+    }
+
+    std::string userInput2;
+    std::getline(std::cin, userInput2);
+
+    for (auto &point : corresp_pixel_candidate)
+    {
+        std::cout << point << std::endl;
+    }
+
+    assert(corresp_pixel_candidate.size() > 0);
+
+    // corresp_pixel リストの中から、該当するものをstore_infoから探す
+    for (auto &pixel : corresp_pixel_candidate)
+    {
+
+        std::vector<Eigen::Vector3d> corresp_point_candidate;
+
+        size_t index = 0;
+        for (auto &projection : store_info)
+        {
+            if (projection == pixel)
+            {
+                corresp_point_candidate.push_back(plypoint.get_point(index));
+            }
+            index++;
+        }
+
+        if (corresp_point_candidate.size() > 0)
+        {
+            int u = pixel % width;
+            int v = pixel / width;
+            if (u < 0 || v < 0 || u > width || v > height)
+            {
+                std::cout << "u or v is over img size: " << u << " " << v << std::endl;
+            }
+            corresp_pixel.at(u).push_back(v);
+            corresp_point.push_back(*std::min_element(corresp_point_candidate.begin(), corresp_point_candidate.end(), compare_distance));
+        }
+        else
+        {
+            std::cout << "no corresponding point" << std::endl;
+            continue;
         }
     }
 }

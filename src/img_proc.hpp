@@ -98,8 +98,11 @@ public:
 class LidarImg : public InstaImg
 {
 private:
-    // 点がどこに投影されたかを格納する。 u, v, (x,y,z)
-    std::vector<std::vector<std::vector<Eigen::Vector3d>>> store_info;
+    // 点がどこに投影されたかを格納する。こっちは座標値を格納 u, v, (x,y,z)
+    // std::vector<std::vector<std::vector<Eigen::Vector3d>>> store_info;
+
+    // 投影された点がどの画素に投影されたか 画素座標(u + v * width)で格納
+    std::vector<int> store_info;
 
 public:
     LidarImg() : InstaImg() {}
@@ -107,19 +110,27 @@ public:
     LidarImg(std::string _name) : InstaImg(_name) {}
     ~LidarImg() {}
 
-    void resize_store_info(int _width, int _height)
+    // void resize_store_info(int _width, int _height)
+    // {
+    //     store_info.resize(_width, std::vector<std::vector<Eigen::Vector3d>>(_height, std::vector<Eigen::Vector3d>()));
+    // }
+    // void set_store_info(int, int, Eigen::Vector3d);
+    // const Eigen::Vector3d &get_store_info(int x, int y, int index) { return store_info[x][y][index]; }
+    // const std::vector<Eigen::Vector3d> &get_store_info(int x, int y) { return store_info[x][y]; }
+    // const std::vector<std::vector<std::vector<Eigen::Vector3d>>> &get_store_info() const { return store_info; }
+
+    void resize_store_info(int point_num)
     {
-        store_info.resize(_width, std::vector<std::vector<Eigen::Vector3d>>(_height, std::vector<Eigen::Vector3d>()));
+        store_info.resize(point_num);
     }
-    void set_store_info(int, int, Eigen::Vector3d);
-    const Eigen::Vector3d &get_store_info(int x, int y, int index) { return store_info[x][y][index]; }
-    const std::vector<Eigen::Vector3d> &get_store_info(int x, int y) { return store_info[x][y]; }
-    const std::vector<std::vector<std::vector<Eigen::Vector3d>>> &get_store_info() const { return store_info; }
+    void set_store_info(int pixel) { store_info.push_back(pixel); }
+    void set_store_info(int u, int v);
+    int get_store_info(int point_index) { return store_info.at(point_index); }
 
     void ply_to_360paranoma_img(PointSet &);
     void ply_to_360paranoma_img(PointSet &, int);
 
-    void get_corresponding_point(std::vector<Eigen::Vector3d> &, std::vector<std::vector<int>> &, EdgeImg &);
+    void get_corresponding_point(std::vector<Eigen::Vector3d> &, std::vector<std::vector<int>> &, EdgeImg &, PointSet &, int);
 };
 
 #endif
