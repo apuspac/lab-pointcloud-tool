@@ -218,6 +218,7 @@ void PointSet::convert_to_polar()
 
         int index = static_cast<int>(&point - &point3[0]);
 
+        // NOTE: ここなんの条件分岐だ？
         if (point3_polar.size() < point3.size())
         {
             // point3_polar.reserve(point3.size());

@@ -460,6 +460,8 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
             int new_v = (v + img.cols) % img.cols;
             assert(new_u <= width);
             assert(new_v <= height);
+
+            std::cout << new_u << " " << new_v << std::endl;
             set_store_info(new_u, new_v, ply_point.get_point(i));
         }
         set_pixel_255(u, v);
@@ -719,6 +721,9 @@ void LidarImg::get_corresponding_point(std::vector<Eigen::Vector3d> &corresp_poi
         for (int u = 0; u < edge_img.cols; u++)
         {
             uchar *ptr = edge_img.data + edge_img.step * v;
+
+            // 画素値が0でなければ、対応として出力したい。
+            // とりあえず、200以上の画素値を対応として出力する
             if (ptr[u] > 200)
             {
 

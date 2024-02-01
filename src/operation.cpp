@@ -953,7 +953,10 @@ void PointOperation::test_location()
 
     // 床の点を除去
     // HACK: 本当はここも平面当てはめ PCAなどでできそうではある。
-    Eigen::Vector3d floor_height = {0, 0, -1.10};
+    // Eigen::Vector3d floor_height = {0, 0, -1.10};
+
+    // 点数減らしてのテストのため、 一時的に全部の点を使うように
+    Eigen::Vector3d floor_height = {0, 0, -21.0};
     PointSet removed_floor_ply_point, rmfloor_point;
     remove_pointset_floor(ply_point, removed_floor_ply_point, floor_height);
     remove_pointset_floor(ply_point, rmfloor_point, floor_height);
@@ -1158,6 +1161,7 @@ void PointOperation::test_location()
     int count_vertical = 0;
     double split = 0.025;
 
+    std::cout << "PPPPPPP" << std::endl;
     // ====== RESULT Img ======
     PointSet move_point;
     rmfloor_point.transform(Eigen::Vector3d(0, 0, split * count_vertical));
@@ -1172,7 +1176,6 @@ void PointOperation::test_location()
     shift_tmp.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
     lidar_img.resize_store_info(image.get_height(), image.get_width());
     lidar_img.ply_to_360paranoma_img(move_point, true);
-    std::cout << "PPPPPPP" << std::endl;
     shift_tmp.set_mat(lidar_img.shift(count, 0));
     shift_tmp.closing(3, 0, 1);
     lidar_edge_height_change.detect_edge_with_sobel(shift_tmp.get_mat());
