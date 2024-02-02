@@ -1191,9 +1191,9 @@ void PointOperation::test_location()
     //
 
     std::vector<Eigen::Vector3d> corres_point;
-    std::vector<std::vector<int>> corres_img_point;
+    std::vector<std::pair<int, int>> corres_img_point;
 
-    lidar_img.get_corresponding_point(corres_point, corres_img_point, insta_edge, move_point, count);
+    lidar_img.get_corresponding_point(corres_point, corres_img_point, lidar_edge_height_change, insta_edge, move_point, count);
 
     obj_io.output_dat("out/" + date + "/" + date + "ply.dat", corres_point);
     obj_io.output_dat("out/" + date + "/" + date + "img.dat", corres_img_point);

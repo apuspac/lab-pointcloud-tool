@@ -119,18 +119,19 @@ public:
     // const std::vector<Eigen::Vector3d> &get_store_info(int x, int y) { return store_info[x][y]; }
     // const std::vector<std::vector<std::vector<Eigen::Vector3d>>> &get_store_info() const { return store_info; }
 
-    void resize_store_info(int point_num)
+    void resize_store_info(size_t point_num)
     {
         store_info.resize(point_num);
     }
-    void set_store_info(int pixel) { store_info.push_back(pixel); }
-    void set_store_info(int u, int v);
+
+    // これ使うときは、resize_store_infoを使って、vectorのサイズを確保しておく。
+    void set_store_info(int pixel, size_t index) { store_info.at(index) = pixel; }
     int get_store_info(int point_index) { return store_info.at(point_index); }
 
     void ply_to_360paranoma_img(PointSet &);
     void ply_to_360paranoma_img(PointSet &, int);
 
-    void get_corresponding_point(std::vector<Eigen::Vector3d> &, std::vector<std::vector<int>> &, EdgeImg &, PointSet &, int);
+    void get_corresponding_point(std::vector<Eigen::Vector3d> &, std::vector<std::pair<int, int>> &, EdgeImg &, EdgeImg &, PointSet &, int);
 };
 
 #endif

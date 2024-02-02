@@ -593,6 +593,7 @@ void ObjectIO::output_dat(std::string filename, std::vector<Eigen::Vector3d> p_d
     {
         std::cout << "failed to open file" << std::endl;
     }
+    outputFile << p_data.size() << std::endl;
 
     for (const auto &p : p_data)
     {
@@ -602,7 +603,7 @@ void ObjectIO::output_dat(std::string filename, std::vector<Eigen::Vector3d> p_d
     std::cout << "output point file complete: " << filename << std::endl;
 }
 
-void ObjectIO::output_dat(std::string filename, std::vector<std::vector<int>> i_data)
+void ObjectIO::output_dat(std::string filename, std::vector<std::pair<int, int>> i_data)
 {
 
     std::ofstream outputFile(filename);
@@ -612,9 +613,11 @@ void ObjectIO::output_dat(std::string filename, std::vector<std::vector<int>> i_
         std::cout << "failed to open file" << std::endl;
     }
 
+    outputFile << i_data.size() << std::endl;
+
     for (const auto &p : i_data)
     {
-        outputFile << p.at(0) << " " << p.at(1) << std::endl;
+        outputFile << p.first << " " << p.second << std::endl;
     }
 
     std::cout << "output pixel file complete: " << filename << std::endl;

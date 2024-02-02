@@ -37,7 +37,7 @@ public:
     void output_csv_2double(std::string, std::vector<std::vector<double>>);
     void create_dir(std::string);
     void output_dat(std::string, std::vector<Eigen::Vector3d>);
-    void output_dat(std::string, std::vector<std::vector<int>>);
+    void output_dat(std::string, std::vector<std::pair<int, int>>);
 };
 
 #endif
