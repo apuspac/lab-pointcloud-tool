@@ -16,12 +16,13 @@ void PointOperation::mode_select()
     switch_func[0] = std::bind(&PointOperation::transform_rotate, this);
     switch_func[1] = std::bind(&PointOperation::transform_rotate_simulation, this);
     switch_func[2] = std::bind(&PointOperation::Rotation_only, this);
-    switch_func[3] = std::bind(&PointOperation::Rotation_only_simulation, this);
+    // switch_func[3] = std::bind(&PointOperation::Rotation_only_simulation, this);
     switch_func[4] = std::bind(&PointOperation::capture_boxpoint, this);
     switch_func[5] = std::bind(&PointOperation::capture_segmentation_point, this);
     switch_func[6] = std::bind(&PointOperation::capture_pointset, this);
     switch_func[7] = std::bind(&PointOperation::capture_point_inner_bbox, this);
     switch_func[9] = std::bind(&PointOperation::test_location, this);
+    switch_func[3] = std::bind(&PointOperation::test_location_two, this);
     switch_func[get_mode()]();
 }
 
@@ -1153,7 +1154,6 @@ void PointOperation::test_location()
         // 初期位置に戻す
         rmfloor_point.transform(Eigen::Vector3d(0, 0, -width_search));
     }
-
     // ============================ テスト環境
     // 手動でパラメータ打ち込んで テスト  mse合わせた画像を作る
 
@@ -1188,7 +1188,6 @@ void PointOperation::test_location()
     cv::imwrite("out/" + date + "/" + "shift_vertical.png", alpha_img.get_mat());
 
     // 同じ点を取って出力。
-    //
 
     std::vector<Eigen::Vector3d> corres_point;
     std::vector<std::pair<int, int>> corres_img_point;
@@ -1223,4 +1222,28 @@ void PointOperation::remove_pointset_floor(PointSet &origin_point, PointSet &out
 void PointOperation::test_location_two()
 {
     std::cout << "test_location_two";
+    ObjectIO obj_io;
+
+    // load
+    PointSet ply_point("plydata");
+    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
+    InstaImg image;
+    image.load_img(img_file_path.at(0));
+
+    ply_point.radius_based_filter(16, 0.05);
+
+    // show
+    // Viewer3D check_window("radius_based_filter");
+    // check_window.add_axes();
+    // check_window.add_geometry_pointset(ply_point.get_point_all(), 3);
+    // check_window.show_using_drawgeometries();
+
+    // create out_dir
+    set_date();
+    std::cout << date << std::endl;
+    obj_io.create_dir("out/" + date);
+
+    obj_io.output_ply(ply_point, "out/" + date + "/" + "rbf" + ply_point.get_name() + ".ply");
+
+    image.HoughLine_vertical();
 }

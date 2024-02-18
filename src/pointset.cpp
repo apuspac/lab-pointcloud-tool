@@ -225,3 +225,17 @@ void PointSet::convert_to_polar()
         point3_polar.at(index) = Eigen::Vector3d(r, theta, phi);
     }
 }
+
+void PointSet::radius_based_filter(size_t point_num, double radius)
+{
+    std::cout << "radius_based_filter: radius" << radius << " num: " << point_num << std::endl;
+    open3d::geometry::PointCloud pointcloud;
+    std::cout << "point3.size()" << point3.size() << std::endl;
+    pointcloud.points_ = point3;
+    std::cout << "pointcloud.points_.size()" << pointcloud.points_.size() << std::endl;
+
+    pointcloud.RemoveRadiusOutliers(point_num, radius, true);
+    point3 = pointcloud.points_;
+    std::cout << "point3.size()" << point3.size() << std::endl;
+    std::cout << "pointcloud.points_.size()" << pointcloud.points_.size() << std::endl;
+}

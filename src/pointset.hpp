@@ -19,6 +19,8 @@
 #include <eigen3/LU>
 #include <eigen3/Dense>
 
+#include <open3d/Open3D.h>
+
 /**
  * @brief 点群そのものに関するクラス
  *
@@ -90,6 +92,7 @@ public:
     void calc_center_of_gravity();
     void rotate(Eigen::Matrix3d);
     void transform(Eigen::Vector3d);
+    void radius_based_filter(size_t, double);
 
     void output_hist(std::string);
     void print();

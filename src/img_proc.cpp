@@ -721,10 +721,134 @@ void LidarImg::get_corresponding_point(std::vector<Eigen::Vector3d> &corresp_poi
 
     assert(store_info.size() == plypoint.get_point_all_polar().size());
 
+    InstaImg check;
+    check.set_zero_imgMat(img.rows, img.cols, CV_8UC1);
+
+    std::vector<int> corresp_pixel_candidate;
+
+    for (int v = 0; v < img.rows; v++)
+    {
+        for (int u = 0; u < img.cols; u++)
+        {
+            // ここのptrは ply_to_panranomaした直後の画像の値
+            uchar *ptr = lidar_edge.data + lidar_edge.step * v;
+
+            uchar *ptr_insta = insta_edge.data + insta_edge.step * v;
+
+            if (ptr[u] > 0 && ptr_insta[u] > 0)
+            {
+                // 投影したときはshift前なので、変換しておく
+                int new_u = (u - shift_count + img.cols) % img.cols;
+                int new_v = (v + img.rows) % img.rows;
+                corresp_pixel_candidate.push_back(new_v * width + new_u);
+                check.set_pixel_255(new_u, new_v);
+            }
+        }
+    }
+
+    check.show("エッジ画像同士の同じ点の出力", 0.25);
+
+    // for (auto &point : store_info)
+    // {
+    //     std::cout << point << std::endl;
+    // }
+
+    // for (auto &point : corresp_pixel_candidate)
+    // {
+    //     std::cout << point << std::endl;
+    // }
+
+    std::cout << "中間結果" << std::endl
+              << store_info.size() << std::endl
+              << corresp_pixel_candidate.size() << std::endl;
+
+    std::string userInput2;
+    std::getline(std::cin, userInput2);
+
+    assert(corresp_pixel_candidate.size() > 0);
+
     auto compare_distance = [](Eigen::Vector3d a, Eigen::Vector3d b)
     {
+        std::cout << a.norm() << " " << b.norm() << std::endl;
         return a.norm() < b.norm();
     };
+
+    // corresp_pixel リストの中から、該当するものをstore_infoから探す
+    for (auto &pixel : corresp_pixel_candidate)
+    {
+
+        std::vector<Eigen::Vector3d> corresp_point_candidate;
+        std::cout << "searching: " << pixel << std::endl;
+
+        size_t index = 0;
+        for (auto &projection : store_info)
+        {
+            if (projection == pixel)
+            {
+                corresp_point_candidate.push_back(plypoint.get_point(index));
+            }
+            index++;
+        }
+
+        if (corresp_point_candidate.size() > 0)
+        {
+            int u = pixel % width;
+            int v = pixel / width;
+
+            // shiftしたあとの座標に戻す
+            u = (u + shift_count + width) % width;
+
+            if (u < 0 || v < 0 || u > width || v > height)
+            {
+                std::cout << "u or v is over img size: " << u << " " << v << std::endl;
+            }
+
+            // std::cout << "found" << u << " " << v << std::endl;
+            corresp_pixel.push_back(std::make_pair(u, v));
+            corresp_point.push_back(*std::min_element(corresp_point_candidate.begin(), corresp_point_candidate.end(), compare_distance));
+        }
+        else
+        {
+            // std::cout << "no corresponding point" << std::endl;
+            continue;
+        }
+    }
+}
+
+std::vector<cv::Vec4i> InstaImg::HoughLine_vertical()
+{
+    cv::Mat dst, cdst;
+    cv::Canny(img, dst, 50, 200, 3);
+    cv::cvtColor(dst, cdst, cv::COLOR_GRAY2BGR);
+
+    std::vector<cv::Vec4i> lines;
+    cv::HoughLinesP(dst, lines, 1, CV_PI / 180, 50, 50, 10);
+    for (size_t i = 0; i < lines.size(); i++)
+    {
+        cv::Vec4i l = lines[i];
+
+        // 縦線のみのための篩
+        int x1 = l[0];
+        int y1 = l[1];
+        int x2 = l[2];
+        int y2 = l[2];
+
+        if (std::abs(x1 - x2) < 3)
+        {
+            cv::line(cdst, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 0, 255), 3, cv::LINE_AA);
+        }
+    }
+    cv::imwrite("houghline360.png", cdst);
+    return lines;
+}
+
+void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corresp_point, std::vector<std::pair<int, int>> &corresp_pixel, EdgeImg &edge_img_lidar, EdgeImg &edge_img_insta, PointSet &plypoint, int shift_count)
+{
+    std::cout << "get_corresponding_point" << std::endl;
+    cv::Mat insta_edge = edge_img_insta.get_mat();
+    cv::Mat lidar_edge = edge_img_lidar.get_mat();
+
+    assert(store_info.size() == plypoint.get_point_all_polar().size());
 
     InstaImg check;
     check.set_zero_imgMat(img.rows, img.cols, CV_8UC1);
@@ -751,17 +875,17 @@ void LidarImg::get_corresponding_point(std::vector<Eigen::Vector3d> &corresp_poi
         }
     }
 
-    check.show("check", 0.25);
+    check.show("エッジ画像同士の同じ点の出力", 0.25);
 
-    for (auto &point : store_info)
-    {
-        std::cout << point << std::endl;
-    }
+    // for (auto &point : store_info)
+    // {
+    //     std::cout << point << std::endl;
+    // }
 
-    for (auto &point : corresp_pixel_candidate)
-    {
-        std::cout << point << std::endl;
-    }
+    // for (auto &point : corresp_pixel_candidate)
+    // {
+    //     std::cout << point << std::endl;
+    // }
 
     std::cout << "中間結果" << std::endl
               << store_info.size() << std::endl
@@ -771,6 +895,12 @@ void LidarImg::get_corresponding_point(std::vector<Eigen::Vector3d> &corresp_poi
     std::getline(std::cin, userInput2);
 
     assert(corresp_pixel_candidate.size() > 0);
+
+    auto compare_distance = [](Eigen::Vector3d a, Eigen::Vector3d b)
+    {
+        std::cout << a.norm() << " " << b.norm() << std::endl;
+        return a.norm() < b.norm();
+    };
 
     // corresp_pixel リストの中から、該当するものをstore_infoから探す
     for (auto &pixel : corresp_pixel_candidate)

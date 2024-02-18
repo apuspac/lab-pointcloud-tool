@@ -31,6 +31,8 @@ public:
 
     PointSet conversion_ply_to_img_point(PointSet &);
     void pickup_corresp_point(PointSet &, PointSet &, PointSet &, PointSet &, std::string);
+
+    void radius_based_outlier_filter(PointSet &, double);
 };
 
 #endif
