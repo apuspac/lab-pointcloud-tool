@@ -817,44 +817,31 @@ void LidarImg::get_corresponding_point(std::vector<Eigen::Vector3d> &corresp_poi
 
 std::vector<cv::Vec4i> InstaImg::HoughLine_vertical()
 {
-    cv::Mat dst, cdst;
+    cv::Mat dst;
     cv::Canny(img, dst, 50, 200, 3);
-    cv::cvtColor(dst, cdst, cv::COLOR_GRAY2BGR);
 
     std::vector<cv::Vec4i> lines;
     cv::HoughLinesP(dst, lines, 1, CV_PI / 180, 50, 50, 10);
-    for (size_t i = 0; i < lines.size(); i++)
-    {
-        cv::Vec4i l = lines[i];
-
-        // 縦線のみのための篩
-        int x1 = l[0];
-        int y1 = l[1];
-        int x2 = l[2];
-        int y2 = l[2];
-
-        if (std::abs(x1 - x2) < 3)
-        {
-            cv::line(cdst, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 0, 255), 3, cv::LINE_AA);
-        }
-    }
-    cv::imwrite("houghline360.png", cdst);
     return lines;
 }
 
 void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corresp_point, std::vector<std::pair<int, int>> &corresp_pixel, EdgeImg &edge_img_lidar, EdgeImg &edge_img_insta, PointSet &plypoint, int shift_count)
 {
-    std::cout << "get_corresponding_point" << std::endl;
+    std::cout << "get_corresponding_point_Hough" << std::endl;
     cv::Mat insta_edge = edge_img_insta.get_mat();
     cv::Mat lidar_edge = edge_img_lidar.get_mat();
 
     assert(store_info.size() == plypoint.get_point_all_polar().size());
 
-    InstaImg check;
-    check.set_zero_imgMat(img.rows, img.cols, CV_8UC1);
+    InstaImg candidate_img, candidate_img2, check_candidate;
+    candidate_img.set_zero_imgMat(img.rows, img.cols, CV_8UC1);
+    candidate_img2.set_zero_imgMat(img.rows, img.cols, CV_8UC1);
+    check_candidate.set_zero_imgMat(img.rows, img.cols, CV_8UC1);
 
     std::vector<int> corresp_pixel_candidate;
 
+    // 同じ点の座標を求める。
+    std::cout << "calc candidate pixel" << std::endl;
     for (int v = 0; v < img.rows; v++)
     {
         for (int u = 0; u < img.cols; u++)
@@ -869,23 +856,48 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
                 // 投影したときはshift前なので、変換しておく
                 int new_u = (u - shift_count + img.cols) % img.cols;
                 int new_v = (v + img.rows) % img.rows;
-                corresp_pixel_candidate.push_back(new_v * width + new_u);
-                check.set_pixel_255(new_u, new_v);
+                candidate_img.set_pixel_255(new_u, new_v);
+                // corresp_pixel_candidate.push_back(new_v * width + new_u);
             }
         }
     }
 
-    check.show("エッジ画像同士の同じ点の出力", 0.25);
+    // エッジ画像同士の同じ点の画像から、Hough変換を行う
+    std::cout << "calc Hough" << std::endl;
+    std::vector<cv::Vec4i> lines = candidate_img.HoughLine_vertical();
+    cv::cvtColor(candidate_img.get_mat(), check_candidate.get_mat(), cv::COLOR_GRAY2BGR);
 
-    // for (auto &point : store_info)
-    // {
-    //     std::cout << point << std::endl;
-    // }
+    // Hough変換結果から 縦エッジのみをフィルタリングして、candidate_img2に描画(確認用にcheck_candidateにも描画)
+    for (size_t i = 0; i < lines.size(); i++)
+    {
+        cv::Vec4i l = lines[i];
+        int x1 = l[0];
+        int y1 = l[1];
+        int x2 = l[2];
+        int y2 = l[2];
 
-    // for (auto &point : corresp_pixel_candidate)
-    // {
-    //     std::cout << point << std::endl;
-    // }
+        if (std::abs(x1 - x2) < 3)
+        {
+            cv::line(check_candidate.get_mat(), cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 0, 255), 3, cv::LINE_AA);
+            cv::line(candidate_img2.get_mat(), cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), c 255, 3, cv::LINE_AA);
+        }
+    }
+    cv::imwrite("houghline_vertical.png", check_candidate.get_mat());
+
+    // 対応点の座標を求める
+    std::cout << "calc corresp_pixel_candidate" << std::endl;
+    for (int v = 0; v < img.rows; v++)
+    {
+        for (int u = 0; u < img.cols; u++)
+        {
+            uchar *ptr = candidate_img2.get_mat().data + candidate_img2.get_mat().step * v;
+
+            if (ptr[u] > 0)
+            {
+                corresp_pixel_candidate.push_back(v * width + u);
+            }
+        }
+    }
 
     std::cout << "中間結果" << std::endl
               << store_info.size() << std::endl
