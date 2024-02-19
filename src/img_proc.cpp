@@ -822,6 +822,7 @@ std::vector<cv::Vec4i> InstaImg::HoughLine_vertical()
 
     std::vector<cv::Vec4i> lines;
     cv::HoughLinesP(dst, lines, 1, CV_PI / 180, 50, 50, 10);
+
     return lines;
 }
 
@@ -838,6 +839,8 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
     candidate_img2.set_zero_imgMat(img.rows, img.cols, CV_8UC1);
     check_candidate.set_zero_imgMat(img.rows, img.cols, CV_8UC1);
 
+    // lineごとに対応点を管理する
+    // std::vector<std::vector<int>> corresp_pixel_candidate;
     std::vector<int> corresp_pixel_candidate;
 
     // 同じ点の座標を求める。
@@ -865,8 +868,11 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
     // エッジ画像同士の同じ点の画像から、Hough変換を行う
     std::cout << "calc Hough" << std::endl;
     std::vector<cv::Vec4i> lines = candidate_img.HoughLine_vertical();
-    cv::cvtColor(candidate_img.get_mat(), check_candidate.get_mat(), cv::COLOR_GRAY2BGR);
+    // cv::cvtColor(candidate_img.get_mat(), check_candidate.get_mat(), cv::COLOR_GRAY2BGR);
+    //
+    std::cout << "lines: " << lines.size() << std::endl;
 
+    std::cout << "make_candidate_img2" << std::endl;
     // Hough変換結果から 縦エッジのみをフィルタリングして、candidate_img2に描画(確認用にcheck_candidateにも描画)
     for (size_t i = 0; i < lines.size(); i++)
     {
@@ -878,11 +884,19 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
 
         if (std::abs(x1 - x2) < 3)
         {
-            cv::line(check_candidate.get_mat(), cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 0, 255), 3, cv::LINE_AA);
-            cv::line(candidate_img2.get_mat(), cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), c 255, 3, cv::LINE_AA);
+            cv::line(check_candidate.get_mat(), cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), 255, 3, cv::LINE_AA);
+            cv::line(candidate_img2.get_mat(), cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), 255, 3, cv::LINE_AA);
+            
+            // 直線の座標を出力してみる
+            int dx = std::abs(x2 - x1);
+            int sx = (x1 < x2) ? 1 : -1;
+            int dy = std::abs(y2 - y1);
+            int sy = y1 < y2 ? 1 : -1;
+            int err = (dx > dy ? dx : -dy) /2;
+            int e2;
+
         }
     }
-    cv::imwrite("houghline_vertical.png", check_candidate.get_mat());
 
     // 対応点の座標を求める
     std::cout << "calc corresp_pixel_candidate" << std::endl;
@@ -898,6 +912,10 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
             }
         }
     }
+
+    cv::imwrite("houghline_vertical_check.png", check_candidate.get_mat());
+    cv::imwrite("houghline_vertical_img.png", candidate_img.get_mat());
+    cv::imwrite("houghline_vertical_img2.png", candidate_img2.get_mat());
 
     std::cout << "中間結果" << std::endl
               << store_info.size() << std::endl
