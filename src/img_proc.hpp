@@ -12,6 +12,7 @@
 #include <opencv2/quality.hpp>
 #include <opencv2/core/types.hpp>
 
+
 /**
  * @brief メインの画像クラス
  * Instaとか言ってるが、メインの画像クラス

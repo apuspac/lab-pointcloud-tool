@@ -465,7 +465,7 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
             int new_u = (u + width) % width;
             int new_v = (v + height) % height;
             int pixel = new_u + new_v * width;
-            std::cout << index << " : " << new_u << " " << new_v << " " << pixel << " " << std::endl;
+            // std::cout << index << " : " << new_u << " " << new_v << " " << pixel << " " << std::endl;
 
             set_store_info(pixel, index);
         }
@@ -474,6 +474,7 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
         index++;
     }
 
+    std::cout << "set_store_info"  << store_info.size() << std::endl;
     // 極座標から画像へ投影
     // for (auto &point : ply_point.get_point_all_polar())
     // {
@@ -753,7 +754,7 @@ void LidarImg::get_corresponding_point(std::vector<Eigen::Vector3d> &corresp_poi
     //     std::cout << point << std::endl;
     // }
 
-    // for (auto &point : corresp_pixel_candidate)
+    // for (auto &point : corresp_pixel_candidatewidth )
     // {
     //     std::cout << point << std::endl;
     // }
@@ -840,8 +841,8 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
     check_candidate.set_zero_imgMat(img.rows, img.cols, CV_8UC1);
 
     // lineごとに対応点を管理する
-    // std::vector<std::vector<int>> corresp_pixel_candidate;
-    std::vector<int> corresp_pixel_candidate;
+    std::vector<std::vector<int>> corresp_pixel_candidate;
+    // std::vector<int> corresp_pixel_candidate;
 
     // 同じ点の座標を求める。
     std::cout << "calc candidate pixel" << std::endl;
@@ -873,6 +874,8 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
     std::cout << "lines: " << lines.size() << std::endl;
 
     std::cout << "make_candidate_img2" << std::endl;
+    
+    size_t line_index = 0;
     // Hough変換結果から 縦エッジのみをフィルタリングして、candidate_img2に描画(確認用にcheck_candidateにも描画)
     for (size_t i = 0; i < lines.size(); i++)
     {
@@ -886,32 +889,61 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
         {
             cv::line(check_candidate.get_mat(), cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), 255, 3, cv::LINE_AA);
             cv::line(candidate_img2.get_mat(), cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), 255, 3, cv::LINE_AA);
-            
+
             // 直線の座標を出力してみる
+            // Bresenham's line algorithmというらしい。 PCで直線描画するときに使われてるとか。
             int dx = std::abs(x2 - x1);
             int sx = (x1 < x2) ? 1 : -1;
             int dy = std::abs(y2 - y1);
             int sy = y1 < y2 ? 1 : -1;
-            int err = (dx > dy ? dx : -dy) /2;
+            int err = (dx > dy ? dx : -dy) / 2;
             int e2;
 
+            while (true)
+            {
+                std::cout << "line: " << i << " " <<  x1 << " " << y1 << std::endl;
+                // lineごとの対応を保存
+                if(corresp_pixel_candidate.size() < line_index + 1)
+                {
+                    corresp_pixel_candidate.push_back(std::vector<int>());
+                }
+                corresp_pixel_candidate.at(line_index).push_back(y1 * width + x1);
+
+                if (x1 == x2 && y1 == y2)
+                {
+                    break;
+                }
+                e2 = err;
+                if (e2 > -dx)
+                {
+                    err -= dy;
+                    x1 += sx;
+                }
+                if (e2 < dy)
+                {
+                    err += dx;
+                    y1 += sy;
+                }
+            }
+            
+            line_index++;
         }
     }
 
     // 対応点の座標を求める
-    std::cout << "calc corresp_pixel_candidate" << std::endl;
-    for (int v = 0; v < img.rows; v++)
-    {
-        for (int u = 0; u < img.cols; u++)
-        {
-            uchar *ptr = candidate_img2.get_mat().data + candidate_img2.get_mat().step * v;
+    // std::cout << "calc corresp_pixel_candidate" << std::endl;
+    // for (int v = 0; v < img.rows; v++)
+    // {
+    //     for (int u = 0; u < img.cols; u++)
+    //     {
+    //         uchar *ptr = candidate_img2.get_mat().data + candidate_img2.get_mat().step * v;
 
-            if (ptr[u] > 0)
-            {
-                corresp_pixel_candidate.push_back(v * width + u);
-            }
-        }
-    }
+    //         if (ptr[u] > 0)
+    //         {
+    //             corresp_pixel_candidate.push_back(v * width + u);
+    //         }
+    //     }
+    // }
 
     cv::imwrite("houghline_vertical_check.png", check_candidate.get_mat());
     cv::imwrite("houghline_vertical_img.png", candidate_img.get_mat());
@@ -923,6 +955,8 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
 
     std::string userInput2;
     std::getline(std::cin, userInput2);
+    
+    std::ofstream ofs("corresp_pixel_candidate.txt");
 
     assert(corresp_pixel_candidate.size() > 0);
 
@@ -932,44 +966,106 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
         return a.norm() < b.norm();
     };
 
-    // corresp_pixel リストの中から、該当するものをstore_infoから探す
-    for (auto &pixel : corresp_pixel_candidate)
+    // pixelから 画像対応点に変換する
+    auto pixel_to_uv = [this, shift_count](int pixel)
     {
+        int u = pixel % width;
+        int v = pixel / width;
 
-        std::vector<Eigen::Vector3d> corresp_point_candidate;
-        std::cout << "searching: " << pixel << std::endl;
+        // shiftしたあとの座標に戻す
+        u = (u + shift_count + width) % width;
 
-        size_t index = 0;
-        for (auto &projection : store_info)
+        if (u < 0 || v < 0 || u > width || v > height)
         {
-            if (projection == pixel)
+            std::cout << "u or v is over img size: " << u << " " << v << std::endl;
+        }
+        return std::make_pair(u, v);
+    };
+
+    struct candidate_pair
+    {
+        int pixel;
+        Eigen::Vector3d point;
+        size_t store_index;
+    };
+
+    int search_line_index = 0;
+    // lineごとに該当する点をstore_infoから探す
+    for (auto &line_pixel : corresp_pixel_candidate)
+    {
+        // ヒストグラムの階級数
+        int bin_width = 1 + static_cast<int>(std::log2(line_pixel.size()));
+        
+        std::cout << "search_line" << search_line_index << std::endl;
+
+        // 各ヒストグラムと
+        std::vector<double> distance_from_center;
+        // 個数のヒストグラムと それに対応するpixel pointのpairをそれぞれ格納
+        std::array<int, 500> histgram_distance;
+        std::vector<candidate_pair> candidate_corresp;
+
+        // corresp_pixel リストの中から、該当するものをstore_infoから探す
+        for (auto &pixel : line_pixel)
+        {
+
+            std::vector<Eigen::Vector3d> corresp_point_candidate;
+            // std::cout << "searching: " << pixel << std::endl;
+
+            size_t index = 0;
+            // store_info(1の点はpixelのどこに投影されたかを記録してるので)
+            // 同じpixelがあるか探索(まああるんだけど)
+            for (auto &projection : store_info)
             {
-                corresp_point_candidate.push_back(plypoint.get_point(index));
+                if (projection == pixel)
+                {
+                    corresp_point_candidate.push_back(plypoint.get_point(index));
+                }
+                index++;
             }
-            index++;
-        }
 
-        if (corresp_point_candidate.size() > 0)
-        {
-            int u = pixel % width;
-            int v = pixel / width;
-
-            // shiftしたあとの座標に戻す
-            u = (u + shift_count + width) % width;
-
-            if (u < 0 || v < 0 || u > width || v > height)
+            // candidate_pixelに対応する点が見つかったら
+            if (corresp_point_candidate.size() > 0)
             {
-                std::cout << "u or v is over img size: " << u << " " << v << std::endl;
-            }
+                // corresp_pixel.push_back(pixel_to_uv(pixel));
+                // corresp_point.push_back(*std::min_element(corresp_point_candidate.begin(), corresp_point_candidate.end(), compare_distance));
+                // 格納する点の距離をbin_widthで割って histgramに格納
+                Eigen::Vector3d point = *std::min_element(corresp_point_candidate.begin(), corresp_point_candidate.end(), compare_distance);
+                double point_dis = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0));
+                size_t hist_index = static_cast<size_t>(point_dis / bin_width);
 
-            // std::cout << "found" << u << " " << v << std::endl;
-            corresp_pixel.push_back(std::make_pair(u, v));
-            corresp_point.push_back(*std::min_element(corresp_point_candidate.begin(), corresp_point_candidate.end(), compare_distance));
+                // ヒストグラムの更新
+                histgram_distance.at(hist_index)++;
+                candidate_corresp.push_back({pixel, point, hist_index});
+            }
+            else
+            {
+                // std::cout << "no corresponding point" << std::endl;
+                continue;
+            }
         }
-        else
+        
+        // ヒストグラムの中から 大きいものを探す
+        auto iter = std::max_element(histgram_distance.begin(), histgram_distance.end());
+        size_t c_index= std::distance(histgram_distance.begin(), iter);
+        
+        // print
+        ofs << "next_line" << std::endl;
+        for(unsigned int i =0; i< histgram_distance.size(); i++)
         {
-            // std::cout << "no corresponding point" << std::endl;
-            continue;
+            ofs << i * bin_width << " " << histgram_distance.at(i) << std::endl;
         }
+        
+        for(auto &candidate : candidate_corresp)
+        {
+            if(candidate.store_index == c_index)
+            {
+                std::cout << "found: "  << candidate.pixel << " " << candidate.point<< std::endl;
+                corresp_pixel.push_back(pixel_to_uv(candidate.pixel));
+                corresp_point.push_back(candidate.point);
+            }
+        }
+        
+        search_line_index++;
     }
+    ofs.close();
 }
