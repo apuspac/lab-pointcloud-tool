@@ -962,7 +962,7 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
 
     auto compare_distance = [](Eigen::Vector3d a, Eigen::Vector3d b)
     {
-        std::cout << a.norm() << " " << b.norm() << std::endl;
+        std::cout << "compare_distance" << a.norm() << " " << b.norm() << std::endl;
         return a.norm() < b.norm();
     };
 
