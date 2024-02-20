@@ -73,7 +73,7 @@ public:
     void gaussian_blur(int);
     void diff_pixel(const cv::Mat &);
     void diff_img(const cv::Mat &);
-    std::vector<cv::Vec4i> HoughLine_vertical();
+    std::vector<cv::Vec4i> HoughLine_vertical(int, double, double);
 };
 
 /**
@@ -134,7 +134,7 @@ public:
     void ply_to_360paranoma_img(PointSet &, int);
 
     void get_corresponding_point(std::vector<Eigen::Vector3d> &, std::vector<std::pair<int, int>> &, EdgeImg &, EdgeImg &, PointSet &, int);
-    void get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &, std::vector<std::pair<int, int>> &, EdgeImg &, EdgeImg &, PointSet &, int);
+    void get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &, std::vector<std::pair<int, int>> &, EdgeImg &, EdgeImg &, PointSet &, int, std::string);
 };
 
 #endif

@@ -1192,7 +1192,7 @@ void PointOperation::test_location()
     std::vector<Eigen::Vector3d> corres_point;
     std::vector<std::pair<int, int>> corres_img_point;
 
-    lidar_img.get_corresponding_point_Hough(corres_point, corres_img_point, lidar_edge_height_change, insta_edge, move_point, count);
+    lidar_img.get_corresponding_point_Hough(corres_point, corres_img_point, lidar_edge_height_change, insta_edge, move_point, count, date);
 
     obj_io.output_dat("out/" + date + "/" + date + "ply.dat", corres_point);
     obj_io.output_dat("out/" + date + "/" + date + "img.dat", corres_img_point);
@@ -1245,5 +1245,5 @@ void PointOperation::test_location_two()
 
     obj_io.output_ply(ply_point, "out/" + date + "/" + "rbf" + ply_point.get_name() + ".ply");
 
-    image.HoughLine_vertical();
+    image.HoughLine_vertical(50, 100, 10);
 }
