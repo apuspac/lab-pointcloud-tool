@@ -1161,7 +1161,6 @@ void PointOperation::test_location()
     int count_vertical = 0;
     double split = 0.025;
 
-    std::cout << "PPPPPPP" << std::endl;
     // ====== RESULT Img ======
     PointSet move_point;
     rmfloor_point.transform(Eigen::Vector3d(0, 0, split * count_vertical));
@@ -1176,7 +1175,8 @@ void PointOperation::test_location()
     shift_tmp.set_zero_imgMat(image.get_height(), image.get_width(), CV_8UC1);
     // lidar_img.resize_store_info(image.get_height(), image.get_width());
     lidar_img.resize_store_info(move_point.get_point_num());
-    lidar_img.ply_to_360paranoma_img(move_point, true);
+    // lidar_img.ply_to_360paranoma_img(move_point, true);
+    lidar_img.ply_to_360paranoma_img_depth(move_point, true);
     shift_tmp.set_mat(lidar_img.shift(count, 0));
     shift_tmp.closing(3, 0, 1);
     lidar_edge_height_change.detect_edge_with_sobel(shift_tmp.get_mat());

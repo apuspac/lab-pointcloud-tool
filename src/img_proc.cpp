@@ -428,6 +428,40 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point)
     }
 }
 
+void LidarImg::ply_to_360paranoma_img_depth(PointSet &ply_point, int depth_flag)
+{
+    std::cout << "ply_to_360_paranoma_img_depth" << std::endl
+              << ply_point.get_point_all().size() << std::endl
+              << "polar.num" << ply_point.get_point_all_polar().size() << std::endl;
+    assert(ply_point.get_point_all_polar().size() == store_info.size());
+
+    store_pixel.resize(width * height);
+
+    for (const auto &point : ply_point.get_point_all_polar())
+    {
+        double u_dash = point(2) / (2.0 * M_PI);
+        double v_dash = point(1) / M_PI;
+
+        // 画像は左手系なため、右手と合わせるために 反転して90°回転させる
+        int u = static_cast<int>(-(u_dash * width) + (width / 4));
+        int v = static_cast<int>(v_dash * height);
+
+        if (u > width)
+        {
+            u -= static_cast<int>(width);
+        }
+            // 画像の範囲外に出てしまった場合を戻す処理。
+            // 下のset_pixel_255は、opencv側でよしなにしてくれるため、ない。
+            int new_u = (u + width) % width;
+            int new_v = (v + height) % height;
+            int pixel = new_u + new_v * width;
+        
+        set_store_pixel(pixel, point);
+        set_pixel_255(u, v);
+    }
+    std::cout << "set_store_info_size:" << store_pixel.size() << std::endl;
+}
+
 /**
  * @brief plyから得られる点群を全方位画像に投影する。
  *
@@ -436,9 +470,10 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point)
  */
 void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
 {
-    std::cout << "ply_to_360paranoma_img" << std::endl;
-    std::cout << ply_point.get_point(0) << std::endl;
-    std::cout << ply_point.get_point_polar(0) << std::endl;
+    std::cout << "ply_to_360paranoma_img" << std::endl
+              << "check_point0: " << std::endl
+              << ply_point.get_point(0) << std::endl
+              << ply_point.get_point_polar(0) << std::endl;
 
     assert(ply_point.get_point_all_polar().size() == store_info.size());
 
@@ -827,7 +862,8 @@ std::vector<cv::Vec4i> InstaImg::HoughLine_vertical(int threshold, double minlin
     return lines;
 }
 
-void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corresp_point, std::vector<std::pair<int, int>> &corresp_pixel, EdgeImg &edge_img_lidar, EdgeImg &edge_img_insta, PointSet &plypoint, int shift_count, std::string date)
+// set_store_infoを使った場合
+void LidarImg::get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &corresp_point, std::vector<std::pair<int, int>> &corresp_pixel, EdgeImg &edge_img_lidar, EdgeImg &edge_img_insta, PointSet &plypoint, int shift_count, std::string date)
 {
     std::cout << "get_corresponding_point_Hough" << std::endl;
     cv::Mat insta_edge = edge_img_insta.get_mat();
@@ -870,8 +906,8 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
     std::cout << "calc Hough" << std::endl;
 
     int _threshold = 50;
-    double _minline = 250;
-    double _maxgap = 40;
+    double _minline = 300;
+    double _maxgap = 10;
 
     std::cout << "setting" << _threshold << " " << _minline << " " << _maxgap << std::endl;
     std::vector<cv::Vec4i> lines = candidate_img.HoughLine_vertical(_threshold, _minline, _maxgap);
@@ -893,11 +929,13 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
         int y1 = l[1];
         int x2 = l[2];
         int y2 = l[2];
-        
+
         bool is_overlap = false;
-        
-        for(auto &x: line_overlap_check){
-            if(x1 == x){
+
+        for (auto &x : line_overlap_check)
+        {
+            if (x1 == x)
+            {
                 std::cout << "overlap" << std::endl;
                 is_overlap = true;
             }
@@ -1072,13 +1110,273 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
         }
 
         // ヒストグラムの中から大きいものではなく 前面でほしいものを探す
-        auto iter = std::find_if(histgram_distance.begin(), histgram_distance.end(), [](int value)
-                                 { return value != 0; });
-        auto c_index = std::distance(histgram_distance.begin(), iter);
+        // auto iter = std::find_if(histgram_distance.begin(), histgram_distance.end(), [](int value)
+        //                          { return value != 0; });
+        // auto c_index = std::distance(histgram_distance.begin(), iter);
 
         // ヒストグラムの中から最大の物を探す
-        //  auto iter = std::max_element(histgram_distance.begin(), histgram_distance.end());
-        //  auto c_index= std::distance(histgram_distance.begin(), iter);
+        auto iter = std::max_element(histgram_distance.begin(), histgram_distance.end());
+        auto c_index = std::distance(histgram_distance.begin(), iter);
+
+        std::cout << "c_index" << c_index << std::endl;
+
+        if (c_index == histgram_distance.size())
+        {
+            std::cout << "no corresponding point" << std::endl;
+            continue;
+        }
+        else
+        {
+            // print
+            ofs << "next_line" << std::endl;
+            for (unsigned int i = 0; i < histgram_distance.size(); i++)
+            {
+                if (histgram_distance.at(i) != 0)
+                {
+                    ofs << histgram_distance.at(i) << " " << i * bin_width << std::endl;
+                    std::cout << histgram_distance.at(i) << " " << i * bin_width << std::endl;
+                }
+            }
+
+            for (auto &candidate : candidate_corresp)
+            {
+                if (candidate.store_index == c_index)
+                {
+                    std::cout << "found: " << candidate.pixel << " " << candidate.point.transpose();
+                    corresp_pixel.push_back(pixel_to_uv(candidate.pixel));
+                    corresp_point.push_back(candidate.point);
+                }
+            }
+        }
+
+        search_line_index++;
+    }
+    ofs.close();
+}
+
+void LidarImg::set_store_pixel(int pixel, Eigen::Vector3d new_point)
+{
+    double new_distance = std::sqrt(std::pow(new_point(0), 2.0) + std::pow(new_point(1), 2.0));
+    double distance = store_pixel.at(pixel).distance;
+
+    if (new_distance < distance || distance == 0.0)
+    {
+        store_pixel.at(pixel).point = new_point;
+        store_pixel.at(pixel).distance = new_distance;
+    }
+}
+
+// store_pixelを使う
+void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corresp_point, std::vector<std::pair<int, int>> &corresp_pixel, EdgeImg &edge_img_lidar, EdgeImg &edge_img_insta, PointSet &plypoint, int shift_count, std::string date)
+{
+    std::cout << "get_corresponding_point_Hough" << std::endl;
+    cv::Mat insta_edge = edge_img_insta.get_mat();
+    cv::Mat lidar_edge = edge_img_lidar.get_mat();
+
+    assert(store_info.size() == plypoint.get_point_all_polar().size());
+
+    InstaImg candidate_img, candidate_img2, check_candidate;
+    candidate_img.set_zero_imgMat(img.rows, img.cols, CV_8UC1);
+    candidate_img2.set_zero_imgMat(img.rows, img.cols, CV_8UC1);
+    check_candidate.set_zero_imgMat(img.rows, img.cols, CV_8UC1);
+
+    // lineごとに対応点を管理する
+    std::vector<std::vector<int>> corresp_pixel_candidate;
+    // std::vector<int> corresp_pixel_candidate;
+
+    // 同じ点の座標を求める。
+    std::cout << "calc candidate pixel" << std::endl;
+    for (int v = 0; v < img.rows; v++)
+    {
+        for (int u = 0; u < img.cols; u++)
+        {
+            // ここのptrは ply_to_panranomaした直後の画像の値
+            uchar *ptr = lidar_edge.data + lidar_edge.step * v;
+            uchar *ptr_insta = insta_edge.data + insta_edge.step * v;
+
+            if (ptr[u] > 0 && ptr_insta[u] > 0)
+            {
+                // 投影したときはshift前なので、変換しておく
+                int new_u = (u - shift_count + img.cols) % img.cols;
+                int new_v = (v + img.rows) % img.rows;
+                candidate_img.set_pixel_255(new_u, new_v);
+            }
+        }
+    }
+
+    // エッジ画像同士の同じ点の画像から、Hough変換を行う
+    std::cout << "calc Hough" << std::endl;
+
+    int _threshold = 50;
+    double _minline = 100;
+    double _maxgap = 10;
+
+    std::cout << "setting" << _threshold << " " << _minline << " " << _maxgap << std::endl;
+    std::vector<cv::Vec4i> lines = candidate_img.HoughLine_vertical(_threshold, _minline, _maxgap);
+    std::cout << "lines: " << lines.size() << std::endl;
+    std::cout << "make_candidate_img2" << std::endl;
+
+    // かぶっている可能性があるので， 外す処理を書いてみる
+    std::vector<int> line_overlap_check;
+
+    size_t line_index = 0;
+    // Hough変換結果から 縦エッジのみをフィルタリングして、candidate_img2に描画(確認用にcheck_candidateにも描画)
+    for (size_t i = 0; i < lines.size(); i++)
+    {
+        cv::Vec4i l = lines[i];
+        int x1 = l[0];
+        int y1 = l[1];
+        int x2 = l[2];
+        int y2 = l[2];
+
+        bool is_overlap = false;
+
+        // 直線がかぶっていたら 除く
+        for (auto &x : line_overlap_check)
+        {
+            if (x1 == x)
+            {
+                std::cout << "overlap" << std::endl;
+                is_overlap = true;
+            }
+        }
+
+        if (std::abs(x1 - x2) < 1 && !is_overlap)
+        {
+            cv::line(check_candidate.get_mat(), cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), 255, 3, cv::LINE_AA);
+            cv::line(candidate_img2.get_mat(), cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), 255, 3, cv::LINE_AA);
+
+            // 直線の座標を出力してみる
+            // Bresenham's line algorithmというらしい。 PCで直線描画するときに使われてるとか。
+            int dx = std::abs(x2 - x1);
+            int sx = (x1 < x2) ? 1 : -1;
+            int dy = std::abs(y2 - y1);
+            int sy = y1 < y2 ? 1 : -1;
+            int err = (dx > dy ? dx : -dy) / 2;
+            int e2;
+
+            while (true)
+            {
+                // std::cout << "line: " << i << " " <<  x1 << " " << y1 << std::endl;
+                // lineごとの対応を保存
+                if (corresp_pixel_candidate.size() < line_index + 1)
+                {
+                    corresp_pixel_candidate.push_back(std::vector<int>());
+                }
+                corresp_pixel_candidate.at(line_index).push_back(y1 * width + x1);
+
+                if (x1 == x2 && y1 == y2)
+                {
+                    break;
+                }
+                e2 = err;
+                if (e2 > -dx)
+                {
+                    err -= dy;
+                    x1 += sx;
+                }
+                if (e2 < dy)
+                {
+                    err += dx;
+                    y1 += sy;
+                }
+            }
+
+            line_index++;
+        }
+        line_overlap_check.push_back(x1);
+    }
+
+    cv::imwrite("out/" + date + "/" + date + "houghline_vertical_check.png", check_candidate.get_mat());
+    cv::imwrite("out/" + date + "/" + date + "houghline_vertical_img.png", candidate_img.get_mat());
+    // cv::imwrite("houghline_vertical_img2.png", candidate_img2.get_mat());
+
+    std::cout << "中間結果" << std::endl
+              << store_info.size() << std::endl
+              << corresp_pixel_candidate.size() << std::endl;
+
+    std::string userInput2;
+    std::getline(std::cin, userInput2);
+
+    std::ofstream ofs("corresp_pixel_candidate.txt");
+    assert(corresp_pixel_candidate.size() > 0);
+
+    // pixelから 画像対応点に変換する
+    auto pixel_to_uv = [this, shift_count](int pixel)
+    {
+        int u = pixel % width;
+        int v = pixel / width;
+
+        // shiftしたあとの座標に戻す
+        u = (u + shift_count + width) % width;
+
+        if (u < 0 || v < 0 || u > width || v > height)
+        {
+            std::cout << "u or v is over img size: " << u << " " << v << std::endl;
+        }
+        return std::make_pair(u, v);
+    };
+
+    struct candidate_pair
+    {
+        int pixel;
+        Eigen::Vector3d point;
+        int store_index;
+    };
+
+    int search_line_index = 0;
+    // lineごとに該当する点をstore_pixelから探す
+    for (auto &line_pixel : corresp_pixel_candidate)
+    {
+        // ヒストグラムの階級数
+        // int bin_width = 1 + static_cast<int>(std::log2(line_pixel.size()));
+        double bin_width = 0.05;
+
+        std::cout << "search_line" << search_line_index << std::endl;
+        std::cout << "bin_width" << bin_width << std::endl;
+
+        // 各ヒストグラムと
+        std::vector<double> distance_from_center;
+        // 個数のヒストグラムと それに対応するpixel pointのpairをそれぞれ格納
+        std::array<int, 500> histgram_distance;
+        std::vector<candidate_pair> candidate_corresp;
+
+        // histgram_distanceを0で初期化
+        std::fill(histgram_distance.begin(), histgram_distance.end(), 0);
+        // candidate_correspを0で初期化
+        // std::fill(candidate_corresp.begin(), candidate_corresp.end(), candidate_pair{0, 0});
+
+        // lineごとの対応のあるpixelを探索
+        for (auto &pixel : line_pixel)
+        {
+            if(pixel > height * width){
+                std::cout << pixel <<  "pixel is over" <<  height * width << std::endl;
+                std::cout << store_pixel.capacity() << std::endl;
+                continue;
+            }
+            auto store_pixell = store_pixel.at(pixel);
+            // pixelに対応するstore_pixelの点のうち 距離が0でないものを探す
+            if(store_pixell.distance != 0){
+                double point_dis = store_pixell.distance;
+                int hist_index = point_dis / bin_width;
+                histgram_distance.at(hist_index)++;
+                candidate_corresp.push_back({pixel, store_pixell.point, hist_index});
+            }
+            else
+            {
+                // std::cout << "no corresponding point" << std::endl;
+                continue;
+            }
+        }
+
+        // ヒストグラムの中から大きいものではなく 前面でほしいものを探す
+        // auto iter = std::find_if(histgram_distance.begin(), histgram_distance.end(), [](int value)
+        //                          { return value != 0; });
+        // auto c_index = std::distance(histgram_distance.begin(), iter);
+
+        // ヒストグラムの中から最大の物を探す
+        auto iter = std::max_element(histgram_distance.begin(), histgram_distance.end());
+        auto c_index = std::distance(histgram_distance.begin(), iter);
 
         std::cout << "c_index" << c_index << std::endl;
 

@@ -92,6 +92,15 @@ public:
     void detect_edge_with_sobel(const cv::Mat &);
 };
 
+struct projection_info
+{
+    // v * width + u  形式
+    int pixel;
+    Eigen::Vector3d point;
+    double distance;
+};
+
+
 /**
  * @brief LiDAR画像クラス
  *
@@ -104,7 +113,10 @@ private:
     // std::vector<std::vector<std::vector<Eigen::Vector3d>>> store_info;
 
     // 投影された点がどの画素に投影されたか 画素座標(u + v * width)で格納
+    // 追記: これ全部の点を格納するのではなく，画素ごとに点を格納するように変更する
     std::vector<int> store_info;
+    std::vector<projection_info> store_pixel;
+
 
 public:
     LidarImg() : InstaImg() {}
@@ -128,12 +140,15 @@ public:
 
     // これ使うときは、resize_store_infoを使って、vectorのサイズを確保しておく。
     void set_store_info(int pixel, size_t index) { store_info.at(index) = pixel; }
+    void set_store_pixel(int, Eigen::Vector3d);
     int get_store_info(int point_index) { return store_info.at(point_index); }
 
     void ply_to_360paranoma_img(PointSet &);
     void ply_to_360paranoma_img(PointSet &, int);
+    void ply_to_360paranoma_img_depth(PointSet &, int);
 
     void get_corresponding_point(std::vector<Eigen::Vector3d> &, std::vector<std::pair<int, int>> &, EdgeImg &, EdgeImg &, PointSet &, int);
+    void get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &, std::vector<std::pair<int, int>> &, EdgeImg &, EdgeImg &, PointSet &, int, std::string);
     void get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &, std::vector<std::pair<int, int>> &, EdgeImg &, EdgeImg &, PointSet &, int, std::string);
 };
 
