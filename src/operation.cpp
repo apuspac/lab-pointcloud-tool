@@ -328,7 +328,7 @@ void PointOperation::Rotation_only()
 
     CalcPointSet calc;
 
-    // 重み(よくわかってない)
+    // 重み(よくわかってない)kamo
     double weight = 1.0;
     // 相関行列C
     Eigen::Matrix3d correlation_C = calc.calc_correlation_C(corresp_ply_point, corresp_img_point, weight);
