@@ -34,8 +34,10 @@ public:
     static void output_ply(PointSet &, std::string);
     Eigen::Vector3d extend_distance_from_point_and_origin(Eigen::Vector3d, double);
     int load_detection_json_file(std::string, DetectionData &, std::string);
-    void output_csv(std::string, std::vector<std::vector<double>>);
+    void output_csv_2double(std::string, std::vector<std::vector<double>>);
     void create_dir(std::string);
+    void output_dat(std::string, std::vector<Eigen::Vector3d>);
+    void output_dat(std::string, std::vector<std::pair<int, int>>);
 };
 
 #endif

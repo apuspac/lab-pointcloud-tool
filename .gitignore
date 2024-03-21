@@ -61,7 +61,7 @@ _deps
 *-prefix/
 
 *.json
-
+*.ply
 
 # dataファイルなどの 元データは追跡
 !data/

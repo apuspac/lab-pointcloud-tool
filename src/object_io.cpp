@@ -551,7 +551,7 @@ int ObjectIO::load_detection_json_file(std::string filepath, DetectionData &dete
     return 0;
 }
 
-void ObjectIO::output_csv(std::string filename, std::vector<std::vector<double>> csv_data)
+void ObjectIO::output_csv_2double(std::string filename, std::vector<std::vector<double>> csv_data)
 {
     std::ofstream outputFile(filename);
 
@@ -583,4 +583,42 @@ void ObjectIO::create_dir(std::string dir_path)
     bool result = std::filesystem::create_directories(dir_path);
 
     assert(result);
+}
+
+void ObjectIO::output_dat(std::string filename, std::vector<Eigen::Vector3d> p_data)
+{
+    std::ofstream outputFile(filename);
+
+    if (!outputFile.is_open())
+    {
+        std::cout << "failed to open file" << std::endl;
+    }
+    outputFile << p_data.size() << std::endl;
+
+    for (const auto &p : p_data)
+    {
+        outputFile << p(0) << " " << p(1) << " " << p(2) << std::endl;
+    }
+
+    std::cout << "output point file complete: " << filename << std::endl;
+}
+
+void ObjectIO::output_dat(std::string filename, std::vector<std::pair<int, int>> i_data)
+{
+
+    std::ofstream outputFile(filename);
+
+    if (!outputFile.is_open())
+    {
+        std::cout << "failed to open file" << std::endl;
+    }
+
+    outputFile << i_data.size() << std::endl;
+
+    for (const auto &p : i_data)
+    {
+        outputFile << p.first << " " << p.second << std::endl;
+    }
+
+    std::cout << "output pixel file complete: " << filename << std::endl;
 }
