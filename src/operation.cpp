@@ -883,10 +883,6 @@ void PointOperation::projection_to_sphere()
 
 double img_projection(PointSet &ply_point, LidarImg &lidar_img, InstaImg &image)
 {
-
-    // std::cout << image.get_width() << "::" << image.get_height() << std::endl;
-    // std::cout << ply_point.get_point(0).transpose() << std::endl;
-
     // 極座標から画像へ投影
     for (auto &point : ply_point.get_point_all_polar())
     {
