@@ -328,7 +328,7 @@ void PointOperation::Rotation_only()
 
     CalcPointSet calc;
 
-    // 重み(よくわかってない)
+    // 重み(よくわかってない)kamo
     double weight = 1.0;
     // 相関行列C
     Eigen::Matrix3d correlation_C = calc.calc_correlation_C(corresp_ply_point, corresp_img_point, weight);
@@ -797,7 +797,7 @@ void PointOperation::capture_point_inner_bbox()
             }
         }
 
-        // center_of_gravity 重心も分けたい場合はこれも
+        // center_of_gravity 重心も分けたい場合はこれも必要かも
         // for (auto &center_of_gravity_multi : all_center_of_gravity)
         // {
         //     for (auto &center_of_gravity : center_of_gravity_multi)
@@ -883,10 +883,6 @@ void PointOperation::projection_to_sphere()
 
 double img_projection(PointSet &ply_point, LidarImg &lidar_img, InstaImg &image)
 {
-
-    // std::cout << image.get_width() << "::" << image.get_height() << std::endl;
-    // std::cout << ply_point.get_point(0).transpose() << std::endl;
-
     // 極座標から画像へ投影
     for (auto &point : ply_point.get_point_all_polar())
     {
