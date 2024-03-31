@@ -797,7 +797,7 @@ void PointOperation::capture_point_inner_bbox()
             }
         }
 
-        // center_of_gravity 重心も分けたい場合はこれも
+        // center_of_gravity 重心も分けたい場合はこれも必要かも
         // for (auto &center_of_gravity_multi : all_center_of_gravity)
         // {
         //     for (auto &center_of_gravity : center_of_gravity_multi)
