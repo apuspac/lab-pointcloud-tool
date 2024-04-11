@@ -1215,31 +1215,13 @@ void PointOperation::remove_pointset_floor(PointSet &origin_point, PointSet &out
     }
 }
 
+/**
+ * what are you doing now?
+* 画像シフトのテストを作って 試します。
+*/
 void PointOperation::test_location_two()
 {
     std::cout << "test_location_two";
     ObjectIO obj_io;
 
-    // load
-    PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
-    InstaImg image;
-    image.load_img(img_file_path.at(0));
-
-    ply_point.radius_based_filter(16, 0.05);
-
-    // show
-    // Viewer3D check_window("radius_based_filter");
-    // check_window.add_axes();
-    // check_window.add_geometry_pointset(ply_point.get_point_all(), 3);
-    // check_window.show_using_drawgeometries();
-
-    // create out_dir
-    set_date();
-    std::cout << date << std::endl;
-    obj_io.create_dir("out/" + date);
-
-    obj_io.output_ply(ply_point, "out/" + date + "/" + "rbf" + ply_point.get_name() + ".ply");
-
-    image.HoughLine_vertical(50, 100, 10);
 }
