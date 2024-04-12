@@ -12,7 +12,6 @@
 #include <opencv2/quality.hpp>
 #include <opencv2/core/types.hpp>
 
-
 /**
  * @brief メインの画像クラス
  * Instaとか言ってるが、メインの画像クラス
@@ -74,6 +73,8 @@ public:
     void diff_pixel(const cv::Mat &);
     void diff_img(const cv::Mat &);
     std::vector<cv::Vec4i> HoughLine_vertical(int, double, double);
+
+    void make_test_img_forEdge(int, int, int, int);
 };
 
 /**
@@ -100,7 +101,6 @@ struct projection_info
     double distance;
 };
 
-
 /**
  * @brief LiDAR画像クラス
  *
@@ -116,7 +116,6 @@ private:
     // 追記: これ全部の点を格納するのではなく，画素ごとに点を格納するように変更する
     std::vector<int> store_info;
     std::vector<projection_info> store_pixel;
-
 
 public:
     LidarImg() : InstaImg() {}

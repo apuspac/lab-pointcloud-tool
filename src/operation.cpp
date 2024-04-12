@@ -1217,11 +1217,58 @@ void PointOperation::remove_pointset_floor(PointSet &origin_point, PointSet &out
 
 /**
  * what are you doing now?
-* 画像シフトのテストを作って 試します。
-*/
+ * 画像シフトのテストを作って 試します。
+ */
 void PointOperation::test_location_two()
 {
     std::cout << "test_location_two";
     ObjectIO obj_io;
 
+    InstaImg image;
+    PointSet ply_point("plydata");
+
+    // ここでimageにテスト画像を用意
+    image.make_test_img_forEdge(1920, 1080, 100, 100);
+    // ここでpointsetに点群を生成
+
+    // crate out_dir
+    set_date();
+    std::cout << date << std::endl;
+    obj_io.create_dir("out/" + date);
+
+    image.show("test", 0.25);
+
+    auto insta_img_edge_detection = [this](EdgeImg &_insta_edge, InstaImg &_image)
+    {
+        _insta_edge.set_zero_imgMat(_image.get_height(), _image.get_width(), CV_8UC1);
+        _insta_edge.detect_edge_with_sobel(_image.get_mat());
+        cv::imwrite("out/" + date + "/" + "instaimg_sobel.png", _insta_edge.get_mat());
+    };
+    // insta_img edge_detection
+    EdgeImg insta_edge("insta_edge");
+    insta_img_edge_detection(insta_edge, image);
+    insta_edge.show("insta_edge", 0.25);
+    /*
+     *
+        auto lidar_to_img_edge_detection = [this](EdgeImg &_lidar_edge, PointSet &_removed_floor_ply_point, InstaImg &_image)
+        {
+            LidarImg lidar_img("lidar_edge");
+            _removed_floor_ply_point.convert_to_polar();
+            lidar_img.set_zero_imgMat(_image.get_height(), _image.get_width(), CV_8UC1);
+            lidar_img.ply_to_360paranoma_img(_removed_floor_ply_point);
+            cv::imwrite("out/" + date + "/" + "ply2img_origin.png", lidar_img.get_mat());
+
+            lidar_img.closing(3, 0, 1);
+            cv::imwrite("out/" + date + "/" + "ply2img_closing.png", lidar_img.get_mat());
+            _lidar_edge.detect_edge_with_sobel(lidar_img.get_mat());
+            cv::imwrite("out/" + date + "/" + "ply2img_closing_sobel.png", _lidar_edge.get_mat());
+        };
+
+
+        // lidar_img edge_detection
+        EdgeImg lidar_edge("lidar_edge");
+        lidar_to_img_edge_detection(lidar_edge, ply_point, image);
+
+        // edge画像をシフトさせて、evaを計算する
+    */
 }

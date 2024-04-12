@@ -97,6 +97,43 @@ void InstaImg::set_pixel_255(int u, int v)
 }
 
 /**
+ * @brief テスト画像 すいか
+ */
+void InstaImg::make_test_img_forEdge(int test_width, int test_height, int step, int band)
+{
+    set_zero_imgMat(test_height, test_width, CV_8UC1);
+
+    int step_tmp = 0;
+    int band_tmp = 0;
+    for (int i = 0; i < test_width; i++)
+    {
+        for (int j = 0; j < test_height; j++)
+        {
+            if (step_tmp > step && band_tmp < band)
+            {
+                set_pixel_255(i, j);
+            }
+        }
+
+        if (step_tmp == step && band_tmp ==
+
+                                    band)
+        {
+            step_tmp = 0;
+            band_tmp = 0;
+        }
+        else if (step_tmp > step && band_tmp < band)
+        {
+            band_tmp++;
+        }
+        else
+        {
+            step_tmp++;
+        }
+    }
+}
+
+/**
  * @brief 縮小処理
  *
  * @param erosin_elem: 0: 長方形 1: 十字型 2: 楕円ぽい感じ
@@ -450,12 +487,12 @@ void LidarImg::ply_to_360paranoma_img_depth(PointSet &ply_point, int depth_flag)
         {
             u -= static_cast<int>(width);
         }
-            // 画像の範囲外に出てしまった場合を戻す処理。
-            // 下のset_pixel_255は、opencv側でよしなにしてくれるため、ない。
-            int new_u = (u + width) % width;
-            int new_v = (v + height) % height;
-            int pixel = new_u + new_v * width;
-        
+        // 画像の範囲外に出てしまった場合を戻す処理。
+        // 下のset_pixel_255は、opencv側でよしなにしてくれるため、ない。
+        int new_u = (u + width) % width;
+        int new_v = (v + height) % height;
+        int pixel = new_u + new_v * width;
+
         set_store_pixel(pixel, point);
         set_pixel_255(u, v);
     }
@@ -1349,14 +1386,16 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
         // lineごとの対応のあるpixelを探索
         for (auto &pixel : line_pixel)
         {
-            if(pixel > height * width){
-                std::cout << pixel <<  "pixel is over" <<  height * width << std::endl;
+            if (pixel > height * width)
+            {
+                std::cout << pixel << "pixel is over" << height * width << std::endl;
                 std::cout << store_pixel.capacity() << std::endl;
                 continue;
             }
             auto store_pixell = store_pixel.at(pixel);
             // pixelに対応するstore_pixelの点のうち 距離が0でないものを探す
-            if(store_pixell.distance != 0){
+            if (store_pixell.distance != 0)
+            {
                 double point_dis = store_pixell.distance;
                 int hist_index = point_dis / bin_width;
                 histgram_distance.at(hist_index)++;
