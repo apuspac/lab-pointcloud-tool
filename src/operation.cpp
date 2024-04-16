@@ -1226,28 +1226,68 @@ void PointOperation::test_location_two()
 
     InstaImg image;
     PointSet ply_point("plydata");
+    PointSet test_point("sphere_point");
 
-    // ここでimageにテスト画像を用意
-    image.make_test_img_forEdge(1920, 1080, 100, 100);
-    // ここでpointsetに点群を生成
+    std::vector<std::vector<int>> theta_phi;
 
     // crate out_dir
     set_date();
     std::cout << date << std::endl;
     obj_io.create_dir("out/" + date);
 
-    image.show("test", 0.25);
+    // make 球の画像の配列
+    double r = 1.0;
+    int divide_num = 6;
 
-    auto insta_img_edge_detection = [this](EdgeImg &_insta_edge, InstaImg &_image)
+    bool flag = true;
+    bool step_flag = true;
+    int step = 180 / divide_num;
+    for (int theta_angle = 0; theta_angle < 180; theta_angle++)
     {
-        _insta_edge.set_zero_imgMat(_image.get_height(), _image.get_width(), CV_8UC1);
-        _insta_edge.detect_edge_with_sobel(_image.get_mat());
-        cv::imwrite("out/" + date + "/" + "instaimg_sobel.png", _insta_edge.get_mat());
-    };
+        int i = 0;
+        for (int phi_angle = 0; phi_angle < 2 * 180; phi_angle++)
+        {
+            if (i < step)
+            {
+                flag = true;
+                i++;
+            }
+            else
+            {
+                flag = false;
+                i = 0;
+                step_flag = !step_flag;
+                std::cout << step_flag;
+            }
+
+            if (flag && step_flag)
+            {
+                theta_phi.push_back({theta_angle, phi_angle});
+                test_point.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
+            }
+            // test_point.add_point(Eigen::Vector3d(sin(theta_angle * M_PI / 180) * cos(phi_angle * M_PI / 180), sin(theta_angle * M_PI / 180) * sin(phi_angle * M_PI / 180), cos(theta_angle * M_PI / 180)));
+        }
+    }
+
+    test_point.convert_to_rectangular();
+    obj_io.output_ply(test_point, "out/" + date + "/" + date + ".ply");
+
+    // ここでimageにテスト画像を用意
+    // image.make_test_img_forEdge(1920, 1080, 100, 100);
+    // ここでpointsetに点群を生成
+
+    // image.show("test", 0.25);
+
+    // auto insta_img_edge_detection = [this](EdgeImg &_insta_edge, InstaImg &_image)
+    // {
+    //     _insta_edge.set_zero_imgMat(_image.get_height(), _image.get_width(), CV_8UC1);
+    //     _insta_edge.detect_edge_with_sobel(_image.get_mat());
+    //     cv::imwrite("out/" + date + "/" + "instaimg_sobel.png", _insta_edge.get_mat());
+    // };
     // insta_img edge_detection
-    EdgeImg insta_edge("insta_edge");
-    insta_img_edge_detection(insta_edge, image);
-    insta_edge.show("insta_edge", 0.25);
+    // EdgeImg insta_edge("insta_edge");
+    // insta_img_edge_detection(insta_edge, image);
+    // insta_edge.show("insta_edge", 0.25);
     /*
      *
         auto lidar_to_img_edge_detection = [this](EdgeImg &_lidar_edge, PointSet &_removed_floor_ply_point, InstaImg &_image)

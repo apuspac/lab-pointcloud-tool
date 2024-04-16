@@ -115,9 +115,7 @@ void InstaImg::make_test_img_forEdge(int test_width, int test_height, int step, 
             }
         }
 
-        if (step_tmp == step && band_tmp ==
-
-                                    band)
+        if (step_tmp == step && band_tmp == band)
         {
             step_tmp = 0;
             band_tmp = 0;

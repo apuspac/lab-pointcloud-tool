@@ -36,19 +36,18 @@ void PointSet::print_polar()
 
 void PointSet::add_point(PointSet add_pointset)
 {
-    // add_pointset.get_point_all();
-
     for (auto point : add_pointset.get_point_all())
     {
         point3.push_back(point);
     }
+}
 
-    // if (point3.capacity() < point3.size() + add_pointset.get_point_all().size())
-    // {
-    //     point3.reserve(point3.size() + add_pointset.get_point_all().size());
-    // }
-    // point3.insert(point3.end(), add_pointset.get_point_all().begin(), add_pointset.get_point_all().end());
-    // std::cout << "oi" << std::endl;
+void PointSet::add_point_polar(PointSet add_pointset)
+{
+    for (auto point : add_pointset.get_point_all())
+    {
+        point3_polar.push_back(point);
+    }
 }
 
 /**
@@ -223,6 +222,21 @@ void PointSet::convert_to_polar()
 
         // 最初にsizeを確保しておけば push_backじゃなくていいはずなので、 assertでチェックしておく。
         point3_polar.at(index) = Eigen::Vector3d(r, theta, phi);
+    }
+}
+
+void PointSet::convert_to_rectangular()
+{
+    std::cout << point3.size() << std::endl;
+    assert(point3.size() == 0);
+    // point3_polar = {r, theta, phi}
+    for (auto &point : point3_polar)
+    {
+        double x = point(0) * sin(point(1)) * cos(point(2));
+        double y = point(0) * sin(point(1)) * sin(point(2));
+        double z = point(0) * cos(point(1));
+
+        add_point(Eigen::Vector3d(x, y, z));
     }
 }
 

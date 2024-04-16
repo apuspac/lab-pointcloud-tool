@@ -62,6 +62,8 @@ public:
     // 点の追加 edgeの組を追加
     void add_point(const Eigen::Vector3d add_point) { point3.push_back(add_point); }
     void add_point(PointSet);
+    void add_point_polar(const Eigen::Vector3d add_point) { point3_polar.push_back(add_point); }
+    void add_point_polar(PointSet);
     void add_edge(std::array<int, 2> edge) { edge2.push_back(edge); }
     /**
      * @brief Get the point object
@@ -88,6 +90,7 @@ public:
 
     // calc
     void convert_to_polar();
+    void convert_to_rectangular();
     void create_histgram();
     void calc_center_of_gravity();
     void rotate(Eigen::Matrix3d);
