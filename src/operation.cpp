@@ -1227,6 +1227,7 @@ void PointOperation::test_location_two()
     InstaImg image;
     PointSet ply_point("plydata");
     PointSet test_point("sphere_point");
+    PointSet test_point2("sphere_point");
 
     std::vector<std::vector<int>> theta_phi;
 
@@ -1237,40 +1238,51 @@ void PointOperation::test_location_two()
 
     // make 球の画像の配列
     double r = 1.0;
-    int divide_num = 6;
+    int divide_num = 10;
 
     bool flag = true;
-    bool step_flag = true;
-    int step = 180 / divide_num;
-    for (int theta_angle = 0; theta_angle < 180; theta_angle++)
+    int phi_step = 360 / divide_num;
+    int theta_step = 180 / divide_num;
+    int i = 0;
+    for (int phi_angle = 0; phi_angle < 2 * 180; phi_angle++)
     {
-        int i = 0;
-        for (int phi_angle = 0; phi_angle < 2 * 180; phi_angle++)
+        if (i < phi_step)
         {
-            if (i < step)
+            int j = 0;
+            for (int theta_angle = 0; theta_angle < 180; theta_angle++)
             {
-                flag = true;
-                i++;
+                if ((i == 0 || (i == phi_step - 1)) && j == theta_step && flag)
+                {
+                    test_point2.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
+                }
+                if (flag)
+                {
+                    theta_phi.push_back({theta_angle, phi_angle});
+                    test_point.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
+                }
+                // test_point.add_point(Eigen::Vector3d(sin(theta_angle * M_PI / 180) * cos(phi_angle * M_PI / 180), sin(theta_angle * M_PI / 180) * sin(phi_angle * M_PI / 180), cos(theta_angle * M_PI / 180)));
+                if (j < theta_step)
+                {
+                    j++;
+                }
+                else
+                {
+                    j = 0;
+                }
             }
-            else
-            {
-                flag = false;
-                i = 0;
-                step_flag = !step_flag;
-                std::cout << step_flag;
-            }
-
-            if (flag && step_flag)
-            {
-                theta_phi.push_back({theta_angle, phi_angle});
-                test_point.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
-            }
-            // test_point.add_point(Eigen::Vector3d(sin(theta_angle * M_PI / 180) * cos(phi_angle * M_PI / 180), sin(theta_angle * M_PI / 180) * sin(phi_angle * M_PI / 180), cos(theta_angle * M_PI / 180)));
+            i++;
+        }
+        else
+        {
+            i = 0;
+            flag = !flag;
         }
     }
 
     test_point.convert_to_rectangular();
     obj_io.output_ply(test_point, "out/" + date + "/" + date + ".ply");
+    test_point2.convert_to_rectangular();
+    obj_io.output_ply(test_point2, "out/" + date + "/_" + date + ".ply");
 
     // ここでimageにテスト画像を用意
     // image.make_test_img_forEdge(1920, 1080, 100, 100);
