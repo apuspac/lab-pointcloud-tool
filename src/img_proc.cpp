@@ -436,6 +436,22 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
     return dest[0];
 }
 
+double InstaImg::compute_MSE(const std::vector<std::vector<int>> &reference, const std::vector<std::vector<int>> &comparison)
+{
+    double sum = 0.0;
+
+    // すべての画素値の差の2乗和を計算
+    for (int i = 0; i < reference.size(); i++)
+    {
+        for (int j = 0; j < reference[0].size(); j++)
+        {
+            sum += std::pow(reference[i][j] - comparison[i][j], 2);
+        }
+    }
+
+    return sum / (reference.size() * reference[0].size());
+}
+
 /**
  * @brief plyから得られる点群を全方位画像に投影する
  *

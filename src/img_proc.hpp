@@ -65,6 +65,7 @@ public:
     void convert_to_unitsphere(PointSet &);
     void img_alpha_blending(const cv::Mat &, const cv::Mat &, double);
     double compute_MSE(const cv::Mat &, const cv::Mat &);
+    double compute_MSE(const std::vector<std::vector<int>> &, const std::vector<std::vector<int>> &);
     void dilation(int, int);
     void erosion(int, int);
     void closing(int, int, int);
