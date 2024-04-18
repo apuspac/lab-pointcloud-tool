@@ -1226,10 +1226,12 @@ void PointOperation::test_location_two()
 
     InstaImg image;
     PointSet ply_point("plydata");
-    PointSet test_point("sphere_point");
-    PointSet test_point2("sphere_point");
+    PointSet watermelon_point("sphere_point");
+    PointSet stitch_edge_point("sphere_point");
+    PointSet stitch_edge_point2("sphere_point");
 
-    std::vector<std::vector<int>> theta_phi;
+    std::vector<std::vector<int>> stitch_edge;
+    std::vector<std::vector<int>> stitch_edge2;
 
     // crate out_dir
     set_date();
@@ -1254,12 +1256,17 @@ void PointOperation::test_location_two()
             {
                 if ((i == 0 || (i == phi_step - 1)) && j == theta_step && flag)
                 {
-                    test_point2.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
+                    stitch_edge_point.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
+                    stitch_edge_point2.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
+                    stitch_edge.push_back({phi_angle * 360 + theta_angle, 1});
+                }
+                else
+                {
+                    stitch_edge.push_back({phi_angle * 360 + theta_angle, 0});
                 }
                 if (flag)
                 {
-                    theta_phi.push_back({theta_angle, phi_angle});
-                    test_point.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
+                    watermelon_point.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
                 }
                 // test_point.add_point(Eigen::Vector3d(sin(theta_angle * M_PI / 180) * cos(phi_angle * M_PI / 180), sin(theta_angle * M_PI / 180) * sin(phi_angle * M_PI / 180), cos(theta_angle * M_PI / 180)));
                 if (j < theta_step)
@@ -1280,10 +1287,15 @@ void PointOperation::test_location_two()
         }
     }
 
-    test_point.convert_to_rectangular();
-    obj_io.output_ply(test_point, "out/" + date + "/" + date + ".ply");
-    test_point2.convert_to_rectangular();
-    obj_io.output_ply(test_point2, "out/" + date + "/_" + date + ".ply");
+    watermelon_point.convert_to_rectangular();
+    obj_io.output_ply(watermelon_point, "out/" + date + "/" + date + ".ply");
+    stitch_edge_point.convert_to_rectangular();
+    obj_io.output_ply(stitch_edge_point, "out/" + date + "/_" + date + ".ply");
+
+    stitch_edge2 = stitch_edge;
+
+    std::cout << "MSE calc" << std::endl;
+    std::cout << ImgCalc::compute_MSE(stitch_edge, stitch_edge2) << std::endl;
 
     // ここでimageにテスト画像を用意
     // image.make_test_img_forEdge(1920, 1080, 100, 100);

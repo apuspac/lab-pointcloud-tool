@@ -436,7 +436,7 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
     return dest[0];
 }
 
-double InstaImg::compute_MSE(const std::vector<std::vector<int>> &reference, const std::vector<std::vector<int>> &comparison)
+double ImgCalc::compute_MSE(const std::vector<std::vector<int>> &reference, const std::vector<std::vector<int>> &comparison)
 {
     double sum = 0.0;
 

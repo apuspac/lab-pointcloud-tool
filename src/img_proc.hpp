@@ -152,4 +152,15 @@ public:
     void get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &, std::vector<std::pair<int, int>> &, EdgeImg &, EdgeImg &, PointSet &, int, std::string);
 };
 
+/**
+ * @brief opencvに影響されない処理
+ * methodのみを呼び出す形で使用。
+ *
+ */
+class ImgCalc
+{
+public:
+    double compute_MSE(const std::vector<std::vector<int>> &, const std::vector<std::vector<int>> &);
+};
+
 #endif
