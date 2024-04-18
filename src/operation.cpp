@@ -1221,7 +1221,7 @@ void PointOperation::remove_pointset_floor(PointSet &origin_point, PointSet &out
  */
 void PointOperation::test_location_two()
 {
-    std::cout << "test_location_two";
+    std::cout << "test_location_two" << std::endl;
     ObjectIO obj_io;
 
     InstaImg image;
@@ -1230,8 +1230,11 @@ void PointOperation::test_location_two()
     PointSet stitch_edge_point("sphere_point");
     PointSet stitch_edge_point2("sphere_point");
 
-    std::vector<std::vector<int>> stitch_edge;
-    std::vector<std::vector<int>> stitch_edge2;
+    std::vector<int> stitch_edge;
+    std::vector<int> stitch_edge2;
+
+    stitch_edge.resize(360 * 180);
+    stitch_edge2.resize(360 * 180);
 
     // crate out_dir
     set_date();
@@ -1245,8 +1248,9 @@ void PointOperation::test_location_two()
     bool flag = true;
     int phi_step = 360 / divide_num;
     // int theta_step = 180 / divide_num;
-    int theta_step = 1;
+    int theta_step = 0;
     int i = 0;
+
     for (int phi_angle = 0; phi_angle < 2 * 180; phi_angle++)
     {
         if (i < phi_step)
@@ -1258,11 +1262,11 @@ void PointOperation::test_location_two()
                 {
                     stitch_edge_point.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
                     stitch_edge_point2.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
-                    stitch_edge.push_back({phi_angle * 360 + theta_angle, 1});
+                    stitch_edge.at(phi_angle * 180 + theta_angle) = 1;
                 }
                 else
                 {
-                    stitch_edge.push_back({phi_angle * 360 + theta_angle, 0});
+                    stitch_edge.at(phi_angle * 180 + theta_angle) = 0;
                 }
                 if (flag)
                 {
@@ -1297,43 +1301,25 @@ void PointOperation::test_location_two()
     std::cout << "MSE calc" << std::endl;
     std::cout << ImgCalc::compute_MSE(stitch_edge, stitch_edge2) << std::endl;
 
-    // ここでimageにテスト画像を用意
-    // image.make_test_img_forEdge(1920, 1080, 100, 100);
-    // ここでpointsetに点群を生成
-
-    // image.show("test", 0.25);
-
-    // auto insta_img_edge_detection = [this](EdgeImg &_insta_edge, InstaImg &_image)
-    // {
-    //     _insta_edge.set_zero_imgMat(_image.get_height(), _image.get_width(), CV_8UC1);
-    //     _insta_edge.detect_edge_with_sobel(_image.get_mat());
-    //     cv::imwrite("out/" + date + "/" + "instaimg_sobel.png", _insta_edge.get_mat());
-    // };
-    // insta_img edge_detection
-    // EdgeImg insta_edge("insta_edge");
-    // insta_img_edge_detection(insta_edge, image);
-    // insta_edge.show("insta_edge", 0.25);
-    /*
-     *
-        auto lidar_to_img_edge_detection = [this](EdgeImg &_lidar_edge, PointSet &_removed_floor_ply_point, InstaImg &_image)
+    cv::Mat imgmat(360, 180, CV_8UC1);
+    for (int i = 0; i < 360; i++)
+    {
+        for (int j = 0; j < 180; j++)
         {
-            LidarImg lidar_img("lidar_edge");
-            _removed_floor_ply_point.convert_to_polar();
-            lidar_img.set_zero_imgMat(_image.get_height(), _image.get_width(), CV_8UC1);
-            lidar_img.ply_to_360paranoma_img(_removed_floor_ply_point);
-            cv::imwrite("out/" + date + "/" + "ply2img_origin.png", lidar_img.get_mat());
+            imgmat.at<uchar>(i, j) = stitch_edge.at(i * 180 + j);
+            std::cout << stitch_edge.at(i * 180 + j);
+        }
+    }
 
-            lidar_img.closing(3, 0, 1);
-            cv::imwrite("out/" + date + "/" + "ply2img_closing.png", lidar_img.get_mat());
-            _lidar_edge.detect_edge_with_sobel(lidar_img.get_mat());
-            cv::imwrite("out/" + date + "/" + "ply2img_closing_sobel.png", _lidar_edge.get_mat());
-        };
+    cv::imwrite("outpnt.png", imgmat);
 
+    std::vector<int> tmp_mat = stitch_edge2;
+    for (int i = 0; i < 360; i++)
+    {
+        tmp_mat = ImgCalc::shift(tmp_mat, 360, 180, 0, 1);
+        std::cout << ImgCalc::compute_MSE(stitch_edge, tmp_mat) << std::endl;
+    }
 
-        // lidar_img edge_detection
-        EdgeImg lidar_edge("lidar_edge");
-        lidar_to_img_edge_detection(lidar_edge, ply_point, image);
-
-        // edge画像をシフトさせて、evaを計算する
-    */
+    // tmp_mat = ImgCalc::shift(stitch_edge2, 360, 180, 0, 2);
+    // std::cout << ImgCalc::compute_MSE(stitch_edge, tmp_mat) << std::endl;
 }

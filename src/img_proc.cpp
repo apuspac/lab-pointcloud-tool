@@ -436,22 +436,47 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
     return dest[0];
 }
 
-double ImgCalc::compute_MSE(const std::vector<std::vector<int>> &reference, const std::vector<std::vector<int>> &comparison)
+double ImgCalc::compute_MSE(const std::vector<int> &reference, const std::vector<int> &comparison)
 {
     double sum = 0.0;
 
     // すべての画素値の差の2乗和を計算
     for (int i = 0; i < reference.size(); i++)
     {
-        for (int j = 0; j < reference[0].size(); j++)
+        sum += std::pow(reference.at(i) - comparison.at(i), 2);
+    }
+
+    return sum / (reference.size() * reference.size());
+}
+
+/**
+ * @brief 画像を平行移動する はみ出した場所は反対側に移動
+ *
+ * @param x
+ * @param y
+ * @param out_mat
+ */
+std::vector<int> ImgCalc::shift(std::vector<int> target, int size_phi, int size_theta, int x, int y)
+{
+    std::vector<int> out_mat;
+    out_mat.resize(target.size());
+
+    for (int u = 0; u < size_phi; u++)
+    {
+        for (int v = 0; v < size_theta; v++)
         {
-            sum += std::pow(reference[i][j] - comparison[i][j], 2);
+            int ptr = target.at(u * size_theta + v);
+
+            int new_u = (u + y + size_phi) % size_phi;
+            int new_v = (v + x + size_theta) % size_theta;
+            // std::cout << u << " " << v << " TO ";
+            // std::cout << new_u << " " << new_v << std::endl;
+            out_mat.at(new_u * size_theta + new_v) = ptr;
         }
     }
 
-    return sum / (reference.size() * reference[0].size());
+    return out_mat;
 }
-
 /**
  * @brief plyから得られる点群を全方位画像に投影する
  *
