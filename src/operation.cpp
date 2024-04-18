@@ -1242,7 +1242,7 @@ void PointOperation::test_location_two()
 
     bool flag = true;
     int phi_step = 360 / divide_num;
-    int theta_step = 180 / divide_num;
+    // int theta_step = 180 / divide_num;
     int i = 0;
     for (int phi_angle = 0; phi_angle < 2 * 180; phi_angle++)
     {
