@@ -31,11 +31,12 @@ public:
     static void option_process(int, char **, PointOperation &);
     void load_ply_point_file(std::string, std::string, int, PointSet &);
     void load_img_point_file(std::string, std::string, std::string, PointSet &);
-    static void output_ply(PointSet &, std::string);
+    static void create_dir(std::string);
+    void output_ply(PointSet &, std::string);
+    void output_ply(PointSet &);
     Eigen::Vector3d extend_distance_from_point_and_origin(Eigen::Vector3d, double);
     int load_detection_json_file(std::string, DetectionData &, std::string);
     void output_csv_2double(std::string, std::vector<std::vector<double>>);
-    static void create_dir(std::string);
     void output_dat(std::string, std::vector<Eigen::Vector3d>);
     void output_dat(std::string, std::vector<std::pair<int, int>>);
 };

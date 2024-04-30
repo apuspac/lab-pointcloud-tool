@@ -59,6 +59,11 @@ public:
     std::string get_class_name() { return class_name; }
     std::string get_name() { return name; }
 
+    // is
+    bool is_empty() { return point3.size() == 0; }
+    bool is_empty_edge() { return edge2.size() == 0; }
+    bool is_empry_polar() { return point3_polar.size() == 0; }
+
     // 点の追加 edgeの組を追加
     void add_point(const Eigen::Vector3d add_point) { point3.push_back(add_point); }
     void add_point(PointSet);
