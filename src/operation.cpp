@@ -32,21 +32,39 @@ void PointOperation::set_date()
     date = data_s;
 }
 
+/**
+ * @brief get local time YYMMDD_HHMMSS
+ *
+ * @return std::string
+ */
 std::string PointOperation::get_localtime()
 {
     std::cout << "get_date" << std::endl;
     time_t t = time(nullptr);
     const tm *local_time = localtime(&t);
     std::stringstream ss;
+
+    // YY/MM/DD_HHMMSS
     ss << local_time->tm_year + 1900;
-    ss << local_time->tm_mon + 1;
-    ss << local_time->tm_mday;
+    ss << std::setw(2) << std::setfill('0') << local_time->tm_mon + 1;
+    ss << std::setw(2) << std::setfill('0') << local_time->tm_mday;
     ss << "_";
     ss << std::setw(2) << std::setfill('0') << local_time->tm_hour;
     ss << std::setw(2) << std::setfill('0') << local_time->tm_min;
-    // ss << local_time->tm_sec;
+    ss << std::setw(2) << std::setfill('0') << local_time->tm_sec;
 
     return ss.str();
+}
+
+/**
+ * @brief create out dir with date
+ *
+ */
+void PointOperation::create_output_dir()
+{
+    set_date();
+    std::cout << date << std::endl;
+    ObjectIO::create_dir("out/" + date);
 }
 
 /**
@@ -1235,10 +1253,7 @@ void PointOperation::test_location_two()
     stitch_edge.resize(360 * 180);
     stitch_edge2.resize(360 * 180);
 
-    // #### crate out_dir
-    set_date();
-    std::cout << date << std::endl;
-    obj_io.create_dir("out/" + date);
+    create_output_dir();
 
     // #### make 球の画像の配列
 
@@ -1262,7 +1277,7 @@ void PointOperation::test_location_two()
     {
         for (int j = 0; j < 180; j++)
         {
-            imgmat.at<uchar>(i, j) = stitch_edge.at(i * 180 + j);
+            imgmat.at<uchar>(i, j) = static_cast<u_char>(stitch_edge.at(i * 180 + j));
             std::cout << stitch_edge.at(i * 180 + j);
         }
     }

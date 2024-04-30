@@ -70,6 +70,7 @@ public:
     void set_mode(std::string mode_) { mode = mode_; }
     void set_date(std::string date_) { date = date_; }
     void set_date();
+    void create_output_dir();
 
     // ファイル名を出力
     void print();
