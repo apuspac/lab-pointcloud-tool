@@ -1228,7 +1228,6 @@ void PointOperation::test_location_two()
     PointSet ply_point("plydata");
     PointSet watermelon_point("sphere_point");
     PointSet stitch_edge_point("sphere_point");
-    PointSet stitch_edge_point2("sphere_point");
 
     std::vector<int> stitch_edge;
     std::vector<int> stitch_edge2;
@@ -1236,66 +1235,23 @@ void PointOperation::test_location_two()
     stitch_edge.resize(360 * 180);
     stitch_edge2.resize(360 * 180);
 
-    // crate out_dir
+    // #### crate out_dir
     set_date();
     std::cout << date << std::endl;
     obj_io.create_dir("out/" + date);
 
-    // make 球の画像の配列
-    double r = 1.0;
-    int divide_num = 10;
+    // #### make 球の画像の配列
 
-    bool flag = true;
-    int phi_step = 360 / divide_num;
-    // int theta_step = 180 / divide_num;
-    int theta_step = 0;
-    int i = 0;
-
-    for (int phi_angle = 0; phi_angle < 2 * 180; phi_angle++)
-    {
-        if (i < phi_step)
-        {
-            int j = 0;
-            for (int theta_angle = 0; theta_angle < 180; theta_angle++)
-            {
-                if ((i == 0 || (i == phi_step - 1)) && j == theta_step && flag)
-                {
-                    stitch_edge_point.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
-                    stitch_edge_point2.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
-                    stitch_edge.at(phi_angle * 180 + theta_angle) = 1;
-                }
-                else
-                {
-                    stitch_edge.at(phi_angle * 180 + theta_angle) = 0;
-                }
-                if (flag)
-                {
-                    watermelon_point.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
-                }
-                // test_point.add_point(Eigen::Vector3d(sin(theta_angle * M_PI / 180) * cos(phi_angle * M_PI / 180), sin(theta_angle * M_PI / 180) * sin(phi_angle * M_PI / 180), cos(theta_angle * M_PI / 180)));
-                if (j < theta_step)
-                {
-                    j++;
-                }
-                else
-                {
-                    j = 0;
-                }
-            }
-            i++;
-        }
-        else
-        {
-            i = 0;
-            flag = !flag;
-        }
-    }
+    CalcPointSet::make_striped_pattern(stitch_edge, stitch_edge_point, watermelon_point);
 
     watermelon_point.convert_to_rectangular();
     obj_io.output_ply(watermelon_point, "out/" + date + "/" + date + ".ply");
     stitch_edge_point.convert_to_rectangular();
     obj_io.output_ply(stitch_edge_point, "out/" + date + "/_" + date + ".ply");
 
+    exit(0);
+
+    // 同じ点を用いて、 片方を画像、もう片方を点群から投影した画像点と想定して、 計算させる。
     stitch_edge2 = stitch_edge;
 
     std::cout << "MSE calc" << std::endl;
