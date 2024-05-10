@@ -1293,6 +1293,9 @@ void PointOperation::test_location_two()
     PointSet stitch_edge_point2("stitch_edge_point2");
     stitch_edge_point2.add_point(stitch_edge_point);
 
+    stitch_edge_point2.print_polar();
+
+    exit(0);
     stitch_edge_point2.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(1.0, Eigen::Vector3d::UnitZ())));
 
     for (auto point : stitch_edge_point2.get_point_all_polar())
@@ -1312,7 +1315,6 @@ void PointOperation::test_location_two()
     std::cout << "MSE calc" << std::endl;
     std::cout << ImgCalc::compute_MSE(imgmat, imgmat_point) << std::endl;
 
-    exit(0);
     // cv::Mat imgmat(360, 180, CV_8UC1);
     // for (int i = 0; i < 360; i++)
     // {

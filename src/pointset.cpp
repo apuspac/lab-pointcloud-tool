@@ -41,7 +41,7 @@ void PointSet::add_point(PointSet add_pointset)
         point3 = add_pointset.get_point_all();
         return;
     }
-    if (is_empty_polar() == true)
+    if (is_empry_polar() == true)
     {
         point3_polar = add_pointset.get_point_all();
     }
