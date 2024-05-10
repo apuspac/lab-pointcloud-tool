@@ -436,6 +436,27 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
     return dest[0];
 }
 
+double ImgCalc::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison)
+{
+    if (reference.size() != comparison.size())
+    {
+        std::cout << "size not same" << std::endl;
+        std::exit(-1);
+    }
+    if (reference.channels() != comparison.channels())
+    {
+        std::cout << "channel not same" << std::endl
+                  << "reference: " << reference.channels() << std::endl
+                  << "comparison: " << comparison.channels() << std::endl;
+
+        std::exit(-1);
+    }
+
+    cv::Scalar_<double> dest = cv::quality::QualityMSE::compute(reference, comparison, cv::noArray());
+
+    return dest[0];
+}
+
 double ImgCalc::compute_MSE(const std::vector<int> &reference, const std::vector<int> &comparison)
 {
     double sum = 0.0;

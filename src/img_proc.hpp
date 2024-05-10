@@ -161,6 +161,7 @@ class ImgCalc
 {
 public:
     static double compute_MSE(const std::vector<int> &, const std::vector<int> &);
+    static double compute_MSE(const cv::Mat &, const cv::Mat &);
     static std::vector<int> shift(std::vector<int>, int, int, int, int);
 };
 

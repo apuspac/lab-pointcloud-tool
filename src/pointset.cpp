@@ -36,10 +36,19 @@ void PointSet::print_polar()
 
 void PointSet::add_point(PointSet add_pointset)
 {
-    for (auto point : add_pointset.get_point_all())
+    if (is_empty() == true)
     {
-        point3.push_back(point);
+        point3 = add_pointset.get_point_all();
+        return;
     }
+    if (is_empty_polar() == true)
+    {
+        point3_polar = add_pointset.get_point_all();
+    }
+    // for (auto point : add_pointset.get_point_all())
+    // {
+    //     point3.push_back(point);
+    // }
 }
 
 void PointSet::add_point_polar(PointSet add_pointset)
@@ -59,9 +68,21 @@ void PointSet::rotate(Eigen::Matrix3d rotate_matrix)
 {
     // std::cout << name << " point_rotated:" << std::endl
     //           << rotate_matrix << std::endl;
-    for (Eigen::Vector3d &tmp : point3)
+    if (is_empty() == false)
     {
-        tmp = rotate_matrix * tmp;
+
+        for (Eigen::Vector3d &tmp : point3)
+        {
+            tmp = rotate_matrix * tmp;
+        }
+    }
+    if (is_empry_polar() == false)
+    {
+
+        for (Eigen::Vector3d &tmp : point3_polar)
+        {
+            tmp = rotate_matrix * tmp;
+        }
     }
 }
 
@@ -227,7 +248,7 @@ void PointSet::convert_to_polar()
 
 void PointSet::convert_to_rectangular()
 {
-    std::cout << point3.size() << std::endl;
+    std::cout << name << " convert_to_rectangular: point_num:" << point3.size() << " " << point3_polar.size() << std::endl;
     assert(point3.size() == 0);
     // point3_polar = {r, theta, phi}
     for (auto &point : point3_polar)
@@ -238,6 +259,8 @@ void PointSet::convert_to_rectangular()
 
         add_point(Eigen::Vector3d(x, y, z));
     }
+    assert(point3_polar.size() == point3.size());
+    std::cout << "convert_conpleted: " << point3.size() << " " << point3_polar.size() << std::endl;
 }
 
 void PointSet::radius_based_filter(size_t point_num, double radius)

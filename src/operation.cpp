@@ -1244,14 +1244,12 @@ void PointOperation::test_location_two()
 
     InstaImg image;
     PointSet ply_point("plydata");
-    PointSet watermelon_point("sphere_point");
-    PointSet stitch_edge_point("sphere_point");
+    PointSet watermelon_point("watermelon_point");
+    PointSet stitch_edge_point("stitch_edge_point");
 
     std::vector<int> stitch_edge;
-    std::vector<int> stitch_edge2;
 
     stitch_edge.resize(360 * 180);
-    stitch_edge2.resize(360 * 180);
 
     create_output_dir();
 
@@ -1264,33 +1262,71 @@ void PointOperation::test_location_two()
     stitch_edge_point.convert_to_rectangular();
     obj_io.output_ply(stitch_edge_point, "out/" + date + "/_" + date + ".ply");
 
-    exit(0);
+    // #### make 球-> 画像
+    cv::Mat imgmat(360, 180, CV_8UC1);
+    cv::Mat imgmat_point(360, 180, CV_8UC1);
+    imgmat = cv::Mat::zeros(360, 180, CV_8UC1);
+    imgmat_point = cv::Mat::zeros(360, 180, CV_8UC1);
 
-    // 同じ点を用いて、 片方を画像、もう片方を点群から投影した画像点と想定して、 計算させる。
-    stitch_edge2 = stitch_edge;
+    for (auto point : stitch_edge_point.get_point_all_polar())
+    {
+        std::cout << point.transpose() << " ";
+        // 画像に変換する( theta, phi) -> (v, u)
+        double phi = point(1);
+        double theta = point(2);
+        int u = static_cast<int>(phi / (2.0 * M_PI) * 360.0);
+        int v = static_cast<int>(theta / M_PI * 180.0);
+
+        std::cout << u << ":" << v << " " << std::endl;
+
+        imgmat.at<uchar>(v, u) = 255;
+        imgmat_point.at<uchar>(v, u) = 255;
+    }
+
+    cv::imwrite("out/" + date + "/" + "outpnt.png", imgmat);
+    cv::imwrite("out/" + date + "/" + "outpnt.png", imgmat);
 
     std::cout << "MSE calc" << std::endl;
-    std::cout << ImgCalc::compute_MSE(stitch_edge, stitch_edge2) << std::endl;
+    std::cout << ImgCalc::compute_MSE(imgmat, imgmat_point) << std::endl;
 
-    cv::Mat imgmat(360, 180, CV_8UC1);
-    for (int i = 0; i < 360; i++)
+    // rotate z axis
+    PointSet stitch_edge_point2("stitch_edge_point2");
+    stitch_edge_point2.add_point(stitch_edge_point);
+
+    stitch_edge_point2.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(1.0, Eigen::Vector3d::UnitZ())));
+
+    for (auto point : stitch_edge_point2.get_point_all_polar())
     {
-        for (int j = 0; j < 180; j++)
-        {
-            imgmat.at<uchar>(i, j) = static_cast<u_char>(stitch_edge.at(i * 180 + j));
-            std::cout << stitch_edge.at(i * 180 + j);
-        }
+        std::cout << point.transpose() << " ";
+        // 画像に変換する( theta, phi) -> (v, u)
+        double phi = point(1);
+        double theta = point(2);
+        int u = static_cast<int>(phi / (2.0 * M_PI) * 360.0);
+        int v = static_cast<int>(theta / M_PI * 180.0);
+
+        std::cout << u << ":" << v << " " << std::endl;
+
+        imgmat_point.at<uchar>(v, u) = 255;
     }
 
-    cv::imwrite("outpnt.png", imgmat);
+    std::cout << "MSE calc" << std::endl;
+    std::cout << ImgCalc::compute_MSE(imgmat, imgmat_point) << std::endl;
 
-    std::vector<int> tmp_mat = stitch_edge2;
-    for (int i = 0; i < 360; i++)
-    {
-        tmp_mat = ImgCalc::shift(tmp_mat, 360, 180, 0, 1);
-        std::cout << ImgCalc::compute_MSE(stitch_edge, tmp_mat) << std::endl;
-    }
+    exit(0);
+    // cv::Mat imgmat(360, 180, CV_8UC1);
+    // for (int i = 0; i < 360; i++)
+    // {
+    //     for (int j = 0; j < 180; j++)
+    //     {
+    //         imgmat.at<uchar>(i, j) = static_cast<u_char>(stitch_edge.at(i * 180 + j));
+    //         std::cout << stitch_edge.at(i * 180 + j);
+    //     }
+    // }
 
-    // tmp_mat = ImgCalc::shift(stitch_edge2, 360, 180, 0, 2);
-    // std::cout << ImgCalc::compute_MSE(stitch_edge, tmp_mat) << std::endl;
+    // std::vector<int> tmp_mat = stitch_edge2;
+    // for (int i = 0; i < 360; i++)
+    // {
+    //     tmp_mat = ImgCalc::shift(tmp_mat, 360, 180, 0, 1);
+    //     std::cout << ImgCalc::compute_MSE(stitch_edge, tmp_mat) << std::endl;
+    // }
 }
