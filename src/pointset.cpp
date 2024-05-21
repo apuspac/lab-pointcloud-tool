@@ -36,19 +36,14 @@ void PointSet::print_polar()
 
 void PointSet::add_point(PointSet add_pointset)
 {
-    if (is_empty() == true)
+    if (add_pointset.is_empty() == false)
     {
         point3 = add_pointset.get_point_all();
-        return;
     }
-    if (is_empry_polar() == true)
+    if (add_pointset.is_empry_polar() == false)
     {
         point3_polar = add_pointset.get_point_all();
     }
-    // for (auto point : add_pointset.get_point_all())
-    // {
-    //     point3.push_back(point);
-    // }
 }
 
 void PointSet::add_point_polar(PointSet add_pointset)

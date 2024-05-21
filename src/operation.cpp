@@ -1264,40 +1264,40 @@ void PointOperation::test_location_two()
 
     // #### make 球-> 画像
     cv::Mat imgmat(360, 180, CV_8UC1);
-    cv::Mat imgmat_point(360, 180, CV_8UC1);
+    cv::Mat imgmat_lidar(360, 180, CV_8UC1);
     imgmat = cv::Mat::zeros(360, 180, CV_8UC1);
-    imgmat_point = cv::Mat::zeros(360, 180, CV_8UC1);
+    imgmat_lidar = cv::Mat::zeros(360, 180, CV_8UC1);
 
     for (auto point : stitch_edge_point.get_point_all_polar())
     {
-        std::cout << point.transpose() << " ";
         // 画像に変換する( theta, phi) -> (v, u)
         double phi = point(1);
         double theta = point(2);
         int u = static_cast<int>(phi / (2.0 * M_PI) * 360.0);
         int v = static_cast<int>(theta / M_PI * 180.0);
 
+        std::cout << point.transpose() << " ";
         std::cout << u << ":" << v << " " << std::endl;
 
         imgmat.at<uchar>(v, u) = 255;
-        imgmat_point.at<uchar>(v, u) = 255;
+        imgmat_lidar.at<uchar>(v, u) = 255;
     }
 
     cv::imwrite("out/" + date + "/" + "outpnt.png", imgmat);
-    cv::imwrite("out/" + date + "/" + "outpnt.png", imgmat);
 
     std::cout << "MSE calc" << std::endl;
-    std::cout << ImgCalc::compute_MSE(imgmat, imgmat_point) << std::endl;
+    std::cout << ImgCalc::compute_MSE(imgmat, imgmat_lidar) << std::endl;
 
     // rotate z axis
     PointSet stitch_edge_point2("stitch_edge_point2");
     stitch_edge_point2.add_point(stitch_edge_point);
 
-    stitch_edge_point2.print_polar();
+
+    stitch_edge_point2.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(1.0*M_PI, Eigen::Vector3d::UnitZ())));
+
+    obj_io.output_ply(stitch_edge_point2, "out/" + date + "/" + "rote" + ".ply");
 
     exit(0);
-    stitch_edge_point2.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(1.0, Eigen::Vector3d::UnitZ())));
-
     for (auto point : stitch_edge_point2.get_point_all_polar())
     {
         std::cout << point.transpose() << " ";
@@ -1309,11 +1309,11 @@ void PointOperation::test_location_two()
 
         std::cout << u << ":" << v << " " << std::endl;
 
-        imgmat_point.at<uchar>(v, u) = 255;
+        imgmat_lidar.at<uchar>(v, u) = 255;
     }
 
     std::cout << "MSE calc" << std::endl;
-    std::cout << ImgCalc::compute_MSE(imgmat, imgmat_point) << std::endl;
+    std::cout << ImgCalc::compute_MSE(imgmat, imgmat_lidar) << std::endl;
 
     // cv::Mat imgmat(360, 180, CV_8UC1);
     // for (int i = 0; i < 360; i++)
@@ -1325,7 +1325,7 @@ void PointOperation::test_location_two()
     //     }
     // }
 
-    // std::vector<int> tmp_mat = stitch_edge2;
+    // std::vector<int> tmp_mat = stitch_edge2
     // for (int i = 0; i < 360; i++)
     // {
     //     tmp_mat = ImgCalc::shift(tmp_mat, 360, 180, 0, 1);
