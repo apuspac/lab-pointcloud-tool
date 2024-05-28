@@ -1242,7 +1242,6 @@ void PointOperation::test_location_two()
     std::cout << "test_location_two" << std::endl;
     ObjectIO obj_io;
 
-    InstaImg image;
     PointSet ply_point("plydata");
     PointSet watermelon_point("watermelon_point");
     PointSet stitch_edge_point("stitch_edge_point");
@@ -1253,8 +1252,6 @@ void PointOperation::test_location_two()
 
     create_output_dir();
 
-    // #### make 球の画像の配列
-
     CalcPointSet::make_striped_pattern(stitch_edge, stitch_edge_point, watermelon_point);
 
     watermelon_point.convert_to_rectangular();
@@ -1263,6 +1260,22 @@ void PointOperation::test_location_two()
     obj_io.output_ply(stitch_edge_point, "out/" + date + "/_" + date + ".ply");
 
     // #### make 球-> 画像
+    InstaImg pointimg;
+    pointimg.make_img_from_pointcloud(PointSet stitch_edge_point, std::pair<int, int>(360, 180));
+
+    cv::imwrite("out/" + date + "/" + "outpnt.png", pointimg.get_mat());
+
+    exit(0);
+    // std::cout << "MSE calc" << std::endl;
+    // std::cout << ImgCalc::compute_MSE(imgmat, imgmat_lidar) << std::endl;
+
+
+
+
+
+
+
+    // #### make 球の画像の配列
     cv::Mat imgmat(360, 180, CV_8UC1);
     cv::Mat imgmat_lidar(360, 180, CV_8UC1);
     imgmat = cv::Mat::zeros(360, 180, CV_8UC1);
@@ -1283,21 +1296,49 @@ void PointOperation::test_location_two()
         imgmat_lidar.at<uchar>(v, u) = 255;
     }
 
-    cv::imwrite("out/" + date + "/" + "outpnt.png", imgmat);
 
-    std::cout << "MSE calc" << std::endl;
-    std::cout << ImgCalc::compute_MSE(imgmat, imgmat_lidar) << std::endl;
+
+
+
+
+
 
     // rotate z axis
     PointSet stitch_edge_point2("stitch_edge_point2");
     stitch_edge_point2.add_point(stitch_edge_point);
 
 
-    stitch_edge_point2.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(1.0*M_PI, Eigen::Vector3d::UnitZ())));
+    stitch_edge_point2.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(1.0*M_PI / 180, Eigen::Vector3d::UnitZ())));
 
     obj_io.output_ply(stitch_edge_point2, "out/" + date + "/" + "rote" + ".ply");
 
-    exit(0);
+    cv::Mat imgmat2(360, 180, CV_8UC1);
+    imgmat2 = cv::Mat::zeros(360, 180, CV_8UC1);
+
+    for (auto point : stitch_edge_point2.get_point_all_polar())
+    {
+        // 画像に変換する( theta, phi) -> (v, u)
+        double phi = point(1);
+        double theta = point(2);
+        int u = static_cast<int>(phi / (2.0 * M_PI) * 360.0);
+        int v = static_cast<int>(theta / M_PI * 180.0);
+
+        std::cout << point.transpose() << " ";
+        std::cout << u << ":" << v << " " << std::endl;
+
+        imgmat2.at<uchar>(v, u) = 255;
+    }
+
+    cv::imwrite("out/" + date + "/" + "outpnt2.png", imgmat2);
+
+    // 画像に変換する の切り出し。
+    // これ 画像のサイズに依存しないためには どうすれば？
+    // 依存するというか。最初の時点で指定すればよくね。operationからもってこよ
+
+
+
+
+
     for (auto point : stitch_edge_point2.get_point_all_polar())
     {
         std::cout << point.transpose() << " ";
@@ -1310,6 +1351,7 @@ void PointOperation::test_location_two()
         std::cout << u << ":" << v << " " << std::endl;
 
         imgmat_lidar.at<uchar>(v, u) = 255;
+        imgmat.at<uchar>(v, u) = 255;
     }
 
     std::cout << "MSE calc" << std::endl;

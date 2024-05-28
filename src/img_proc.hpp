@@ -75,6 +75,8 @@ public:
     void diff_img(const cv::Mat &);
     std::vector<cv::Vec4i> HoughLine_vertical(int, double, double);
 
+    void make_img_from_pointcloud(PointSet &, std::pair<int, int>);
+
     void make_test_img_forEdge(int, int, int, int);
 };
 
@@ -153,7 +155,6 @@ public:
 };
 
 /**
- * @brief opencvに影響されない処理
  * methodのみを呼び出す形で使用。
  *
  */
@@ -163,6 +164,7 @@ public:
     static double compute_MSE(const std::vector<int> &, const std::vector<int> &);
     static double compute_MSE(const cv::Mat &, const cv::Mat &);
     static std::vector<int> shift(std::vector<int>, int, int, int, int);
+    static cv::Mat point_to_img(PointSet &, std::pair<int, int>);
 };
 
 #endif

@@ -6,6 +6,7 @@
  */
 
 #include "img_proc.hpp"
+#include <utility>
 
 /**
  * @brief img_pathから画像を読み込む
@@ -498,6 +499,47 @@ std::vector<int> ImgCalc::shift(std::vector<int> target, int size_phi, int size_
 
     return out_mat;
 }
+
+
+void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, int> img_size)
+{
+    // polarがあるかどうかの確認
+    if(target_point.is_empry_polar())
+    {
+        std::cout << "point_to_img: polar is empty" << std::endl;
+        std::exit(-1);
+    }
+
+
+    // 画像の初期化
+    // Scalar 0 で 0埋めしてくれるの？もしかして。
+    cv::Mat imgmat(img_size.first, img_size.second, CV_8UC1, cv::Scalar(0));
+
+    // 変換処理
+    for(auto point : target_point.get_point_all_polar())
+    {
+        // 画像に変換する( theta, phi) -> (v, u)
+        double phi = point(1);
+        double theta = point(2);
+        int u = static_cast<int>(phi / (2.0 * M_PI) * 360.0);
+        int v = static_cast<int>(theta / M_PI * 180.0);
+
+        #ifdef _DEBUG
+        std::cout << point.transpose() << " ";
+        std::cout << u << ":" << v << " " << std::endl;
+        #endif
+
+        imgmat.at<uchar>(v, u) = 255;
+    }
+
+    set_mat(imgmat);
+
+}
+
+
+
+
+
 /**
  * @brief plyから得られる点群を全方位画像に投影する
  *
