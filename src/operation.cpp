@@ -1261,7 +1261,7 @@ void PointOperation::test_location_two()
 
     // #### make 球-> 画像
     InstaImg pointimg;
-    pointimg.make_img_from_pointcloud(PointSet stitch_edge_point, std::pair<int, int>(360, 180));
+    pointimg.make_img_from_pointcloud(stitch_edge_point, std::pair<int, int>(360, 180));
 
     cv::imwrite("out/" + date + "/" + "outpnt.png", pointimg.get_mat());
 

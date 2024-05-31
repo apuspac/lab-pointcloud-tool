@@ -512,7 +512,6 @@ void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, i
 
 
     // 画像の初期化
-    // Scalar 0 で 0埋めしてくれるの？もしかして。
     cv::Mat imgmat(img_size.first, img_size.second, CV_8UC1, cv::Scalar(0));
 
     // 変換処理

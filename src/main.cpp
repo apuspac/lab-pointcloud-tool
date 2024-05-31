@@ -18,7 +18,16 @@ int main(int argc, char *argv[])
     PointOperation opt;
     ObjectIO::option_process(argc, argv, opt);
     opt.print();
-    opt.mode_select();
+    // opt.mode_select();
+
+
+#ifdef _DEBUG
+    std::cout << "DEBUG_MODE"
+#endif
+
+#ifdef USE_OPEN3D
+    std::cout << "USE_OPEN3D"
+#endif
 
     return 0;
 }
