@@ -4,7 +4,7 @@
  * @date 2023-05-30
  *
  */
-
+#ifdef OPEN3D_ENABLED
 #ifndef VIEWER_HPP_INCLUDE_GUARD
 #define VIEWER_HPP_INCLUDE_GUARD
 
@@ -36,4 +36,5 @@ public:
     void show_using_drawgeometries();
     Eigen::Vector3d color_preset(int);
 };
+#endif
 #endif
