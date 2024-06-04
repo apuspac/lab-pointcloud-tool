@@ -13,17 +13,17 @@ void PointOperation::mode_select()
 
     // https://yutamano.hatenablog.com/entry/2013/11/18/161234
     std::cout << "mode select" << std::endl;
-    switch_func[0] = std::bind(&PointOperation::transform_rotate, this);
-    switch_func[1] = std::bind(&PointOperation::transform_rotate_simulation, this);
-    switch_func[2] = std::bind(&PointOperation::Rotation_only, this);
-    // switch_func[3] = std::bind(&PointOperation::Rotation_only_simulation, this);
-    switch_func[4] = std::bind(&PointOperation::capture_boxpoint, this);
-    switch_func[5] = std::bind(&PointOperation::capture_segmentation_point, this);
-    switch_func[6] = std::bind(&PointOperation::capture_pointset, this);
-    switch_func[7] = std::bind(&PointOperation::capture_point_inner_bbox, this);
-    switch_func[9] = std::bind(&PointOperation::test_location, this);
-    switch_func[3] = std::bind(&PointOperation::test_location_two, this);
+    switch_func[1] = std::bind(&PointOperation::transform_rotate, this);
+    switch_func[2] = std::bind(&PointOperation::rotate, this);
+    switch_func[3] = std::bind(&PointOperation::capture_point_inner_bbox, this);
+    switch_func[4] = std::bind(&PointOperation::old_detection_correspoint, this);
+    switch_func[0] = std::bind(&PointOperation::test_location, this);
     switch_func[get_mode()]();
+    // switch_func[*] = std::bind(&PointOperation::Rotation_only_simulation, this);
+    // switch_func[*] = std::bind(&PointOperation::transform_rotate_simulation, this);
+    // switch_func[*] = std::bind(&PointOperation::capture_boxpoint, this);
+    // switch_func[*] = std::bind(&PointOperation::capture_segmentation_point, this);
+    // switch_func[*] = std::bind(&PointOperation::capture_pointset, this);
 }
 
 void PointOperation::set_date()
@@ -214,6 +214,7 @@ void PointOperation::transform_rotate()
  * 基本行列Eを求め、分解して tRを計算
  *
  * 読み込むファイルがどちらもplyファイルなのに注意。
+ * 回転と姿勢だけが違うplyファイルを読み込んで、 原点合わせをする。
  *
  * 実行例:
  * ./Rotation   --mode 1
@@ -325,7 +326,7 @@ void PointOperation::transform_rotate_simulation()
  *              >! ../../ply_data/rotate/out.dat
  *
  */
-void PointOperation::Rotation_only()
+void PointOperation::rotate()
 {
     std::cout << "Rotation only::" << std::endl;
     ObjectIO obj_io;
@@ -366,6 +367,10 @@ void PointOperation::Rotation_only()
 
 /**
  * @brief 回転を計算する(シミュレーション用)
+ * 
+ * 生成した 回転のみが変わっているplyファイルを読み込み、
+ * 対応点をpickup, 回転と並進を計算する。
+ * 対応を得る際に pointの番号で指定しているため 完全なコピーのplyファイルじゃないとうまくいかない。
  *
  * plyfileを読み込み、対応点をpickup, 対応点を使用して回転と並進を計算する。
  * 基本行列Eを求め、分解して tRを計算
@@ -382,7 +387,7 @@ void PointOperation::Rotation_only()
  *              >! ../../ply_data/transform_rotate_sim/out.dat
  *
  */
-void PointOperation::Rotation_only_simulation()
+void PointOperation::rotate_simulation()
 {
     std::cout << "Rotation only simulation::" << std::endl;
     ObjectIO obj_io;
@@ -394,6 +399,7 @@ void PointOperation::Rotation_only_simulation()
     // load 対応点 img_point.ply
     PointSet corresp_imgply_point("corresp_imgpoint");
     obj_io.load_ply_point_file(corresp_ply_file_name.at(1), default_dir_path, 3, corresp_imgply_point);
+
 
     //  対応点をピックアップ
     CalcPointSet calc;
@@ -475,6 +481,7 @@ void PointOperation::capture_boxpoint()
 
     std::cout << "check_ply_visualization" << std::endl;
 
+    #ifdef OPEN3D_ENABLED
     Viewer3D check_ply("check_ply");
     check_ply.add_axes();
     check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
@@ -483,6 +490,7 @@ void PointOperation::capture_boxpoint()
     check_ply.add_line_origin(bbox_print.get_point_all(), 2);
 
     check_ply.show_using_drawgeometries();
+    #endif
 
     // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
@@ -537,6 +545,8 @@ void PointOperation::capture_segmentation_point()
     capture_ply.add_point(one_mask);
     mask_print.add_point(one_mask_forprint);
 
+
+#ifdef OPEN3D_ENABLED
     //  Check Result
     Viewer3D check_ply("check_ply_segmentation");
     check_ply.add_axes();
@@ -547,6 +557,7 @@ void PointOperation::capture_segmentation_point()
 
     check_ply.show_using_drawgeometries();
     // one_mask.add_point(one_img_mask.get_mask_xyz().at(0));
+#endif
 
     obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
@@ -585,11 +596,13 @@ void PointOperation::capture_pointset()
 
     std::cout << ply_point.get_point_all().at(0) << std::endl;
 
+#ifdef OPEN3D_ENABLED
     Viewer3D check_ply("plyfile");
     check_ply.add_axes();
     check_ply.add_geometry_pointset(ply_point.get_point_all(), 0);
 
     check_ply.show_using_drawgeometries();
+#endif
 
     // --------- capture segmentation point -------------
     // 抽出したポイントを格納
@@ -604,8 +617,8 @@ void PointOperation::capture_pointset()
 
     capbox.capture_segmentation_distance(ply_point, capture_ply_seg, one_mask, segline_point);
 
+#ifdef OPEN3D_ENABLED
     Viewer3D check_window("bbox");
-
     // ply_point: 元のply
     // capture_ply: 切り出したbboxの中の点群
     // one_img_bbox: bboxそのもの
@@ -631,6 +644,7 @@ void PointOperation::capture_pointset()
 
     check_mask.show_using_drawgeometries();
 
+#endif
     // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
 
@@ -751,6 +765,8 @@ void PointOperation::capture_point_inner_bbox()
     }
 
     // 描画処理
+
+#ifdef OPEN3D_ENABLED
     std::cout << "check_ply_visualization" << std::endl;
     Viewer3D check_ply("check_ply");
     check_ply.add_axes();
@@ -795,6 +811,7 @@ void PointOperation::capture_point_inner_bbox()
 
     // 描画
     check_ply.show_using_drawgeometries();
+#endif
 
     //  output_ply パーツごとではなく、クラスでまとめて出力する
     std::array<PointSet, 20> output_captured_point;
@@ -941,9 +958,7 @@ double img_projection(PointSet &ply_point, LidarImg &lidar_img, InstaImg &image)
 }
 
 /**
- * @brief テスト用の関数
- *
- * 新機能等を作ったら、あとで実装してあげる
+ * @brief 画像シフト, 類似度mseを計算して、最も高かった場所から対応点を出力する。
  *
  *  * 実行例:
  * ./Rotation   --mode 9
@@ -955,7 +970,7 @@ double img_projection(PointSet &ply_point, LidarImg &lidar_img, InstaImg &image)
  *              --json, data/detections_test.json,
  *              --mode, 9,
  */
-void PointOperation::test_location()
+void PointOperation::old_detection_correspoint()
 {
 
     ObjectIO obj_io;
@@ -1237,9 +1252,9 @@ void PointOperation::remove_pointset_floor(PointSet &origin_point, PointSet &out
  * what are you doing now?
  * 画像シフトのテストを作って 試します。
  */
-void PointOperation::test_location_two()
+void PointOperation::test_location()
 {
-    std::cout << "test_location_two" << std::endl;
+    std::cout << "test_location" << std::endl;
     ObjectIO obj_io;
 
     PointSet ply_point("plydata");
@@ -1263,99 +1278,61 @@ void PointOperation::test_location_two()
     InstaImg pointimg;
     pointimg.make_img_from_pointcloud(stitch_edge_point, std::pair<int, int>(360, 180));
 
-    cv::imwrite("out/" + date + "/" + "outpnt.png", pointimg.get_mat());
+    cv::imwrite("out/" + date + "/" + "insta.png", pointimg.get_mat());
+
+
+    // こっから関数にする
+    // # 比較用の画像と 回転させた点群を作成して 画像を生成
+    auto make_img = [this, &stitch_edge_point, &obj_io](double angle, std::string imgname)
+    {
+        PointSet stitch_edge_point_rotate("stitch_edge_point");
+        stitch_edge_point_rotate.add_point(stitch_edge_point);
+
+        stitch_edge_point_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(angle*M_PI / 180, Eigen::Vector3d::UnitZ())));
+        obj_io.output_ply(stitch_edge_point_rotate, "out/" + date + "/_" + imgname + ".ply");
+        InstaImg pointimg_lidar;
+        pointimg_lidar.make_img_from_pointcloud(stitch_edge_point_rotate, std::pair<int, int>(360, 180));
+        cv::imwrite("out/" + date + "/" + imgname + ".png", pointimg_lidar.get_mat());
+
+        return pointimg_lidar.get_mat();
+
+    };
+
+    // 回転
+    make_img(1.0, "rote1");
+    std::cout << "MSE calc" << std::endl;
+    std::cout << ImgCalc::compute_MSE(imgmat, imgmat_lidar) << std::endl;
+
+
+
+    make_img(2.0, "rote2");
+    std::cout << "MSE calc" << std::endl;
+    std::cout << ImgCalc::compute_MSE(imgmat, imgmat_lidar) << std::endl;
+
+    make_img(3.0, "rote3");
+    make_img(4.0, "rote4");
+    make_img(5.0, "rote5");
+
+
+
+    // rotate z axis
+    PointSet stitch_edge_point2("stitch_edge_point");
+    stitch_edge_point2.add_point(stitch_edge_point);
+    stitch_edge_point2.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(6.0*M_PI / 180, Eigen::Vector3d::UnitZ())));
+
+    InstaImg pointimg_lidar;
+    pointimg_lidar.make_img_from_pointcloud(stitch_edge_point2, std::pair<int, int>(360, 180));
+    cv::imwrite("out/" + date + "/" + "rote6.png", pointimg_lidar.get_mat());
 
     exit(0);
     // std::cout << "MSE calc" << std::endl;
     // std::cout << ImgCalc::compute_MSE(imgmat, imgmat_lidar) << std::endl;
 
 
-
-
-
-
-
-    // #### make 球の画像の配列
-    cv::Mat imgmat(360, 180, CV_8UC1);
-    cv::Mat imgmat_lidar(360, 180, CV_8UC1);
-    imgmat = cv::Mat::zeros(360, 180, CV_8UC1);
-    imgmat_lidar = cv::Mat::zeros(360, 180, CV_8UC1);
-
-    for (auto point : stitch_edge_point.get_point_all_polar())
-    {
-        // 画像に変換する( theta, phi) -> (v, u)
-        double phi = point(1);
-        double theta = point(2);
-        int u = static_cast<int>(phi / (2.0 * M_PI) * 360.0);
-        int v = static_cast<int>(theta / M_PI * 180.0);
-
-        std::cout << point.transpose() << " ";
-        std::cout << u << ":" << v << " " << std::endl;
-
-        imgmat.at<uchar>(v, u) = 255;
-        imgmat_lidar.at<uchar>(v, u) = 255;
-    }
-
-
-
-
-
-
-
-
-    // rotate z axis
-    PointSet stitch_edge_point2("stitch_edge_point2");
-    stitch_edge_point2.add_point(stitch_edge_point);
-
-
-    stitch_edge_point2.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(1.0*M_PI / 180, Eigen::Vector3d::UnitZ())));
-
-    obj_io.output_ply(stitch_edge_point2, "out/" + date + "/" + "rote" + ".ply");
-
-    cv::Mat imgmat2(360, 180, CV_8UC1);
-    imgmat2 = cv::Mat::zeros(360, 180, CV_8UC1);
-
-    for (auto point : stitch_edge_point2.get_point_all_polar())
-    {
-        // 画像に変換する( theta, phi) -> (v, u)
-        double phi = point(1);
-        double theta = point(2);
-        int u = static_cast<int>(phi / (2.0 * M_PI) * 360.0);
-        int v = static_cast<int>(theta / M_PI * 180.0);
-
-        std::cout << point.transpose() << " ";
-        std::cout << u << ":" << v << " " << std::endl;
-
-        imgmat2.at<uchar>(v, u) = 255;
-    }
-
-    cv::imwrite("out/" + date + "/" + "outpnt2.png", imgmat2);
-
     // 画像に変換する の切り出し。
     // これ 画像のサイズに依存しないためには どうすれば？
     // 依存するというか。最初の時点で指定すればよくね。operationからもってこよ
 
-
-
-
-
-    for (auto point : stitch_edge_point2.get_point_all_polar())
-    {
-        std::cout << point.transpose() << " ";
-        // 画像に変換する( theta, phi) -> (v, u)
-        double phi = point(1);
-        double theta = point(2);
-        int u = static_cast<int>(phi / (2.0 * M_PI) * 360.0);
-        int v = static_cast<int>(theta / M_PI * 180.0);
-
-        std::cout << u << ":" << v << " " << std::endl;
-
-        imgmat_lidar.at<uchar>(v, u) = 255;
-        imgmat.at<uchar>(v, u) = 255;
-    }
-
-    std::cout << "MSE calc" << std::endl;
-    std::cout << ImgCalc::compute_MSE(imgmat, imgmat_lidar) << std::endl;
 
     // cv::Mat imgmat(360, 180, CV_8UC1);
     // for (int i = 0; i < 360; i++)

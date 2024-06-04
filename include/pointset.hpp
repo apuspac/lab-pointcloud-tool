@@ -54,6 +54,7 @@ public:
 
     // get
     long unsigned int get_point_num() { return point3.size(); }
+    long unsigned int get_point_num_polar() { return point3_polar.size(); }
     long unsigned int get_edge_num() { return edge2.size(); }
     int get_class_num() { return class_num; }
     std::string get_class_name() { return class_name; }

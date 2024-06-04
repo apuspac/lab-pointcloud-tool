@@ -1,6 +1,8 @@
 {
     "clangd.includePath": [
         "${workspaceFolder}/**",
+        "${workspaceFolder}/include/**",
+        "${workspaceFolder}/src/**",
         "usr/include/opencv4",
         "usr/include/eigen3",
         "usr/local/include/open3d/3rdparty"

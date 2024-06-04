@@ -152,6 +152,8 @@ public:
     void get_corresponding_point(std::vector<Eigen::Vector3d> &, std::vector<std::pair<int, int>> &, EdgeImg &, EdgeImg &, PointSet &, int);
     void get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &, std::vector<std::pair<int, int>> &, EdgeImg &, EdgeImg &, PointSet &, int, std::string);
     void get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &, std::vector<std::pair<int, int>> &, EdgeImg &, EdgeImg &, PointSet &, int, std::string);
+
+    bool is_equal_zero(double);
 };
 
 /**

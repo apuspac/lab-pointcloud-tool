@@ -78,14 +78,14 @@ public:
     // ここに実行listを作ってmodeで切り替えしたい。
     void transform_rotate();
     void transform_rotate_simulation();
-    void Rotation_only();
-    void Rotation_only_simulation();
+    void rotate();
+    void rotate_simulation();
     void capture_boxpoint();
     void capture_segmentation_point();
     void capture_pointset();
     void capture_point_inner_bbox();
+    void old_detection_correspoint();
     void test_location();
-    void test_location_two();
 
     // mode切り替えしない関数
     void remove_pointset_floor(PointSet &, PointSet &, Eigen::Vector3d);

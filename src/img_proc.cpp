@@ -6,6 +6,7 @@
  */
 
 #include "img_proc.hpp"
+#include "fmt/printf.h"
 #include <utility>
 
 /**
@@ -463,12 +464,12 @@ double ImgCalc::compute_MSE(const std::vector<int> &reference, const std::vector
     double sum = 0.0;
 
     // すべての画素値の差の2乗和を計算
-    for (int i = 0; i < reference.size(); i++)
+    for (long unsigned int i = 0; i < reference.size(); i++)
     {
         sum += std::pow(reference.at(i) - comparison.at(i), 2);
     }
 
-    return sum / (reference.size() * reference.size());
+    return sum / (static_cast<double>(  reference.size() * reference.size()));
 }
 
 /**
@@ -501,6 +502,13 @@ std::vector<int> ImgCalc::shift(std::vector<int> target, int size_phi, int size_
 }
 
 
+
+/**
+ * @brief pointcloud を 画像に変換するする
+ *
+ * @param target_point
+ * @param img_size : 画像サイズ (height, width)
+ */
 void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, int> img_size)
 {
     // polarがあるかどうかの確認
@@ -513,6 +521,8 @@ void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, i
 
     // 画像の初期化
     cv::Mat imgmat(img_size.first, img_size.second, CV_8UC1, cv::Scalar(0));
+    std::cout << "target_point.num"  << target_point.get_point_num_polar() << std::endl;
+    std::cout << "img_size" << img_size.first * img_size.second << std::endl;
 
     // 変換処理
     for(auto point : target_point.get_point_all_polar())
@@ -520,15 +530,28 @@ void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, i
         // 画像に変換する( theta, phi) -> (v, u)
         double phi = point(1);
         double theta = point(2);
-        int u = static_cast<int>(phi / (2.0 * M_PI) * 360.0);
-        int v = static_cast<int>(theta / M_PI * 180.0);
+        int v = static_cast<int>(theta / (2.0 * M_PI) * 360.0);
+        int u = static_cast<int>(phi / M_PI * 180.0);
 
-        #ifdef _DEBUG
+        if(v < 0){
+            v += 360;
+        }
+
+        #ifdef DEBUG
         std::cout << point.transpose() << " ";
         std::cout << u << ":" << v << " " << std::endl;
         #endif
 
-        imgmat.at<uchar>(v, u) = 255;
+        imgmat.at<uchar>(v, u) = 250;
+
+        //rad 2.96 は だいたい170°くらい
+        // if(theta > 2.96){
+        //     std::cout << point.transpose() << " ";
+        //     std::cout << u << ":" << v << " " << std::endl;
+        // }else{
+        //
+        // }
+
     }
 
     set_mat(imgmat);
@@ -570,7 +593,8 @@ void LidarImg::ply_to_360paranoma_img_depth(PointSet &ply_point, int depth_flag)
 {
     std::cout << "ply_to_360_paranoma_img_depth" << std::endl
               << ply_point.get_point_all().size() << std::endl
-              << "polar.num" << ply_point.get_point_all_polar().size() << std::endl;
+              << "polar.num" << ply_point.get_point_all_polar().size() << std::endl
+              << "depth_flg" << depth_flag << std::endl;
     assert(ply_point.get_point_all_polar().size() == store_info.size());
 
     store_pixel.resize(width * height);
@@ -1233,7 +1257,7 @@ void LidarImg::get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &c
                 // 格納する点の距離をbin_widthで割って histgramに格納
                 Eigen::Vector3d point = *std::min_element(corresp_point_candidate.begin(), corresp_point_candidate.end(), compare_distance);
                 double point_dis = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0));
-                int hist_index = point_dis / bin_width;
+                int hist_index = static_cast<int>( point_dis / bin_width);
 
                 std::cout << "hist_index" << hist_index << " distance:" << point_dis << std::endl;
                 // ヒストグラムの更新
@@ -1254,7 +1278,7 @@ void LidarImg::get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &c
 
         // ヒストグラムの中から最大の物を探す
         auto iter = std::max_element(histgram_distance.begin(), histgram_distance.end());
-        auto c_index = std::distance(histgram_distance.begin(), iter);
+        long unsigned int  c_index = std::distance(histgram_distance.begin(), iter);
 
         std::cout << "c_index" << c_index << std::endl;
 
@@ -1278,7 +1302,7 @@ void LidarImg::get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &c
 
             for (auto &candidate : candidate_corresp)
             {
-                if (candidate.store_index == c_index)
+                if (candidate.store_index == static_cast<int>(c_index))
                 {
                     std::cout << "found: " << candidate.pixel << " " << candidate.point.transpose();
                     corresp_pixel.push_back(pixel_to_uv(candidate.pixel));
@@ -1297,7 +1321,9 @@ void LidarImg::set_store_pixel(int pixel, Eigen::Vector3d new_point)
     double new_distance = std::sqrt(std::pow(new_point(0), 2.0) + std::pow(new_point(1), 2.0));
     double distance = store_pixel.at(pixel).distance;
 
-    if (new_distance < distance || distance == 0.0)
+    // ここの0.0 は 設定されていないと同じなのだから、 そのように変更すべき
+    // 設定されてないと、何が帰ってくるんだ？
+    if (new_distance < distance || is_equal_zero(distance))
     {
         store_pixel.at(pixel).point = new_point;
         store_pixel.at(pixel).distance = new_distance;
@@ -1493,12 +1519,16 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
                 std::cout << store_pixel.capacity() << std::endl;
                 continue;
             }
+            // ばかみたいな変数名してて草 ぶち殺されるぞ。
             auto store_pixell = store_pixel.at(pixel);
             // pixelに対応するstore_pixelの点のうち 距離が0でないものを探す
-            if (store_pixell.distance != 0)
+            if (!is_equal_zero(store_pixell.distance))
             {
                 double point_dis = store_pixell.distance;
-                int hist_index = point_dis / bin_width;
+
+
+                // intへ切り捨てしてcast 
+                int hist_index =static_cast<int>(   point_dis / bin_width);
                 histgram_distance.at(hist_index)++;
                 candidate_corresp.push_back({pixel, store_pixell.point, hist_index});
             }
@@ -1520,7 +1550,7 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
 
         std::cout << "c_index" << c_index << std::endl;
 
-        if (c_index == histgram_distance.size())
+        if (static_cast<unsigned long>(c_index) == histgram_distance.size())
         {
             std::cout << "no corresponding point" << std::endl;
             continue;
@@ -1540,7 +1570,7 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
 
             for (auto &candidate : candidate_corresp)
             {
-                if (candidate.store_index == c_index)
+                if (candidate.store_index == static_cast<int>(c_index))
                 {
                     std::cout << "found: " << candidate.pixel << " " << candidate.point.transpose();
                     corresp_pixel.push_back(pixel_to_uv(candidate.pixel));
@@ -1553,3 +1583,19 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
     }
     ofs.close();
 }
+
+
+bool LidarImg::is_equal_zero(double value)
+{
+    double EPSILON = 1e-9;
+
+    if(std::abs(value) < EPSILON)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+

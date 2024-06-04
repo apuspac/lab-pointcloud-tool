@@ -31,6 +31,9 @@
 *.out
 *.app
 
+
+
+
 # CMakeFile
 ./src/build/CMakeFiles/
 ./src/build/CMakeCache.txt
@@ -76,6 +79,10 @@ src/build/Rotation
 
 # 実行結果データは共有しない。
 out/
+
+# nvim
+.cache/
+
 
 !.vscode/tasks.json
 !.vscode/launch.json

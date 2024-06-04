@@ -7,4 +7,4 @@
 --img img/PIC_20230711.jpg \
 --dir ply/projection/ \
 --json data/20230711-bbox/20240711-bbox.json \
---mode 3
+--mode 0 
