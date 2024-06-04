@@ -39,6 +39,7 @@
 ./src/build/CMakeCache.txt
 ./src/build/cmake_install.cmake
 ./src/build/Makefile
+build/
 
 # exeFile
 
