@@ -639,16 +639,13 @@ void PointOperation::capture_pointset()
 
     check_mask.show_using_drawgeometries();
 
-<<<<<<< Updated upstream
     // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
 
     // capture_ply.print();
     // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
-=======
 #endif
->>>>>>> Stashed changes
 }
 
 /**
