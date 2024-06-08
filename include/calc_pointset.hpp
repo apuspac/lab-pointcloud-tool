@@ -30,7 +30,7 @@ public:
     void calc_rotation_axis_from_matrix_R(Eigen::Matrix3d &);
 
     PointSet conversion_ply_to_img_point(PointSet &);
-    void pickup_corresp_point(PointSet &, PointSet &, PointSet &, PointSet &, std::string);
+    void pickup_corresp_point(PointSet &, PointSet &, PointSet &, PointSet &, std::string="");
 
     void radius_based_outlier_filter(PointSet &, double);
     static void make_striped_pattern(std::vector<int> &, PointSet &, PointSet &, int );

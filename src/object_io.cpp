@@ -37,7 +37,7 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
             {"ply", required_argument, 0, 'p'},
             {"img", required_argument, 0, 'i'},
             {"json", required_argument, 0, 'j'},
-            {"dir", required_argument, 0, 'd'},
+            // {"dir", required_argument, 0, 'd'},
             {"mode", required_argument, 0, 'o'},
             {"help", no_argument, 0, 'h'},
 
@@ -71,9 +71,9 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
             operation.set_json_path(std::string(optarg));
             break;
 
-        case 'd':
-            operation.set_default_dir_path(std::string(optarg));
-            break;
+        // case 'd':
+        //     operation.set_default_dir_path(std::string(optarg));
+        //     break;
         case 'o':
             operation.set_mode(std::string(optarg));
             break;
@@ -82,8 +82,8 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
                       << "--img_cp,  -m : corresp img point data filename" << std::endl
                       << "--ply_cp,   -x : corresp ply point data filename" << std::endl
                       << "--ply,      -p : ply file name " << std::endl
-                      << "--img,      -m : img file path" << std::endl
-                      << "--dir,      -d : dir file path" << std::endl;
+                      << "--img,      -m : img file path" << std::endl;
+                      // << "--dir,      -d : dir file path" << std::endl;
             break;
         default:
             break;
@@ -131,15 +131,14 @@ auto is_first_sharp = [](std::string buf_str)
  * 空白で区切った数で点データかどうか判定をしているので、もしheader部分で、プロパティの個数と一緒のプロパティ数があれば、変更する
  *
  *
- * @param file_name plyファイル名
+ * @param file_path plyファイル名
  * @param dir_path plyファイルのあるディレクトリ
  * @param property_num plyファイルのパラメータの数。
  * @param loaded_point_data 格納するPointSetクラス
  */
-void ObjectIO::load_ply_point_file(std::string file_name, std::string dir_path, int property_num, PointSet &loaded_point_data)
+void ObjectIO::load_ply_point_file(int property_num, PointSet &loaded_point_data, std::string file_path=""  )
 {
     std::fstream data_file;
-    std::string file_path = dir_path + file_name;
 
     data_file.open(file_path, std::ios::in);
 
@@ -285,15 +284,13 @@ Eigen::Vector3d equirectangular_to_sphere(double u, double v, double img_width, 
 /**
  * @brief imgファイルから点の読み込み。方向ベクトルの変換処理も一緒に行う
  *
- * @param file_name img点のファイル名
- * @param dir_path img点のファイルがあるディレクトリパス
  * @param img_path 画像のファイルパス
  * @param loaded_point_data 取得したpointを格納するPointset
+ * @param file_path img点のファイル名
  */
-void ObjectIO::load_img_point_file(std::string file_name, std::string dir_path, std::string img_path, PointSet &loaded_point_data)
+void ObjectIO::load_img_point_file(std::string img_path, PointSet &loaded_point_data, std::string file_path = "")
 {
     std::fstream data_file;
-    std::string file_path = dir_path + file_name;
 
     data_file.open(file_path, std::ios::in);
 

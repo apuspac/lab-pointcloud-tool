@@ -77,23 +77,19 @@ void PointOperation::print()
               << mode << std::endl;
 
     std::cout << std::endl
-              << "default_dir_path: "
-              << default_dir_path << std::endl;
-
-    std::cout << std::endl
               << "jsonfile_path: "
               << json_file_path << std::endl;
 
     std::cout << std::endl
               << "corresp_img_file_name: " << std::endl;
-    for (auto tmp : corresp_img_file_name)
+    for (auto tmp : corresp_img_file_path)
     {
         std::cout << tmp << std::endl;
     }
 
     std::cout << std::endl
               << "corresp_ply_file_name: " << std::endl;
-    for (auto tmp : corresp_ply_file_name)
+    for (auto tmp : corresp_ply_file_path)
     {
         std::cout << tmp << std::endl;
     }
@@ -107,7 +103,7 @@ void PointOperation::print()
 
     std::cout << std::endl
               << "ply_file_path: " << std::endl;
-    for (auto tmp : ply_file_name)
+    for (auto tmp : ply_file_path)
     {
         std::cout << tmp << std::endl;
     }
@@ -127,7 +123,6 @@ void PointOperation::print()
  *              --img_cp img.dat
  *              --ply plyname.ply
  *              --img ../../img/kyoiku.JPG
- *              --dir ../../ply_data/transform_rotate/
  *              >! ../../ply_data/transform_rotate/out.dat
  *
  */
@@ -138,12 +133,12 @@ void PointOperation::transform_rotate()
 
     // load ply対応点
     PointSet corresp_ply_point("corresp_plypoint");
-    obj_io.load_ply_point_file(corresp_ply_file_name.at(0), default_dir_path, 3, corresp_ply_point);
+    obj_io.load_ply_point_file( 3, corresp_ply_point, corresp_ply_file_path.at(0)) ;
     corresp_ply_point.print();
 
     // load 画像対応点 読み込む際に方向ベクトルに変換
     PointSet corresp_img_point("corresp_imgpoint");
-    obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), corresp_img_point);
+    obj_io.load_img_point_file(img_file_path.at(0), corresp_img_point, corresp_img_file_path.at(0));
     corresp_img_point.print();
 
     set_date();
@@ -151,7 +146,7 @@ void PointOperation::transform_rotate()
 
     // load 元のplyファイル(回転並進させる用)
     PointSet ply_point("plyfile");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
+    obj_io.load_ply_point_file(3, ply_point, ply_file_path.at(0) );
 
     CalcPointSet calc;
 
@@ -231,20 +226,23 @@ void PointOperation::transform_rotate_simulation()
     std::cout << "transform_rotate_simulation::" << std::endl;
     ObjectIO obj_io;
 
+    set_date();
+    obj_io.create_dir("out/" + date);
+
     // load plypoint
     PointSet ply_point("corresp_plypoint");
-    obj_io.load_ply_point_file(corresp_ply_file_name.at(0), default_dir_path, 3, ply_point);
+    obj_io.load_ply_point_file(3, ply_point, corresp_ply_file_path.at(0) );
     ply_point.print();
 
     // load imgpoint(plyfile)
     PointSet img_ply_point("corresp_imgpoint");
-    obj_io.load_ply_point_file(corresp_ply_file_name.at(1), default_dir_path, 3, img_ply_point);
+    obj_io.load_ply_point_file(3, img_ply_point, corresp_ply_file_path.at(1) );
     img_ply_point.print();
 
     //  対応点をピックアップ
     CalcPointSet calc;
     PointSet pickup_img("pickup_img"), pickup_ply("pickup_ply");
-    calc.pickup_corresp_point(img_ply_point, ply_point, pickup_img, pickup_ply, default_dir_path);
+    calc.pickup_corresp_point(img_ply_point, ply_point, pickup_img, pickup_ply);
     pickup_img.print();
     pickup_ply.print();
 
@@ -306,9 +304,9 @@ void PointOperation::transform_rotate_simulation()
     ply_point.transform(translation_vector);
 
     // 出力
-    obj_io.output_ply(ply_point, default_dir_path + ply_point.get_name() + ".ply");
-    obj_io.output_ply(pickup_img, default_dir_path + pickup_img.get_name() + ".ply");
-    obj_io.output_ply(pickup_ply, default_dir_path + pickup_ply.get_name() + ".ply");
+    obj_io.output_ply(ply_point, "out/" + date + ply_point.get_name() + ".ply");
+    obj_io.output_ply(pickup_img, "out/" + date + pickup_img.get_name() + ".ply");
+    obj_io.output_ply(pickup_ply, "out/" + date + pickup_ply.get_name() + ".ply");
 }
 
 /**
@@ -333,17 +331,17 @@ void PointOperation::rotate()
 
     // load 対応点 plypoint
     PointSet corresp_ply_point("corresp_plypoint");
-    obj_io.load_ply_point_file(corresp_ply_file_name.at(0), default_dir_path, 3, corresp_ply_point);
+    obj_io.load_ply_point_file( 3, corresp_ply_point, corresp_ply_file_path.at(0));
     corresp_ply_point.print();
 
     // load 対応点 imgpoint
     PointSet corresp_img_point("corresp_imgpoint");
-    obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), corresp_img_point);
+    obj_io.load_img_point_file(img_file_path.at(0), corresp_img_point, corresp_img_file_path.at(0));
     corresp_img_point.print();
 
     // load 対象のplypoint
     PointSet ply_point("plyfile");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
+    obj_io.load_ply_point_file(4, ply_point, ply_file_path.at(0));
 
     CalcPointSet calc;
 
@@ -362,7 +360,7 @@ void PointOperation::rotate()
     ply_point.rotate(matrix_R);
 
     // 出力
-    obj_io.output_ply(ply_point, default_dir_path + ply_point.get_name() + ".ply");
+    obj_io.output_ply(ply_point, ply_point.get_name() + ".ply");
 }
 
 /**
@@ -394,17 +392,16 @@ void PointOperation::rotate_simulation()
 
     // load 対応点 ply
     PointSet corresp_ply_point("corresp_plypoint");
-    obj_io.load_ply_point_file(corresp_ply_file_name.at(0), default_dir_path, 3, corresp_ply_point);
+    obj_io.load_ply_point_file(3, corresp_ply_point, corresp_ply_file_path.at(0) );
 
     // load 対応点 img_point.ply
     PointSet corresp_imgply_point("corresp_imgpoint");
-    obj_io.load_ply_point_file(corresp_ply_file_name.at(1), default_dir_path, 3, corresp_imgply_point);
-
+    obj_io.load_ply_point_file(3, corresp_imgply_point, corresp_ply_file_path.at(1) );
 
     //  対応点をピックアップ
     CalcPointSet calc;
     PointSet pickup_img("pickup_img"), pickup_ply("pickup_ply");
-    calc.pickup_corresp_point(corresp_imgply_point, corresp_ply_point, pickup_img, pickup_ply, default_dir_path);
+    calc.pickup_corresp_point(corresp_imgply_point, corresp_ply_point, pickup_img, pickup_ply);
     pickup_img.print();
     pickup_ply.print();
 
@@ -426,7 +423,7 @@ void PointOperation::rotate_simulation()
     corresp_ply_point.rotate(matrix_R);
 
     // 出力
-    obj_io.output_ply(corresp_ply_point, default_dir_path + corresp_ply_point.get_name() + ".ply");
+    obj_io.output_ply(corresp_ply_point, corresp_ply_point.get_name() + ".ply");
 }
 
 /**
@@ -449,7 +446,7 @@ void PointOperation::capture_boxpoint()
 
     // load plydata
     PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
+    obj_io.load_ply_point_file(3, ply_point, ply_file_path.at(0));
 
     // load bbox
     DetectionData detect;
@@ -457,7 +454,7 @@ void PointOperation::capture_boxpoint()
 
     // // load bbox
     // PointSet bbox_img_point("corresp_imgpoint");
-    // obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), bbox_img_point);
+    // obj_io.load_img_point_file(corresp_img_file_name.at(0), img_file_path.at(0), bbox_img_point);
     // bbox_img_point.print();
 
     CaptureBoxPoint capbox;
@@ -492,8 +489,6 @@ void PointOperation::capture_boxpoint()
     check_ply.show_using_drawgeometries();
     #endif
 
-    // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
-    // obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
 }
 
 /**
@@ -516,7 +511,7 @@ void PointOperation::capture_segmentation_point()
 
     // load plypoint
     PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
+    obj_io.load_ply_point_file(3, ply_point, ply_file_path.at(0));
 
     // load segmentation data
     DetectionData detect;
@@ -559,7 +554,7 @@ void PointOperation::capture_segmentation_point()
     // one_mask.add_point(one_img_mask.get_mask_xyz().at(0));
 #endif
 
-    obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
+    obj_io.output_ply(capture_ply, "out/" + date + "/" + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
 }
 
@@ -575,7 +570,7 @@ void PointOperation::capture_pointset()
 
     // load plydata
     PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
+    obj_io.load_ply_point_file(4, ply_point, ply_file_path.at(0) );
 
     // load bbox ここにjsonファイルのクラスのインスタンスを宣言
     // objectIOに jsonデータ格納のプログラムを作る
@@ -644,13 +639,16 @@ void PointOperation::capture_pointset()
 
     check_mask.show_using_drawgeometries();
 
-#endif
+<<<<<<< Updated upstream
     // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
 
     // capture_ply.print();
     // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
+=======
+#endif
+>>>>>>> Stashed changes
 }
 
 /**
@@ -675,7 +673,7 @@ void PointOperation::capture_point_inner_bbox()
 
     // load plydata
     PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 4, ply_point);
+    obj_io.load_ply_point_file(4, ply_point, ply_file_path.at(0));
 
     // ply_point.print();
 
@@ -865,7 +863,7 @@ void PointOperation::projection_to_sphere()
 
     // load plydata img
     PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
+    obj_io.load_ply_point_file(3, ply_point, ply_file_path.at(0) );
     InstaImg image;
     image.load_img(img_file_path.at(0));
 
@@ -912,8 +910,8 @@ void PointOperation::projection_to_sphere()
     check_img.show_using_drawgeometries();
 
     // output
-    obj_io.output_ply(img_projection_unisphere, default_dir_path + "img" + ".ply");
-    obj_io.output_ply(projection_unisphere, default_dir_path + "plypoint" + ".ply");
+    obj_io.output_ply(img_projection_unisphere, "out/" + date + "/" + "img" + ".ply");
+    obj_io.output_ply(projection_unisphere, "out/" +  date + "/" + "plypoint" + ".ply");
 }
 
 double img_projection(PointSet &ply_point, LidarImg &lidar_img, InstaImg &image)
@@ -977,7 +975,7 @@ void PointOperation::old_detection_correspoint()
 
     // load
     PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
+    obj_io.load_ply_point_file(3, ply_point, ply_file_path.at(0) );
     InstaImg image;
     image.load_img(img_file_path.at(0));
 

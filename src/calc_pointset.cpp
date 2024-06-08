@@ -724,30 +724,30 @@ void save_ramdom_pickup(std::string out_path, int pick_num, int pick_limit)
  * @brief シミュレーションデータ用にランダムに点をピックアップする。
  * ピックアップした後、点番号を保存する。
  * default_dirに保存したpoint_fileがあれば、そのデータを使用、なければ新しくピックアップする。
+ *  修正: dirを指定する場合と しない場合で調整
  *
  * @param point_data
  * @param point_data2
  * @param pickup_data
  * @param pickup_data2
- * @param default_dir_path
+ * @param pickup_file_path
  */
 void CalcPointSet::pickup_corresp_point(
     PointSet &point_data, PointSet &point_data2,
     PointSet &pickup_data, PointSet &pickup_data2,
-    std::string default_dir_path)
+    std::string pickup_file_path)
 {
     std::cout << "-------pickup point :" << std::endl;
+    
+    // 指定したディレクトリに存在するか？
+    bool is_file_exists = std::filesystem::exists(pickup_file_path + "pickup_num.dat");
 
-    bool is_file_exists = std::filesystem::exists(default_dir_path + "pickup_num.dat");
-
-    std::cout << "pickup_file exists: " << is_file_exists << std::endl;
-
-    // ファイルがない場合 point_fileを作る。
+    // ファイルがない場合 新しくpoint_fileを作る。
     if (is_file_exists == false)
     {
         std::cout << "no pickup file -> make_point_data" << std::endl;
 
-        std::string out_path = default_dir_path + "pickup_num.dat";
+        std::string out_path = "pickup_num.dat";
         int pickup_num = 30;
         int pickup_limit = int(point_data.get_point_num());
 
@@ -756,7 +756,7 @@ void CalcPointSet::pickup_corresp_point(
 
     // ファイルを読み込む
     std::vector<int> ramdom_pickup;
-    load_ramdom_data("pickup_num.dat", default_dir_path, ramdom_pickup);
+    load_ramdom_data("pickup_num.dat", pickup_file_path, ramdom_pickup);
 
     // 読み込んだ点を格納
     for (const auto pick_num : ramdom_pickup)
