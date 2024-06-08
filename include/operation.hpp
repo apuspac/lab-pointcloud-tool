@@ -39,13 +39,13 @@ private:
     std::string mode;
 
     // 画像対応点 ファイル名
-    std::vector<std::string> corresp_img_file_name;
+    std::vector<std::string> corresp_img_file_path;
     // plyファイル対応点 ファイル名
-    std::vector<std::string> corresp_ply_file_name;
-    std::vector<std::string> ply_file_name;
+    std::vector<std::string> corresp_ply_file_path;
+    std::vector<std::string> ply_file_path;
     std::vector<std::string> img_file_path;
     // デフォルトdir(1つのフォルダに上のplyファイルをまとめる)
-    std::string default_dir_path;
+    // std::string default_dir_path;
     std::string date;
     // jsonファイル名
     std::string json_file_path;
@@ -55,11 +55,11 @@ public:
     ~PointOperation() {}
 
     // ファイル名取得
-    std::string get_corresp_img_file_name(int number) { return corresp_img_file_name.at(number); }
-    std::string get_corresp_ply_file_name(int number) { return corresp_ply_file_name.at(number); }
-    std::string get_ply_file_path(int number) { return ply_file_name.at(number); }
+    std::string get_corresp_img_file_name(int number) { return corresp_img_file_path.at(number); }
+    std::string get_corresp_ply_file_name(int number) { return corresp_ply_file_path.at(number); }
+    std::string get_ply_file_path(int number) { return ply_file_path.at(number); }
     std::string get_img_file_path(int number) { return img_file_path.at(number); }
-    std::string get_default_dir_path() { return default_dir_path; }
+    // std::string get_default_dir_path() { return default_dir_path; }
     std::string get_json_path() { return json_file_path; }
 
     // モード取得
@@ -68,11 +68,11 @@ public:
     std::string get_localtime();
 
     // set
-    void set_corresp_img_file_name(std::string name) { corresp_img_file_name.push_back(name); }
-    void set_corresp_ply_file_name(std::string name) { corresp_ply_file_name.push_back(name); }
-    void set_plyfile_name(std::string name) { ply_file_name.push_back(name); }
+    void set_corresp_img_file_name(std::string name) { corresp_img_file_path.push_back(name); }
+    void set_corresp_ply_file_name(std::string name) { corresp_ply_file_path.push_back(name); }
+    void set_plyfile_name(std::string name) { ply_file_path.push_back(name); }
     void set_img_file_path(std::string name) { img_file_path.push_back(name); }
-    void set_default_dir_path(std::string name) { default_dir_path = name; }
+    // void set_default_dir_path(std::string name) { default_dir_path = name; }
     void set_json_path(std::string name) { json_file_path = name; }
     void set_mode(std::string mode_) { mode = mode_; }
     void set_date(std::string date_) { date = date_; }
