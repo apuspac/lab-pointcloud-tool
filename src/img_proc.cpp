@@ -6,6 +6,8 @@
  */
 
 #include "img_proc.hpp"
+#include "fmt/printf.h"
+#include <utility>
 
 /**
  * @brief img_pathから画像を読み込む
@@ -94,6 +96,41 @@ void InstaImg::set_pixel_255(int u, int v)
     //     std::cout << "u or v is under 0: " << u << " " << v << std::endl;
     // }
     img.at<u_char>(v, u) = 255;
+}
+
+/**
+ * @brief テスト画像 すいか
+ */
+void InstaImg::make_test_img_forEdge(int test_width, int test_height, int step, int band)
+{
+    set_zero_imgMat(test_height, test_width, CV_8UC1);
+
+    int step_tmp = 0;
+    int band_tmp = 0;
+    for (int i = 0; i < test_width; i++)
+    {
+        for (int j = 0; j < test_height; j++)
+        {
+            if (step_tmp > step && band_tmp < band)
+            {
+                set_pixel_255(i, j);
+            }
+        }
+
+        if (step_tmp == step && band_tmp == band)
+        {
+            step_tmp = 0;
+            band_tmp = 0;
+        }
+        else if (step_tmp > step && band_tmp < band)
+        {
+            band_tmp++;
+        }
+        else
+        {
+            step_tmp++;
+        }
+    }
 }
 
 /**
@@ -401,6 +438,129 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
     return dest[0];
 }
 
+double ImgCalc::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison)
+{
+    if (reference.size() != comparison.size())
+    {
+        std::cout << "size not same" << std::endl;
+        std::exit(-1);
+    }
+    if (reference.channels() != comparison.channels())
+    {
+        std::cout << "channel not same" << std::endl
+                  << "reference: " << reference.channels() << std::endl
+                  << "comparison: " << comparison.channels() << std::endl;
+
+        std::exit(-1);
+    }
+
+    cv::Scalar_<double> dest = cv::quality::QualityMSE::compute(reference, comparison, cv::noArray());
+
+    return dest[0];
+}
+
+double ImgCalc::compute_MSE(const std::vector<int> &reference, const std::vector<int> &comparison)
+{
+    double sum = 0.0;
+
+    // すべての画素値の差の2乗和を計算
+    for (long unsigned int i = 0; i < reference.size(); i++)
+    {
+        sum += std::pow(reference.at(i) - comparison.at(i), 2);
+    }
+
+    return sum / (static_cast<double>(  reference.size() * reference.size()));
+}
+
+/**
+ * @brief 画像を平行移動する はみ出した場所は反対側に移動
+ *
+ * @param x
+ * @param y
+ * @param out_mat
+ */
+std::vector<int> ImgCalc::shift(std::vector<int> target, int size_phi, int size_theta, int x, int y)
+{
+    std::vector<int> out_mat;
+    out_mat.resize(target.size());
+
+    for (int u = 0; u < size_phi; u++)
+    {
+        for (int v = 0; v < size_theta; v++)
+        {
+            int ptr = target.at(u * size_theta + v);
+
+            int new_u = (u + y + size_phi) % size_phi;
+            int new_v = (v + x + size_theta) % size_theta;
+            // std::cout << u << " " << v << " TO ";
+            // std::cout << new_u << " " << new_v << std::endl;
+            out_mat.at(new_u * size_theta + new_v) = ptr;
+        }
+    }
+
+    return out_mat;
+}
+
+
+
+/**
+ * @brief pointcloud を 画像に変換するする
+ *
+ * @param target_point
+ * @param img_size : 画像サイズ (height, width)
+ */
+void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, int> img_size)
+{
+    // polarがあるかどうかの確認
+    if(target_point.is_empry_polar())
+    {
+        std::cout << "point_to_img: polar is empty" << std::endl;
+        std::exit(-1);
+    }
+
+
+    // 画像の初期化
+    cv::Mat imgmat(img_size.first, img_size.second, CV_8UC1, cv::Scalar(0));
+
+    // 変換処理
+    for(auto point : target_point.get_point_all_polar())
+    {
+        // 画像に変換する( theta, phi) -> (v, u)
+        double phi = point(1);
+        double theta = point(2);
+        int v = static_cast<int>(theta / (2.0 * M_PI) * 360.0);
+        int u = static_cast<int>(phi / M_PI * 180.0);
+
+        // thetaがマイナスの場合の処理
+        if(v < 0){
+            v += 360;
+        }
+
+        #ifdef _DEBUG
+        std::cout << point.transpose() << " ";
+        std::cout << u << ":" << v << " " << std::endl;
+        #endif
+
+        imgmat.at<uchar>(v, u) = 250;
+
+        //rad 2.96 は だいたい170°くらい
+        // if(theta > 2.96){
+        //     std::cout << point.transpose() << " ";
+        //     std::cout << u << ":" << v << " " << std::endl;
+        // }else{
+        //
+        // }
+
+    }
+
+    set_mat(imgmat);
+
+}
+
+
+
+
+
 /**
  * @brief plyから得られる点群を全方位画像に投影する
  *
@@ -432,7 +592,8 @@ void LidarImg::ply_to_360paranoma_img_depth(PointSet &ply_point, int depth_flag)
 {
     std::cout << "ply_to_360_paranoma_img_depth" << std::endl
               << ply_point.get_point_all().size() << std::endl
-              << "polar.num" << ply_point.get_point_all_polar().size() << std::endl;
+              << "polar.num" << ply_point.get_point_all_polar().size() << std::endl
+              << "depth_flg" << depth_flag << std::endl;
     assert(ply_point.get_point_all_polar().size() == store_info.size());
 
     store_pixel.resize(width * height);
@@ -450,12 +611,12 @@ void LidarImg::ply_to_360paranoma_img_depth(PointSet &ply_point, int depth_flag)
         {
             u -= static_cast<int>(width);
         }
-            // 画像の範囲外に出てしまった場合を戻す処理。
-            // 下のset_pixel_255は、opencv側でよしなにしてくれるため、ない。
-            int new_u = (u + width) % width;
-            int new_v = (v + height) % height;
-            int pixel = new_u + new_v * width;
-        
+        // 画像の範囲外に出てしまった場合を戻す処理。
+        // 下のset_pixel_255は、opencv側でよしなにしてくれるため、ない。
+        int new_u = (u + width) % width;
+        int new_v = (v + height) % height;
+        int pixel = new_u + new_v * width;
+
         set_store_pixel(pixel, point);
         set_pixel_255(u, v);
     }
@@ -1095,7 +1256,7 @@ void LidarImg::get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &c
                 // 格納する点の距離をbin_widthで割って histgramに格納
                 Eigen::Vector3d point = *std::min_element(corresp_point_candidate.begin(), corresp_point_candidate.end(), compare_distance);
                 double point_dis = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0));
-                int hist_index = point_dis / bin_width;
+                int hist_index = static_cast<int>( point_dis / bin_width);
 
                 std::cout << "hist_index" << hist_index << " distance:" << point_dis << std::endl;
                 // ヒストグラムの更新
@@ -1116,7 +1277,7 @@ void LidarImg::get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &c
 
         // ヒストグラムの中から最大の物を探す
         auto iter = std::max_element(histgram_distance.begin(), histgram_distance.end());
-        auto c_index = std::distance(histgram_distance.begin(), iter);
+        long unsigned int  c_index = std::distance(histgram_distance.begin(), iter);
 
         std::cout << "c_index" << c_index << std::endl;
 
@@ -1140,7 +1301,7 @@ void LidarImg::get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &c
 
             for (auto &candidate : candidate_corresp)
             {
-                if (candidate.store_index == c_index)
+                if (candidate.store_index == static_cast<int>(c_index))
                 {
                     std::cout << "found: " << candidate.pixel << " " << candidate.point.transpose();
                     corresp_pixel.push_back(pixel_to_uv(candidate.pixel));
@@ -1159,7 +1320,9 @@ void LidarImg::set_store_pixel(int pixel, Eigen::Vector3d new_point)
     double new_distance = std::sqrt(std::pow(new_point(0), 2.0) + std::pow(new_point(1), 2.0));
     double distance = store_pixel.at(pixel).distance;
 
-    if (new_distance < distance || distance == 0.0)
+    // ここの0.0 は 設定されていないと同じなのだから、 そのように変更すべき
+    // 設定されてないと、何が帰ってくるんだ？
+    if (new_distance < distance || is_equal_zero(distance))
     {
         store_pixel.at(pixel).point = new_point;
         store_pixel.at(pixel).distance = new_distance;
@@ -1349,16 +1512,22 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
         // lineごとの対応のあるpixelを探索
         for (auto &pixel : line_pixel)
         {
-            if(pixel > height * width){
-                std::cout << pixel <<  "pixel is over" <<  height * width << std::endl;
+            if (pixel > height * width)
+            {
+                std::cout << pixel << "pixel is over" << height * width << std::endl;
                 std::cout << store_pixel.capacity() << std::endl;
                 continue;
             }
+            // ばかみたいな変数名してて草 ぶち殺されるぞ。
             auto store_pixell = store_pixel.at(pixel);
             // pixelに対応するstore_pixelの点のうち 距離が0でないものを探す
-            if(store_pixell.distance != 0){
+            if (!is_equal_zero(store_pixell.distance))
+            {
                 double point_dis = store_pixell.distance;
-                int hist_index = point_dis / bin_width;
+
+
+                // intへ切り捨てしてcast 
+                int hist_index =static_cast<int>(   point_dis / bin_width);
                 histgram_distance.at(hist_index)++;
                 candidate_corresp.push_back({pixel, store_pixell.point, hist_index});
             }
@@ -1380,7 +1549,7 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
 
         std::cout << "c_index" << c_index << std::endl;
 
-        if (c_index == histgram_distance.size())
+        if (static_cast<unsigned long>(c_index) == histgram_distance.size())
         {
             std::cout << "no corresponding point" << std::endl;
             continue;
@@ -1400,7 +1569,7 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
 
             for (auto &candidate : candidate_corresp)
             {
-                if (candidate.store_index == c_index)
+                if (candidate.store_index == static_cast<int>(c_index))
                 {
                     std::cout << "found: " << candidate.pixel << " " << candidate.point.transpose();
                     corresp_pixel.push_back(pixel_to_uv(candidate.pixel));
@@ -1413,3 +1582,19 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
     }
     ofs.close();
 }
+
+
+bool LidarImg::is_equal_zero(double value)
+{
+    double EPSILON = 1e-9;
+
+    if(std::abs(value) < EPSILON)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+

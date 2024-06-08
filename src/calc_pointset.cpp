@@ -766,3 +766,59 @@ void CalcPointSet::pickup_corresp_point(
         pickup_data2.add_point(point_data2.get_point(pick_num));
     }
 }
+
+/**
+ * @brief 2つの点群を
+ *
+ */
+void CalcPointSet::make_striped_pattern(std::vector<int> &stitch_edge, PointSet &stitch_edge_point, PointSet &watermelon, int divide_num)
+{
+    double r = 1.0;
+
+    //
+    bool flag = true;
+    // suicaの縞模様のphi_間隔
+    int phi_step = 360 / divide_num;
+    // int theta_step = 180 / divide_num;
+    int theta_step = 0;
+    int i = 0;
+
+    for (int phi_angle = 0; phi_angle < 2 * 180; phi_angle++)
+    {
+        if (i < phi_step)
+        {
+            int j = 0;
+            for (int theta_angle = 0; theta_angle < 180; theta_angle++)
+            {
+                if ((i == 0 || (i == phi_step - 1)) && j == theta_step && flag)
+                {
+                    stitch_edge_point.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
+                    stitch_edge.at(phi_angle * 180 + theta_angle) = 1;
+                }
+                else
+                {
+                    stitch_edge.at(phi_angle * 180 + theta_angle) = 0;
+                }
+                if (flag)
+                {
+                    watermelon.add_point_polar(Eigen::Vector3d{r, theta_angle * M_PI / 180, phi_angle * M_PI / 180});
+                }
+                // test_point.add_point(Eigen::Vector3d(sin(theta_angle * M_PI / 180) * cos(phi_angle * M_PI / 180), sin(theta_angle * M_PI / 180) * sin(phi_angle * M_PI / 180), cos(theta_angle * M_PI / 180)));
+                if (j < theta_step)
+                {
+                    j++;
+                }
+                else
+                {
+                    j = 0;
+                }
+            }
+            i++;
+        }
+        else
+        {
+            i = 0;
+            flag = !flag;
+        }
+    }
+}

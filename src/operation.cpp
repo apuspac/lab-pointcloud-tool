@@ -13,17 +13,17 @@ void PointOperation::mode_select()
 
     // https://yutamano.hatenablog.com/entry/2013/11/18/161234
     std::cout << "mode select" << std::endl;
-    switch_func[0] = std::bind(&PointOperation::transform_rotate, this);
-    switch_func[1] = std::bind(&PointOperation::transform_rotate_simulation, this);
-    switch_func[2] = std::bind(&PointOperation::Rotation_only, this);
-    // switch_func[3] = std::bind(&PointOperation::Rotation_only_simulation, this);
-    switch_func[4] = std::bind(&PointOperation::capture_boxpoint, this);
-    switch_func[5] = std::bind(&PointOperation::capture_segmentation_point, this);
-    switch_func[6] = std::bind(&PointOperation::capture_pointset, this);
-    switch_func[7] = std::bind(&PointOperation::capture_point_inner_bbox, this);
-    switch_func[9] = std::bind(&PointOperation::test_location, this);
-    switch_func[3] = std::bind(&PointOperation::test_location_two, this);
+    switch_func[1] = std::bind(&PointOperation::transform_rotate, this);
+    switch_func[2] = std::bind(&PointOperation::rotate, this);
+    switch_func[3] = std::bind(&PointOperation::capture_point_inner_bbox, this);
+    switch_func[4] = std::bind(&PointOperation::old_detection_correspoint, this);
+    switch_func[0] = std::bind(&PointOperation::test_location, this);
     switch_func[get_mode()]();
+    // switch_func[*] = std::bind(&PointOperation::Rotation_only_simulation, this);
+    // switch_func[*] = std::bind(&PointOperation::transform_rotate_simulation, this);
+    // switch_func[*] = std::bind(&PointOperation::capture_boxpoint, this);
+    // switch_func[*] = std::bind(&PointOperation::capture_segmentation_point, this);
+    // switch_func[*] = std::bind(&PointOperation::capture_pointset, this);
 }
 
 void PointOperation::set_date()
@@ -32,21 +32,39 @@ void PointOperation::set_date()
     date = data_s;
 }
 
+/**
+ * @brief get local time YYMMDD_HHMMSS
+ *
+ * @return std::string
+ */
 std::string PointOperation::get_localtime()
 {
     std::cout << "get_date" << std::endl;
     time_t t = time(nullptr);
     const tm *local_time = localtime(&t);
     std::stringstream ss;
+
+    // YY/MM/DD_HHMMSS
     ss << local_time->tm_year + 1900;
-    ss << local_time->tm_mon + 1;
-    ss << local_time->tm_mday;
+    ss << std::setw(2) << std::setfill('0') << local_time->tm_mon + 1;
+    ss << std::setw(2) << std::setfill('0') << local_time->tm_mday;
     ss << "_";
     ss << std::setw(2) << std::setfill('0') << local_time->tm_hour;
     ss << std::setw(2) << std::setfill('0') << local_time->tm_min;
-    // ss << local_time->tm_sec;
+    ss << std::setw(2) << std::setfill('0') << local_time->tm_sec;
 
     return ss.str();
+}
+
+/**
+ * @brief create out dir with date
+ *
+ */
+void PointOperation::create_output_dir()
+{
+    set_date();
+    std::cout << date << std::endl;
+    ObjectIO::create_dir("out/" + date);
 }
 
 /**
@@ -196,6 +214,7 @@ void PointOperation::transform_rotate()
  * 基本行列Eを求め、分解して tRを計算
  *
  * 読み込むファイルがどちらもplyファイルなのに注意。
+ * 回転と姿勢だけが違うplyファイルを読み込んで、 原点合わせをする。
  *
  * 実行例:
  * ./Rotation   --mode 1
@@ -307,7 +326,7 @@ void PointOperation::transform_rotate_simulation()
  *              >! ../../ply_data/rotate/out.dat
  *
  */
-void PointOperation::Rotation_only()
+void PointOperation::rotate()
 {
     std::cout << "Rotation only::" << std::endl;
     ObjectIO obj_io;
@@ -348,6 +367,10 @@ void PointOperation::Rotation_only()
 
 /**
  * @brief 回転を計算する(シミュレーション用)
+ * 
+ * 生成した 回転のみが変わっているplyファイルを読み込み、
+ * 対応点をpickup, 回転と並進を計算する。
+ * 対応を得る際に pointの番号で指定しているため 完全なコピーのplyファイルじゃないとうまくいかない。
  *
  * plyfileを読み込み、対応点をpickup, 対応点を使用して回転と並進を計算する。
  * 基本行列Eを求め、分解して tRを計算
@@ -364,7 +387,7 @@ void PointOperation::Rotation_only()
  *              >! ../../ply_data/transform_rotate_sim/out.dat
  *
  */
-void PointOperation::Rotation_only_simulation()
+void PointOperation::rotate_simulation()
 {
     std::cout << "Rotation only simulation::" << std::endl;
     ObjectIO obj_io;
@@ -376,6 +399,7 @@ void PointOperation::Rotation_only_simulation()
     // load 対応点 img_point.ply
     PointSet corresp_imgply_point("corresp_imgpoint");
     obj_io.load_ply_point_file(corresp_ply_file_name.at(1), default_dir_path, 3, corresp_imgply_point);
+
 
     //  対応点をピックアップ
     CalcPointSet calc;
@@ -457,6 +481,7 @@ void PointOperation::capture_boxpoint()
 
     std::cout << "check_ply_visualization" << std::endl;
 
+    #ifdef OPEN3D_ENABLED
     Viewer3D check_ply("check_ply");
     check_ply.add_axes();
     check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
@@ -465,6 +490,7 @@ void PointOperation::capture_boxpoint()
     check_ply.add_line_origin(bbox_print.get_point_all(), 2);
 
     check_ply.show_using_drawgeometries();
+    #endif
 
     // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(bbox_point, default_dir_path + bbox_point.get_name() + ".ply");
@@ -519,6 +545,8 @@ void PointOperation::capture_segmentation_point()
     capture_ply.add_point(one_mask);
     mask_print.add_point(one_mask_forprint);
 
+
+#ifdef OPEN3D_ENABLED
     //  Check Result
     Viewer3D check_ply("check_ply_segmentation");
     check_ply.add_axes();
@@ -529,6 +557,7 @@ void PointOperation::capture_segmentation_point()
 
     check_ply.show_using_drawgeometries();
     // one_mask.add_point(one_img_mask.get_mask_xyz().at(0));
+#endif
 
     obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
@@ -567,11 +596,13 @@ void PointOperation::capture_pointset()
 
     std::cout << ply_point.get_point_all().at(0) << std::endl;
 
+#ifdef OPEN3D_ENABLED
     Viewer3D check_ply("plyfile");
     check_ply.add_axes();
     check_ply.add_geometry_pointset(ply_point.get_point_all(), 0);
 
     check_ply.show_using_drawgeometries();
+#endif
 
     // --------- capture segmentation point -------------
     // 抽出したポイントを格納
@@ -586,8 +617,8 @@ void PointOperation::capture_pointset()
 
     capbox.capture_segmentation_distance(ply_point, capture_ply_seg, one_mask, segline_point);
 
+#ifdef OPEN3D_ENABLED
     Viewer3D check_window("bbox");
-
     // ply_point: 元のply
     // capture_ply: 切り出したbboxの中の点群
     // one_img_bbox: bboxそのもの
@@ -613,6 +644,7 @@ void PointOperation::capture_pointset()
 
     check_mask.show_using_drawgeometries();
 
+#endif
     // obj_io.output_ply(capture_ply, default_dir_path + capture_ply.get_name() + ".ply");
     // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
 
@@ -733,6 +765,8 @@ void PointOperation::capture_point_inner_bbox()
     }
 
     // 描画処理
+
+#ifdef OPEN3D_ENABLED
     std::cout << "check_ply_visualization" << std::endl;
     Viewer3D check_ply("check_ply");
     check_ply.add_axes();
@@ -777,6 +811,7 @@ void PointOperation::capture_point_inner_bbox()
 
     // 描画
     check_ply.show_using_drawgeometries();
+#endif
 
     //  output_ply パーツごとではなく、クラスでまとめて出力する
     std::array<PointSet, 20> output_captured_point;
@@ -923,9 +958,7 @@ double img_projection(PointSet &ply_point, LidarImg &lidar_img, InstaImg &image)
 }
 
 /**
- * @brief テスト用の関数
- *
- * 新機能等を作ったら、あとで実装してあげる
+ * @brief 画像シフト, 類似度mseを計算して、最も高かった場所から対応点を出力する。
  *
  *  * 実行例:
  * ./Rotation   --mode 9
@@ -937,7 +970,7 @@ double img_projection(PointSet &ply_point, LidarImg &lidar_img, InstaImg &image)
  *              --json, data/detections_test.json,
  *              --mode, 9,
  */
-void PointOperation::test_location()
+void PointOperation::old_detection_correspoint()
 {
 
     ObjectIO obj_io;
@@ -1215,31 +1248,146 @@ void PointOperation::remove_pointset_floor(PointSet &origin_point, PointSet &out
     }
 }
 
-void PointOperation::test_location_two()
+void PointOperation::test_location()
 {
-    std::cout << "test_location_two";
+
+
+}
+
+
+/**
+ * what are you doing now?
+ * 画像シフトのテストを作って 試します。
+ */
+void PointOperation::shift_test_w_stripe_pattern()
+{
+    std::cout << "test_location" << std::endl;
     ObjectIO obj_io;
 
-    // load
     PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_file_name.at(0), default_dir_path, 3, ply_point);
-    InstaImg image;
-    image.load_img(img_file_path.at(0));
+    PointSet watermelon_point("watermelon_point");
+    PointSet stitch_edge_point("stitch_edge_point");
 
-    ply_point.radius_based_filter(16, 0.05);
+    std::vector<int> stitch_edge;
 
-    // show
-    // Viewer3D check_window("radius_based_filter");
-    // check_window.add_axes();
-    // check_window.add_geometry_pointset(ply_point.get_point_all(), 3);
-    // check_window.show_using_drawgeometries();
+    stitch_edge.resize(360 * 180);
 
-    // create out_dir
-    set_date();
-    std::cout << date << std::endl;
-    obj_io.create_dir("out/" + date);
+    create_output_dir();
+    
+    int divide = 20;
+    CalcPointSet::make_striped_pattern(stitch_edge, stitch_edge_point, watermelon_point, divide);
 
-    obj_io.output_ply(ply_point, "out/" + date + "/" + "rbf" + ply_point.get_name() + ".ply");
+    watermelon_point.convert_to_rectangular();
+    obj_io.output_ply(watermelon_point, "out/" + date + "/" + date + ".ply");
+    stitch_edge_point.convert_to_rectangular();
+    obj_io.output_ply(stitch_edge_point, "out/" + date + "/_" + date + ".ply");
 
-    image.HoughLine_vertical(50, 100, 10);
+    // #### make 球-> 画像
+    InstaImg pointimg;
+    pointimg.make_img_from_pointcloud(stitch_edge_point, std::pair<int, int>(360, 180));
+
+    cv::imwrite("out/" + date + "/" + "insta.png", pointimg.get_mat());
+
+
+    // こっから関数にする
+    // # 比較用の画像と 回転させた点群を作成して 画像を生成
+    auto make_img = [this, &stitch_edge_point, &obj_io](double angle, std::string imgname)
+    {
+        // pointcloud rotate
+        PointSet stitch_edge_point_rotate("stitch_edge_point");
+        stitch_edge_point_rotate.add_point(stitch_edge_point);
+        stitch_edge_point_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(angle*M_PI / 180, Eigen::Vector3d::UnitZ())));
+        InstaImg pointimg_lidar;
+        pointimg_lidar.make_img_from_pointcloud(stitch_edge_point_rotate, std::pair<int, int>(360, 180));
+
+#ifdef _DEBUG
+        cv::imwrite("out/" + date + "/" + imgname + ".png", pointimg_lidar.get_mat());
+        obj_io.output_ply(stitch_edge_point_rotate, "out/" + date + "/_" + imgname + ".ply");
+#endif
+
+        return pointimg_lidar.get_mat();
+    };
+
+    // 回転
+    std::cout << "MSE calc" << std::endl;
+    std::vector<double> mse_vec, mse_vec_ave;
+
+
+    for (double i = 0; i <= 360; i++)
+    {
+        double mse_tmp = ImgCalc::compute_MSE(pointimg.get_mat(), make_img(i, "rote" + std::to_string(i)));
+        mse_vec.push_back(mse_tmp);
+    }
+
+    obj_io.output_dat("out/" + date + "/" + date + "mse.dat", mse_vec);
+
+
+#ifdef MATPLOTLIB_ENABLED
+    plt::plot(mse_vec);
+#endif
+
+
+
+    auto calculate_diff = []<class T>(std::vector<T> &mse_vec_lambda)
+    {
+        std::vector<T> mse_diff_lambda;
+        for(auto itr = mse_vec_lambda.begin(); itr != mse_vec_lambda.end(); ++itr)
+        {
+            mse_diff_lambda.push_back(*itr - *(itr - 1));
+        }
+        return mse_diff_lambda;
+    };
+
+    auto find_local_max = []<class T>(std::vector<T> &mse_diff_lambda, double threshold)
+    {
+        // size()で、falseで初期化。
+        std::vector<bool> mse_peak_lambda(mse_diff_lambda.size(), false);
+
+        for (auto itr = mse_diff_lambda.begin(); itr != mse_diff_lambda.end(); ++itr)
+        {
+            if (*itr > 0 && *itr * (*(itr - 1)) < 0 && *itr > threshold)
+            {
+                mse_peak_lambda[itr- mse_diff_lambda.begin()] = true;
+            }
+        }
+        return mse_peak_lambda;
+    };
+
+
+    std::vector<double> mse_diff = calculate_diff(mse_vec);
+    std::vector<bool> mse_peak = find_local_max(mse_diff, 500);
+
+    std::vector<int> plot_mse;
+    std::vector<double> plot_dat;
+    std::vector<double> plot_true;
+   
+    int interval = 360 / divide;
+    for(int i = 0; i < mse_vec.size(); i += interval)
+    {
+        plot_true.push_back(i);
+    }
+
+
+
+    for(int i = 0; i < mse_peak.size(); i++)
+    {
+        std::cout << i << " " << mse_peak.at(i) << std::endl;
+        if(mse_peak.at(i)){
+            plot_mse.push_back(100);
+            plot_dat.push_back(i);
+        }
+        else{
+            plot_mse.push_back(0);
+        }
+    }
+
+    obj_io.output_dat("out/" + date + "/" + date + "peak.dat", plot_dat);
+    obj_io.output_dat("out/" + date + "/" + date + "peak_true.dat", plot_true);
+
+
+#ifdef MATPLOTLIB_ENABLED
+    plt::plot(plot_mse);
+    plt::show();
+#endif
+
 }

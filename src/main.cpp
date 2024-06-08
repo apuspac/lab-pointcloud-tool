@@ -7,7 +7,11 @@
 #include "rapidjson/filereadstream.h"
 #include <cstdio>
 
+#ifdef OPEN3D_ENABLED
 #include "open3d/Open3D.h"
+#endif
+
+
 
 int main(int argc, char *argv[])
 {
@@ -19,6 +23,25 @@ int main(int argc, char *argv[])
     ObjectIO::option_process(argc, argv, opt);
     opt.print();
     opt.mode_select();
+
+
+
+
+
+#ifdef DEBUG
+    std::cout << "DEBUG_MODE____" << std::endl;
+#endif
+
+#ifdef OPEN3D_ENABLED
+    std::cout << "USE_OPEN3D___" << std::endl;
+#endif
+
+#ifdef MATPLOTLIB_ENABLED
+    std::cout << "USE_MATPLOTLIB___" << std::endl;
+    // plt::plot({1, 3, 2, 4});
+    // plt::show();
+
+#endif
 
     return 0;
 }

@@ -36,19 +36,22 @@ void PointSet::print_polar()
 
 void PointSet::add_point(PointSet add_pointset)
 {
-    // add_pointset.get_point_all();
+    if (add_pointset.is_empty() == false)
+    {
+        point3 = add_pointset.get_point_all();
+    }
+    if (add_pointset.is_empry_polar() == false)
+    {
+        point3_polar = add_pointset.get_point_all();
+    }
+}
 
+void PointSet::add_point_polar(PointSet add_pointset)
+{
     for (auto point : add_pointset.get_point_all())
     {
-        point3.push_back(point);
+        point3_polar.push_back(point);
     }
-
-    // if (point3.capacity() < point3.size() + add_pointset.get_point_all().size())
-    // {
-    //     point3.reserve(point3.size() + add_pointset.get_point_all().size());
-    // }
-    // point3.insert(point3.end(), add_pointset.get_point_all().begin(), add_pointset.get_point_all().end());
-    // std::cout << "oi" << std::endl;
 }
 
 /**
@@ -60,9 +63,22 @@ void PointSet::rotate(Eigen::Matrix3d rotate_matrix)
 {
     // std::cout << name << " point_rotated:" << std::endl
     //           << rotate_matrix << std::endl;
-    for (Eigen::Vector3d &tmp : point3)
+    if (is_empty() == false)
     {
-        tmp = rotate_matrix * tmp;
+
+        for (Eigen::Vector3d &tmp : point3)
+        {
+            tmp = rotate_matrix * tmp;
+        }
+    }
+    if (is_empry_polar() == false)
+    {
+        convert_to_polar();
+
+        // for (Eigen::Vector3d &tmp : point3_polar)
+        // {
+        //     tmp = rotate_matrix * tmp;
+        // }
     }
 }
 
@@ -209,7 +225,9 @@ void PointSet::convert_to_polar()
 {
     // std::cout << "convert_to_polar" << std::endl;
 
-    point3_polar.resize(point3.size());
+    if(is_empty()){
+        point3_polar.resize(point3.size());
+    }
     assert(point3_polar.size() == point3.size());
 
     for (auto &point : point3)
@@ -219,11 +237,28 @@ void PointSet::convert_to_polar()
         double theta = std::acos(point(2) / r);
         double phi = std::atan2(point(1), point(0));
 
-        int index = static_cast<int>(&point - &point3[0]);
+        unsigned long index = static_cast<unsigned long>(&point - &point3[0]);
 
         // 最初にsizeを確保しておけば push_backじゃなくていいはずなので、 assertでチェックしておく。
         point3_polar.at(index) = Eigen::Vector3d(r, theta, phi);
     }
+}
+
+void PointSet::convert_to_rectangular()
+{
+    std::cout << name << " convert_to_rectangular: point_num:" << point3.size() << " " << point3_polar.size() << std::endl;
+    assert(point3.size() == 0);
+    // point3_polar = {r, theta, phi}
+    for (auto &point : point3_polar)
+    {
+        double x = point(0) * sin(point(1)) * cos(point(2));
+        double y = point(0) * sin(point(1)) * sin(point(2));
+        double z = point(0) * cos(point(1));
+
+        add_point(Eigen::Vector3d(x, y, z));
+    }
+    assert(point3_polar.size() == point3.size());
+    std::cout << "convert_conpleted: " << point3.size() << " " << point3_polar.size() << std::endl;
 }
 
 void PointSet::radius_based_filter(size_t point_num, double radius)
