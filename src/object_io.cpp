@@ -668,4 +668,46 @@ void ObjectIO::output_dat(std::string filename, std::vector<std::pair<int, int>>
     }
 
     std::cout << "output pixel file complete: " << filename << std::endl;
+
+}
+
+void ObjectIO::output_dat(std::string filename, std::vector<double> i_data)
+{
+
+    std::ofstream outputFile(filename);
+
+    if (!outputFile.is_open())
+    {
+        std::cout << "failed to open file" << std::endl;
+    }
+
+    outputFile << i_data.size() << std::endl;
+
+    for (const auto &p : i_data)
+    {
+        outputFile << p << std::endl;
+    }
+
+    std::cout << "output pixel file complete: " << filename << std::endl;
+}
+
+
+void ObjectIO::output_dat(std::string filename, std::vector<int> i_data)
+{
+
+    std::ofstream outputFile(filename);
+
+    if (!outputFile.is_open())
+    {
+        std::cout << "failed to open file" << std::endl;
+    }
+
+    outputFile << i_data.size() << std::endl;
+
+    for (const auto &p : i_data)
+    {
+        outputFile << p << std::endl;
+    }
+
+    std::cout << "output pixel file complete: " << filename << std::endl;
 }

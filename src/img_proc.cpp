@@ -521,8 +521,6 @@ void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, i
 
     // 画像の初期化
     cv::Mat imgmat(img_size.first, img_size.second, CV_8UC1, cv::Scalar(0));
-    std::cout << "target_point.num"  << target_point.get_point_num_polar() << std::endl;
-    std::cout << "img_size" << img_size.first * img_size.second << std::endl;
 
     // 変換処理
     for(auto point : target_point.get_point_all_polar())
@@ -533,11 +531,12 @@ void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, i
         int v = static_cast<int>(theta / (2.0 * M_PI) * 360.0);
         int u = static_cast<int>(phi / M_PI * 180.0);
 
+        // thetaがマイナスの場合の処理
         if(v < 0){
             v += 360;
         }
 
-        #ifdef DEBUG
+        #ifdef _DEBUG
         std::cout << point.transpose() << " ";
         std::cout << u << ":" << v << " " << std::endl;
         #endif

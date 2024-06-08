@@ -19,7 +19,10 @@
 #include <eigen3/LU>
 #include <eigen3/Dense>
 
+
+#ifdef OPEN3D_ENABLED
 #include <open3d/Open3D.h>
+#endif
 
 /**
  * @brief 点群そのものに関するクラス

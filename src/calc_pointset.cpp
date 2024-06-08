@@ -771,10 +771,9 @@ void CalcPointSet::pickup_corresp_point(
  * @brief 2つの点群を
  *
  */
-void CalcPointSet::make_striped_pattern(std::vector<int> &stitch_edge, PointSet &stitch_edge_point, PointSet &watermelon)
+void CalcPointSet::make_striped_pattern(std::vector<int> &stitch_edge, PointSet &stitch_edge_point, PointSet &watermelon, int divide_num)
 {
     double r = 1.0;
-    int divide_num = 10;
 
     //
     bool flag = true;

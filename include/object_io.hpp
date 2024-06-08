@@ -15,8 +15,8 @@
 #include <getopt.h>
 #include <opencv2/opencv.hpp>
 
-#include "rapidjson/document.h"
-#include "rapidjson/filereadstream.h"
+#include <rapidjson/document.h>
+#include <rapidjson/filereadstream.h>
 #include <cstdio>
 class PointOperation;
 
@@ -39,6 +39,9 @@ public:
     void output_csv_2double(std::string, std::vector<std::vector<double>>);
     void output_dat(std::string, std::vector<Eigen::Vector3d>);
     void output_dat(std::string, std::vector<std::pair<int, int>>);
+    void output_dat(std::string, std::vector<double>);
+    void output_dat(std::string, std::vector<int>);
+
 };
 
 #endif

@@ -1248,11 +1248,18 @@ void PointOperation::remove_pointset_floor(PointSet &origin_point, PointSet &out
     }
 }
 
+void PointOperation::test_location()
+{
+
+
+}
+
+
 /**
  * what are you doing now?
  * 画像シフトのテストを作って 試します。
  */
-void PointOperation::test_location()
+void PointOperation::shift_test_w_stripe_pattern()
 {
     std::cout << "test_location" << std::endl;
     ObjectIO obj_io;
@@ -1266,8 +1273,9 @@ void PointOperation::test_location()
     stitch_edge.resize(360 * 180);
 
     create_output_dir();
-
-    CalcPointSet::make_striped_pattern(stitch_edge, stitch_edge_point, watermelon_point);
+    
+    int divide = 20;
+    CalcPointSet::make_striped_pattern(stitch_edge, stitch_edge_point, watermelon_point, divide);
 
     watermelon_point.convert_to_rectangular();
     obj_io.output_ply(watermelon_point, "out/" + date + "/" + date + ".ply");
@@ -1285,69 +1293,101 @@ void PointOperation::test_location()
     // # 比較用の画像と 回転させた点群を作成して 画像を生成
     auto make_img = [this, &stitch_edge_point, &obj_io](double angle, std::string imgname)
     {
+        // pointcloud rotate
         PointSet stitch_edge_point_rotate("stitch_edge_point");
         stitch_edge_point_rotate.add_point(stitch_edge_point);
-
         stitch_edge_point_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(angle*M_PI / 180, Eigen::Vector3d::UnitZ())));
-        obj_io.output_ply(stitch_edge_point_rotate, "out/" + date + "/_" + imgname + ".ply");
         InstaImg pointimg_lidar;
         pointimg_lidar.make_img_from_pointcloud(stitch_edge_point_rotate, std::pair<int, int>(360, 180));
+
+#ifdef _DEBUG
         cv::imwrite("out/" + date + "/" + imgname + ".png", pointimg_lidar.get_mat());
+        obj_io.output_ply(stitch_edge_point_rotate, "out/" + date + "/_" + imgname + ".ply");
+#endif
 
         return pointimg_lidar.get_mat();
-
     };
 
     // 回転
-    make_img(1.0, "rote1");
     std::cout << "MSE calc" << std::endl;
-    std::cout << ImgCalc::compute_MSE(imgmat, imgmat_lidar) << std::endl;
+    std::vector<double> mse_vec, mse_vec_ave;
+
+
+    for (double i = 0; i <= 360; i++)
+    {
+        double mse_tmp = ImgCalc::compute_MSE(pointimg.get_mat(), make_img(i, "rote" + std::to_string(i)));
+        mse_vec.push_back(mse_tmp);
+    }
+
+    obj_io.output_dat("out/" + date + "/" + date + "mse.dat", mse_vec);
+
+
+#ifdef MATPLOTLIB_ENABLED
+    plt::plot(mse_vec);
+#endif
 
 
 
-    make_img(2.0, "rote2");
-    std::cout << "MSE calc" << std::endl;
-    std::cout << ImgCalc::compute_MSE(imgmat, imgmat_lidar) << std::endl;
+    auto calculate_diff = []<class T>(std::vector<T> &mse_vec_lambda)
+    {
+        std::vector<T> mse_diff_lambda;
+        for(auto itr = mse_vec_lambda.begin(); itr != mse_vec_lambda.end(); ++itr)
+        {
+            mse_diff_lambda.push_back(*itr - *(itr - 1));
+        }
+        return mse_diff_lambda;
+    };
 
-    make_img(3.0, "rote3");
-    make_img(4.0, "rote4");
-    make_img(5.0, "rote5");
+    auto find_local_max = []<class T>(std::vector<T> &mse_diff_lambda, double threshold)
+    {
+        // size()で、falseで初期化。
+        std::vector<bool> mse_peak_lambda(mse_diff_lambda.size(), false);
 
-
-
-    // rotate z axis
-    PointSet stitch_edge_point2("stitch_edge_point");
-    stitch_edge_point2.add_point(stitch_edge_point);
-    stitch_edge_point2.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(6.0*M_PI / 180, Eigen::Vector3d::UnitZ())));
-
-    InstaImg pointimg_lidar;
-    pointimg_lidar.make_img_from_pointcloud(stitch_edge_point2, std::pair<int, int>(360, 180));
-    cv::imwrite("out/" + date + "/" + "rote6.png", pointimg_lidar.get_mat());
-
-    exit(0);
-    // std::cout << "MSE calc" << std::endl;
-    // std::cout << ImgCalc::compute_MSE(imgmat, imgmat_lidar) << std::endl;
-
-
-    // 画像に変換する の切り出し。
-    // これ 画像のサイズに依存しないためには どうすれば？
-    // 依存するというか。最初の時点で指定すればよくね。operationからもってこよ
+        for (auto itr = mse_diff_lambda.begin(); itr != mse_diff_lambda.end(); ++itr)
+        {
+            if (*itr > 0 && *itr * (*(itr - 1)) < 0 && *itr > threshold)
+            {
+                mse_peak_lambda[itr- mse_diff_lambda.begin()] = true;
+            }
+        }
+        return mse_peak_lambda;
+    };
 
 
-    // cv::Mat imgmat(360, 180, CV_8UC1);
-    // for (int i = 0; i < 360; i++)
-    // {
-    //     for (int j = 0; j < 180; j++)
-    //     {
-    //         imgmat.at<uchar>(i, j) = static_cast<u_char>(stitch_edge.at(i * 180 + j));
-    //         std::cout << stitch_edge.at(i * 180 + j);
-    //     }
-    // }
+    std::vector<double> mse_diff = calculate_diff(mse_vec);
+    std::vector<bool> mse_peak = find_local_max(mse_diff, 500);
 
-    // std::vector<int> tmp_mat = stitch_edge2
-    // for (int i = 0; i < 360; i++)
-    // {
-    //     tmp_mat = ImgCalc::shift(tmp_mat, 360, 180, 0, 1);
-    //     std::cout << ImgCalc::compute_MSE(stitch_edge, tmp_mat) << std::endl;
-    // }
+    std::vector<int> plot_mse;
+    std::vector<double> plot_dat;
+    std::vector<double> plot_true;
+   
+    int interval = 360 / divide;
+    for(int i = 0; i < mse_vec.size(); i += interval)
+    {
+        plot_true.push_back(i);
+    }
+
+
+
+    for(int i = 0; i < mse_peak.size(); i++)
+    {
+        std::cout << i << " " << mse_peak.at(i) << std::endl;
+        if(mse_peak.at(i)){
+            plot_mse.push_back(100);
+            plot_dat.push_back(i);
+        }
+        else{
+            plot_mse.push_back(0);
+        }
+    }
+
+    obj_io.output_dat("out/" + date + "/" + date + "peak.dat", plot_dat);
+    obj_io.output_dat("out/" + date + "/" + date + "peak_true.dat", plot_true);
+
+
+#ifdef MATPLOTLIB_ENABLED
+    plt::plot(plot_mse);
+    plt::show();
+#endif
+
 }

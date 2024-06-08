@@ -33,7 +33,7 @@ public:
     void pickup_corresp_point(PointSet &, PointSet &, PointSet &, PointSet &, std::string);
 
     void radius_based_outlier_filter(PointSet &, double);
-    static void make_striped_pattern(std::vector<int> &, PointSet &, PointSet &);
+    static void make_striped_pattern(std::vector<int> &, PointSet &, PointSet &, int );
 };
 
 #endif

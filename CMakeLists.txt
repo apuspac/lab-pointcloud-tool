@@ -7,12 +7,18 @@ project(Rotation CXX)
 find_package(OpenCV REQUIRED)
 
 
-option(OPEN3D_ENABLED "Use Open3D library" OFF)
+option(OPEN3D_ENABLED "Use Open3D library" FALSE)
+option(MATPLOTLIB_ENABLED "Use python matplotlib" FALSE)
 
 # -DOPEN3D_ENABLED=ONで有効
 if(OPEN3D_ENABLED)                # これはgenerator expression使えないらしい。
     find_package(Open3D REQUIRED)
 endif()
+
+if(MATPLOTLIB_ENABLED)
+    find_package(Python3 COMPONENTS Development NumPy)
+endif()
+
 
 
 # cppファイルを追加
@@ -26,10 +32,14 @@ add_executable(${PROJECT_NAME}
     src/viewer.cpp
     src/img_proc.cpp
 )
+
 # include dir
 target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${PROJECT_SOURCE_DIR}/include
+        $<$<BOOL:${MATPLOTLIB_ENABLED}>:/usr/local/include/matplotlib-cpp>
+        $<$<BOOL:${MATPLOTLIB_ENABLED}>:${Python3_INCLUDE_DIRS}>
+        $<$<BOOL:${MATPLOTLIB_ENABLED}>:${Python3_NumPy_INCLUDE_DIRS}>
 )
 
 # c++20
@@ -50,14 +60,19 @@ target_compile_definitions(${PROJECT_NAME}
     PRIVATE
         $<$<CONFIG:DEBUG>:DEBUG>          # DEBUG mode のみに適用されるコンパイル定義
         $<$<BOOL:${OPEN3D_ENABLED}>:OPEN3D_ENABLED>
+        $<$<BOOL:${MATPLOTLIB_ENABLED}>:MATPLOTLIB_ENABLED>
 )
 
 
-target_link_libraries(${PROJECT_NAME} 
+target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        ${OpenCV_LIBS} 
+        ${OpenCV_LIBS}
         ${rapidjson}
+        # ${matplotlibcpp}
         $<$<BOOL:${OPEN3D_ENABLED}>:Open3D::Open3D>  # OPEN3D_REQUIRED
+        # $<$<BOOL:${MATPLOTLIB_ENABLED}>:matplotlib-cpp>
+        $<$<BOOL:${MATPLOTLIB_ENABLED}>:Python3::Python>
+        $<$<BOOL:${MATPLOTLIB_ENABLED}>:Python3::NumPy>
 )
 # target_link_libraries(DisplayImage Eigen3::Eigen)
 

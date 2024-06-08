@@ -10,12 +10,19 @@
 #include "object_io.hpp"
 #include "calc_pointset.hpp"
 #include "capture_boxpoint.hpp"
-#include "viewer.hpp"
 #include "img_proc.hpp"
 
 #include <iomanip>
 
+#ifdef OPEN3D_ENABLED
+#include "viewer.hpp"
 #include "open3d/Open3D.h"
+#endif
+
+#ifdef MATPLOTLIB_ENABLED
+#include "matplotlib-cpp/matplotlibcpp.h"
+namespace plt = matplotlibcpp;
+#endif
 
 // 相互依存
 // HACK: これ書いておく必要ある？
@@ -85,6 +92,7 @@ public:
     void capture_pointset();
     void capture_point_inner_bbox();
     void old_detection_correspoint();
+    void shift_test_w_stripe_pattern();
     void test_location();
 
     // mode切り替えしない関数
