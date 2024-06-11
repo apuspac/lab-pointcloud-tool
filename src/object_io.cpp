@@ -136,7 +136,7 @@ auto is_first_sharp = [](std::string buf_str)
  * @param property_num plyファイルのパラメータの数。
  * @param loaded_point_data 格納するPointSetクラス
  */
-void ObjectIO::load_ply_point_file(int property_num, PointSet &loaded_point_data, std::string file_path=""  )
+void ObjectIO::load_ply_point_file(PointSet &loaded_point_data, std::string file_path=""  )
 {
     std::fstream data_file;
 
@@ -149,6 +149,47 @@ void ObjectIO::load_ply_point_file(int property_num, PointSet &loaded_point_data
     std::string separator = std::string(" ");
     auto separator_length = separator.length();
 
+    int property_num = 0;
+
+    // 最初に end_headerまでを処理する
+    while (std::getline(data_file, one_line_buffer))
+    {
+
+        std::vector<std::string> buf_list;
+        auto offset = std::string::size_type(0);
+
+        while (1)
+        {
+            auto pos = one_line_buffer.find(separator, offset);
+            if (pos == std::string::npos)
+            {
+                buf_list.push_back(one_line_buffer.substr(offset));
+                break;
+            }
+
+            else{
+                buf_list.push_back(one_line_buffer.substr(offset, pos - offset));
+                offset = pos + separator_length;
+            }
+
+        }
+
+        if (one_line_buffer == "end_header") break;
+
+        // # はコメントなので無視
+        if (!(is_first_sharp(buf_list.at(0))))
+        {
+            if(buf_list.at(0) == "property"){
+                property_num++;
+            }
+        }
+    }
+
+
+    std::cout << "property_num_count:" << property_num << std::endl;
+
+    // これここから始めたら どうなるんだ？
+    // end_headerまで読み込んだので、次から点データを読み込む
     // getlineで1行ずつ処理する
     while (std::getline(data_file, one_line_buffer))
     {
@@ -176,9 +217,6 @@ void ObjectIO::load_ply_point_file(int property_num, PointSet &loaded_point_data
             offset = pos + separator_length;
         }
 
-        // TODO plyファイルのheaderを認識して "end_header"の次の行から入力をしたい
-        // TODO というかもうPCLで読み込んでしまってそこからXYZをPointSetとして格納したほうが早い。
-
         // 分割したものから xyzを取り出す。
         if (is_property_count_same(buf_list.size(), property_num))
         {
@@ -201,6 +239,7 @@ void ObjectIO::load_ply_point_file(int property_num, PointSet &loaded_point_data
                     {
                         std::cout << "invalid argument:" << one_point_data << std::endl;
                         not_string_flag = false;
+                        std::cout << one_line_buffer << std::endl;
                     }
                     catch (const std::out_of_range &e)
                     {
@@ -223,6 +262,8 @@ void ObjectIO::load_ply_point_file(int property_num, PointSet &loaded_point_data
             }
         }
     }
+
+    exit(0);
 }
 
 /**
