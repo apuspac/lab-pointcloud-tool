@@ -29,7 +29,9 @@ class ObjectIO
 private:
 public:
     static void option_process(int, char **, PointOperation &);
+
     void load_ply_point_file(PointSet &,std::string);
+
     void load_img_point_file(std::string, PointSet &, std::string);
     static void create_dir(std::string);
     void output_ply(PointSet &, std::string);
