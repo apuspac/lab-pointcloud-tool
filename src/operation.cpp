@@ -1244,6 +1244,7 @@ void PointOperation::remove_pointset_floor(PointSet &origin_point, PointSet &out
     }
 }
 
+
 void PointOperation::test_location()
 {
     // shift_test_w_stripe_patternを参考に実際の画像でやってみる
@@ -1257,30 +1258,40 @@ void PointOperation::test_location()
     image.load_img(img_file_path.at(0));
 
     create_output_dir();
+    
 
     // cv::imwrite("out/" + date + "/" + "insta.png", image.get_mat());
     // obj_io.output_ply(ply_point, "out/" + date + "/" + "plypoint.ply");
 
 
+    // # make img -> theta/phi-img
+    // エッジ検出
+    auto insta_img_edge_detection = [this](EdgeImg &out_edge, InstaImg &in_img)
+    {
+        out_edge.set_zero_imgMat(in_img.get_height(), in_img.get_width(), CV_8UC1);
+        out_edge.detect_edge_with_sobel(in_img.get_mat());
+#ifdef DEBUG
+        cv::imwrite("out/" + date + "/" + "instaimg_sobel.png", out_edge.get_mat());
+#endif
+    };
+
+    EdgeImg insta_edge("insta_edge");
+    insta_img_edge_detection(insta_edge, image);
+    insta_edge.make_thetaphiIMG_from_panorama( std::pair<int, int>(image.get_width(), image.get_height()));
+    cv::imwrite("out/" + date + "/" + "edge.png", insta_edge.get_mat());
 
 
-    int divide = 5;
-    std::vector<int> stitch_edge;
-    stitch_edge.resize(7680 * 4320);
-    PointSet watermelon_point("watermelon_point");
-    PointSet stitch_edge_point("stitch_edge_point");
-    CalcPointSet::make_striped_pattern(stitch_edge, stitch_edge_point, watermelon_point, divide);
-
-    // #### make 球-> 画像
+    // # make point -> theta/phi-img
     InstaImg pointimg;
-    // 
-    pointimg.make_img_from_pointcloud(ply_point, std::pair<int, int>(7680, 4320), true);
-    // pointimg.make_img_from_pointcloud(stitch_edge_point, std::pair<int, int>(360,180), true);
+    pointimg.make_thetaphiIMG_from_pointcloud(ply_point, std::pair<int, int>(image.get_width(), image.get_height()), true);
 
-    std::cout << "test_location" << std::endl;
+    std::cout << "make_img" << std::endl;
     cv::imwrite("out/" + date + "/" + "point.png", pointimg.get_mat());
 
 
+    // double mse_tmp = ImgCalc::compute_MSE(pointimg.get_mat(), make_img(i, "rote" + std::to_string(i)));
+    double mse_tmp = ImgCalc::compute_MSE(insta_edge.get_mat(), pointimg.get_mat());
+    std::cout << "mse: " << mse_tmp << std::endl;
 
 }
 
@@ -1314,7 +1325,7 @@ void PointOperation::shift_test_w_stripe_pattern()
 
     // #### make 球-> 画像
     InstaImg pointimg;
-    pointimg.make_img_from_pointcloud(stitch_edge_point, std::pair<int, int>(360, 180));
+    pointimg.make_thetaphiIMG_from_pointcloud(stitch_edge_point, std::pair<int, int>(360, 180));
 
     cv::imwrite("out/" + date + "/" + "insta.png", pointimg.get_mat());
 
@@ -1330,7 +1341,7 @@ void PointOperation::shift_test_w_stripe_pattern()
         stitch_edge_point_rotate.add_point(stitch_edge_point);
         stitch_edge_point_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(angle*M_PI / 180, Eigen::Vector3d::UnitZ())));
         InstaImg pointimg_lidar;
-        pointimg_lidar.make_img_from_pointcloud(stitch_edge_point_rotate, std::pair<int, int>(360, 180));
+        pointimg_lidar.make_thetaphiIMG_from_pointcloud(stitch_edge_point_rotate, std::pair<int, int>(360, 180));
 
 #ifdef _DEBUG
         cv::imwrite("out/" + date + "/" + imgname + ".png", pointimg_lidar.get_mat());
