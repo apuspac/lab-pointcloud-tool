@@ -7,6 +7,7 @@
 
 #include "img_proc.hpp"
 #include "fmt/printf.h"
+#include <opencv2/opencv.hpp>
 #include <utility>
 
 /**
@@ -508,14 +509,15 @@ std::vector<int> ImgCalc::shift(std::vector<int> target, int size_phi, int size_
  *
  * @param target_point
  * @param img_size : 画像サイズ (height, width)
+ * @param gaussian_flag
  */
-void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, int> img_size)
+void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, int> img_size, bool gaussian_flag)
 {
     // polarがあるかどうかの確認
-    if(target_point.is_empry_polar())
+    if(target_point.is_empty_polar())
     {
-        std::cout << "point_to_img: polar is empty" << std::endl;
-        std::exit(-1);
+        std::cout << "make_img_from_pointcloud: polar is empty, calc polar " << std::endl;
+        target_point.convert_to_polar();
     }
 
 
@@ -528,8 +530,8 @@ void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, i
         // 画像に変換する( theta, phi) -> (v, u)
         double phi = point(1);
         double theta = point(2);
-        int v = static_cast<int>(theta / (2.0 * M_PI) * 360.0);
-        int u = static_cast<int>(phi / M_PI * 180.0);
+        int v = static_cast<int>(theta / (2.0 * M_PI) * static_cast<double>(img_size.first));
+        int u = static_cast<int>(phi / M_PI * static_cast<double>(img_size.second));
 
         // thetaがマイナスの場合の処理
         if(v < 0){
@@ -551,6 +553,19 @@ void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, i
         //
         // }
 
+    }
+
+    if(gaussian_flag == true){
+        std::cout << gaussian_flag;
+        // DEBUG
+        cv::Mat gau;
+        int kernel_size = 7;
+        cv::GaussianBlur(imgmat, gau, cv::Size(kernel_size, kernel_size), 0, 0);
+
+        cv::imwrite("out/no_gauss.png", imgmat);
+        cv::imwrite("out/gauss.png", gau);
+
+        cv::GaussianBlur(imgmat, imgmat, cv::Size(kernel_size, kernel_size), 0, 0);
     }
 
     set_mat(imgmat);

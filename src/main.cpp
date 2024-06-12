@@ -15,6 +15,19 @@
 
 int main(int argc, char *argv[])
 {
+#ifdef DEBUG
+    std::cout << "DEBUG_MODE" << std::endl;
+#endif
+
+#ifdef OPEN3D_ENABLED
+    std::cout << "USE_OPEN3D" << std::endl;
+#endif
+
+#ifdef MATPLOTLIB_ENABLED
+    std::cout << "USE_MATPLOTLIB" << std::endl;
+    // plt::plot({1, 3, 2, 4});
+    // plt::show();
+#endif
 
     // 有効桁数
     std::cout << std::setprecision(15);
@@ -23,25 +36,6 @@ int main(int argc, char *argv[])
     ObjectIO::option_process(argc, argv, opt);
     opt.print();
     opt.mode_select();
-
-
-
-
-
-#ifdef DEBUG
-    std::cout << "DEBUG_MODE____" << std::endl;
-#endif
-
-#ifdef OPEN3D_ENABLED
-    std::cout << "USE_OPEN3D___" << std::endl;
-#endif
-
-#ifdef MATPLOTLIB_ENABLED
-    std::cout << "USE_MATPLOTLIB___" << std::endl;
-    // plt::plot({1, 3, 2, 4});
-    // plt::show();
-
-#endif
 
     return 0;
 }

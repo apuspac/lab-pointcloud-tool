@@ -18,6 +18,7 @@ void PointOperation::mode_select()
     switch_func[3] = std::bind(&PointOperation::capture_point_inner_bbox, this);
     switch_func[4] = std::bind(&PointOperation::old_detection_correspoint, this);
     switch_func[0] = std::bind(&PointOperation::test_location, this);
+    switch_func[5] = std::bind(&PointOperation::shift_test_w_stripe_pattern, this);
     switch_func[get_mode()]();
     // switch_func[*] = std::bind(&PointOperation::Rotation_only_simulation, this);
     // switch_func[*] = std::bind(&PointOperation::transform_rotate_simulation, this);
@@ -1258,8 +1259,25 @@ void PointOperation::test_location()
 
     create_output_dir();
 
-    cv::imwrite("out/" + date + "/" + "insta.png", image.get_mat());
-    obj_io.output_ply(ply_point, "out/" + date + "/" + "plypoint.ply");
+    // cv::imwrite("out/" + date + "/" + "insta.png", image.get_mat());
+    // obj_io.output_ply(ply_point, "out/" + date + "/" + "plypoint.ply");
+
+    int divide = 5;
+    std::vector<int> stitch_edge;
+    stitch_edge.resize(7680 * 4320);
+    PointSet watermelon_point("watermelon_point");
+    PointSet stitch_edge_point("stitch_edge_point");
+    CalcPointSet::make_striped_pattern(stitch_edge, stitch_edge_point, watermelon_point, divide);
+
+    // #### make 球-> 画像
+    InstaImg pointimg;
+    // 
+    // pointimg.make_img_from_pointcloud(stitch_edge_point, std::pair<int, int>(7680, 4320));
+    pointimg.make_img_from_pointcloud(stitch_edge_point, std::pair<int, int>(360,180), true);
+
+    std::cout << "test_location" << std::endl;
+    cv::imwrite("out/" + date + "/" + "point.png", pointimg.get_mat());
+
 
 
 }
@@ -1283,8 +1301,8 @@ void PointOperation::shift_test_w_stripe_pattern()
     stitch_edge.resize(360 * 180);
 
     create_output_dir();
-    
-    int divide = 20;
+
+    int divide = 5;
     CalcPointSet::make_striped_pattern(stitch_edge, stitch_edge_point, watermelon_point, divide);
 
     watermelon_point.convert_to_rectangular();
@@ -1299,8 +1317,10 @@ void PointOperation::shift_test_w_stripe_pattern()
     cv::imwrite("out/" + date + "/" + "insta.png", pointimg.get_mat());
 
 
-    // こっから関数にする
-    // # 比較用の画像と 回転させた点群を作成して 画像を生成
+    /**
+     * 点群を回転させ、 画像を生成 cv::Matに格納し返す。
+     *
+     */
     auto make_img = [this, &stitch_edge_point, &obj_io](double angle, std::string imgname)
     {
         // pointcloud rotate
@@ -1318,11 +1338,11 @@ void PointOperation::shift_test_w_stripe_pattern()
         return pointimg_lidar.get_mat();
     };
 
-    // 回転
     std::cout << "MSE calc" << std::endl;
     std::vector<double> mse_vec, mse_vec_ave;
 
 
+    // 360°回転させ、mseを計算
     for (double i = 0; i <= 360; i++)
     {
         double mse_tmp = ImgCalc::compute_MSE(pointimg.get_mat(), make_img(i, "rote" + std::to_string(i)));
@@ -1337,7 +1357,7 @@ void PointOperation::shift_test_w_stripe_pattern()
 #endif
 
 
-
+    // peakを見るために、一階差分の配列(size-1)を返す
     auto calculate_diff = []<class T>(std::vector<T> &mse_vec_lambda)
     {
         std::vector<T> mse_diff_lambda;
@@ -1348,6 +1368,7 @@ void PointOperation::shift_test_w_stripe_pattern()
         return mse_diff_lambda;
     };
 
+    // 一階差分との符号を確認して極値を返す。このとき、差がthreshold以上のものを持ってくる
     auto find_local_max = []<class T>(std::vector<T> &mse_diff_lambda, double threshold)
     {
         // size()で、falseで初期化。
@@ -1364,22 +1385,23 @@ void PointOperation::shift_test_w_stripe_pattern()
     };
 
 
+    // plot, dat graph化の処理
     std::vector<double> mse_diff = calculate_diff(mse_vec);
     std::vector<bool> mse_peak = find_local_max(mse_diff, 500);
 
     std::vector<int> plot_mse;
     std::vector<double> plot_dat;
-    std::vector<double> plot_true;
+    std::vector<int> plot_true;
    
     int interval = 360 / divide;
-    for(int i = 0; i < mse_vec.size(); i += interval)
+    for(int i = 0; i < static_cast<int>(mse_vec.size());  i += interval)
     {
         plot_true.push_back(i);
     }
 
 
 
-    for(int i = 0; i < mse_peak.size(); i++)
+    for(int i = 0; i < static_cast<int>(mse_peak.size()); i++)
     {
         std::cout << i << " " << mse_peak.at(i) << std::endl;
         if(mse_peak.at(i)){

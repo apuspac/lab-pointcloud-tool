@@ -75,7 +75,7 @@ public:
     void diff_img(const cv::Mat &);
     std::vector<cv::Vec4i> HoughLine_vertical(int, double, double);
 
-    void make_img_from_pointcloud(PointSet &, std::pair<int, int>);
+    void make_img_from_pointcloud(PointSet &, std::pair<int, int>, bool gaussian_flag=false);
 
     void make_test_img_forEdge(int, int, int, int);
 };

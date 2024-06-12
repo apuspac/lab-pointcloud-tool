@@ -66,7 +66,7 @@ public:
     // is
     bool is_empty() { return point3.size() == 0; }
     bool is_empty_edge() { return edge2.size() == 0; }
-    bool is_empry_polar() { return point3_polar.size() == 0; }
+    bool is_empty_polar() { return point3_polar.size() == 0; }
 
     // 点の追加 edgeの組を追加
     void add_point(const Eigen::Vector3d add_point) { point3.push_back(add_point); }
@@ -111,8 +111,3 @@ public:
     void print_polar();
 };
 #endif
-
-// 本当はtemplateを使って Vector3d 以外も一緒に扱えるようにしてみたかった
-// けどうまくいかんかったしすぐに解決できなさそうなので後回し
-// ぱっとみ めちゃめんどそう
-// https://eigen.tuxfamily.org/dox/TopicTemplateKeyword.html
