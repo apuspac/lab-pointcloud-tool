@@ -852,7 +852,6 @@ void PointOperation::capture_point_inner_bbox()
     }
 }
 
-// ちょっと切り出し中
 
 void PointOperation::projection_to_sphere()
 {
@@ -1262,6 +1261,9 @@ void PointOperation::test_location()
     // cv::imwrite("out/" + date + "/" + "insta.png", image.get_mat());
     // obj_io.output_ply(ply_point, "out/" + date + "/" + "plypoint.ply");
 
+
+
+
     int divide = 5;
     std::vector<int> stitch_edge;
     stitch_edge.resize(7680 * 4320);
@@ -1272,8 +1274,8 @@ void PointOperation::test_location()
     // #### make 球-> 画像
     InstaImg pointimg;
     // 
-    // pointimg.make_img_from_pointcloud(stitch_edge_point, std::pair<int, int>(7680, 4320));
-    pointimg.make_img_from_pointcloud(stitch_edge_point, std::pair<int, int>(360,180), true);
+    pointimg.make_img_from_pointcloud(ply_point, std::pair<int, int>(7680, 4320), true);
+    // pointimg.make_img_from_pointcloud(stitch_edge_point, std::pair<int, int>(360,180), true);
 
     std::cout << "test_location" << std::endl;
     cv::imwrite("out/" + date + "/" + "point.png", pointimg.get_mat());

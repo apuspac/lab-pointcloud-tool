@@ -535,7 +535,7 @@ void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, i
 
         // thetaがマイナスの場合の処理
         if(v < 0){
-            v += 360;
+            v += img_size.first;
         }
 
         #ifdef _DEBUG
