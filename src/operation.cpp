@@ -651,19 +651,15 @@ void PointOperation::capture_pointset()
 }
 
 /**
- * @brief テスト用の関数
+ * @brief bboxの中にある点群を抽出する処理
  *
- * 新機能等を作ったら、あとで実装してあげる
  *
  *  * 実行例:
- * ./Rotation   --mode 9
- *              --img_cp img.dat,
- *              --ply_cp, ply.dat,
- *              --ply, plyfile.ply,
+ * ./Rotation   --ply, plyfile.ply,
  *              --img, img/pic_point1.png,
  *              --dir, data/test/,
  *              --json, data/detections_test.json,
- *              --mode, 9,
+ *              --mode, 3,
  */
 void PointOperation::capture_point_inner_bbox()
 {
@@ -675,7 +671,7 @@ void PointOperation::capture_point_inner_bbox()
     obj_io.load_ply_point_file(ply_point, ply_file_path.at(0));
 
     // ply_point.print();
-
+#ifdef _DEBUG  // 手動で回転させる
     CalcPointSet calc;
     Eigen::Matrix3d matrix_R_1 = calc.calc_theory_value_Rotation_Matrix(Eigen::Vector3d(0, 0, 1), 23.0);
     // matrix_R_1 << 0.948577875082123, -0.276966456237335, 0.153263162645223,
@@ -693,11 +689,8 @@ void PointOperation::capture_point_inner_bbox()
     ply_point.rotate(matrix_R_2);
     ply_point.rotate(matrix_R_3);
 
-    // HACK: ply_point 移動
     ply_point.transform(Eigen::Vector3d(0, 0, 0.05));
-    // // NOTE: 一旦ストップ
-    // std::string continue_step = 0;
-    // std::cin >> continue_step;
+#endif
 
     // load bbox
     DetectionData detect;
@@ -1258,11 +1251,6 @@ void PointOperation::test_location()
     image.load_img(img_file_path.at(0));
 
     create_output_dir();
-    
-
-    // cv::imwrite("out/" + date + "/" + "insta.png", image.get_mat());
-    // obj_io.output_ply(ply_point, "out/" + date + "/" + "plypoint.ply");
-
 
     // # make img -> theta/phi-img
     // エッジ検出
@@ -1278,21 +1266,64 @@ void PointOperation::test_location()
     EdgeImg insta_edge("insta_edge");
     insta_img_edge_detection(insta_edge, image);
     insta_edge.make_thetaphiIMG_from_panorama( std::pair<int, int>(image.get_width(), image.get_height()));
-    cv::imwrite("out/" + date + "/" + "edge.png", insta_edge.get_mat());
 
 
     // # make point -> theta/phi-img
     InstaImg pointimg;
     pointimg.make_thetaphiIMG_from_pointcloud(ply_point, std::pair<int, int>(image.get_width(), image.get_height()), true);
-
     std::cout << "make_img" << std::endl;
+#ifdef DEBUG
+    cv::imwrite("out/" + date + "/" + "edge.png", insta_edge.get_mat());
     cv::imwrite("out/" + date + "/" + "point.png", pointimg.get_mat());
+#endif
 
 
     // double mse_tmp = ImgCalc::compute_MSE(pointimg.get_mat(), make_img(i, "rote" + std::to_string(i)));
     double mse_tmp = ImgCalc::compute_MSE(insta_edge.get_mat(), pointimg.get_mat());
     std::cout << "mse: " << mse_tmp << std::endl;
 
+    /**
+     * 点群を回転させ、 画像を生成 cv::Matに格納し返す。
+     *
+     */
+    auto make_img = [this, &image, &ply_point, &obj_io](double angle, std::string imgname)
+    {
+        // pointcloud rotate
+        PointSet ply_point_rotate("rotate_point");
+        ply_point_rotate.add_point(ply_point);
+        ply_point_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(angle*M_PI / 180, Eigen::Vector3d::UnitZ())));
+        InstaImg pointimg_lidar;
+        pointimg_lidar.make_thetaphiIMG_from_pointcloud(ply_point_rotate, std::pair<int, int>(image.get_width(), image.get_height()));
+
+#ifdef _DEBUG
+        cv::imwrite("out/" + date + "/" + imgname + ".png", pointimg_lidar.get_mat());
+        obj_io.output_ply(ply_point_rotate, "out/" + date + "/_" + imgname + ".ply");
+#endif
+
+        return pointimg_lidar.get_mat();
+    };
+
+    std::cout << "MSE calc" << std::endl;
+    std::vector<double> mse_vec, mse_vec_ave;
+
+
+    // 360°回転させ、mseを計算
+    for (double i = 0; i <= 360; i++)
+    {
+        double calc_mse = ImgCalc::compute_MSE(pointimg.get_mat(), make_img(i, "rote" + std::to_string(i)));
+        mse_vec.push_back(calc_mse);
+#ifdef DEBUG
+        std::cout << "angle: " << i << "mse: " << calc_mse<< std::endl;
+#endif
+    }
+
+    obj_io.output_dat("out/" + date + "/" + date + "mse.dat", mse_vec);
+
+
+#ifdef MATPLOTLIB_ENABLED
+    plt::plot(mse_vec);
+    plt::show();
+#endif
 }
 
 
@@ -1360,6 +1391,7 @@ void PointOperation::shift_test_w_stripe_pattern()
     {
         double mse_tmp = ImgCalc::compute_MSE(pointimg.get_mat(), make_img(i, "rote" + std::to_string(i)));
         mse_vec.push_back(mse_tmp);
+        
     }
 
     obj_io.output_dat("out/" + date + "/" + date + "mse.dat", mse_vec);

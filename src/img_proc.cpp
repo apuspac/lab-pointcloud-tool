@@ -421,7 +421,9 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
 
     if (reference.size() != comparison.size())
     {
-        std::cout << "size not same" << std::endl;
+        std::cout << "size not same" << std::endl
+            << "reference size:" <<  reference.size() << std::endl
+            << "comparison size:" << comparison.size() << std::endl;
         std::exit(-1);
     }
     if (reference.channels() != comparison.channels())
@@ -441,6 +443,13 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
 
 double ImgCalc::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison)
 {
+    if (reference.size() != comparison.size())
+    {
+        std::cout << "size not same" << std::endl
+            << "reference size:" <<  reference.size() << std::endl
+            << "comparison size:" << comparison.size() << std::endl;
+        std::exit(-1);
+    }
     if (reference.size() != comparison.size())
     {
         std::cout << "size not same" << std::endl;
