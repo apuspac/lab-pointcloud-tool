@@ -1,24 +1,25 @@
 # coordinate_transform
+Sumitomo関連のプログラムをまとめたもの
 
 
 ## 環境設定
 - opencv install  
-libopencv-dev cmake をインストール
+libopencv-dev cmake
 
 - eigenインストール  
-[Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page)のget itからDLするなりwgetするなりしてきて 展開した中のEigenディレクトリを/usr/local/include/eigen3にコピーする。
+[Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page)のget itからDLし、 展開した中のEigenディレクトリを/usr/local/include/eigen3にコピーする。
 
 - open3d install (optional)
-[open3d](http://www.open3d.org/docs/release/getting_started.html)のinstallを参考にインストール
+[open3d](http://www.open3d.org/docs/release/getting_started.html)のinstallを参考にインストール  
 自分でbuildしないと入らない。
 
 - matplotlib-cpp install (optional)
-ヘッダーを/usr/local/includeに配置する
+ヘッダーを/usr/local/includeに配置する  
 
 
 
 ## build
-build directoryを作成して、その中でcmake, makeを実行 
+build directoryを作成して、その中でcmake, makeを実行  
 
 ```bash
 cmake ..
@@ -30,7 +31,7 @@ open3d, matplotlibを使う場合 flagを有効に
 cmake .. -DCMAKE_BUILD_TYPE=Debug -DOPEN3D_ENABLED=ON -DMATPLOTLIB_ENABLED=ON
 ```
 
-自分用
+開発用
 ```bash
 cmake .. -DCMAKE_BUILD_TYPE=Debug -DOPEN3D_ENABLED=ON -DMATPLOTLIB_ENABLED=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 ```
@@ -41,23 +42,23 @@ modeで機能の切り替えを行う。
 
 
 ### transform
-回転と並進を対応点から計算する
-in 
+回転と並進を対応点から計算する  
+in  
 - 360°画像
 - plyファイル
 - 画像対応点
 - plyの対応点
 
-out
+out  
 - 画像の座標に位置合わせしたplyファイル
 
 ```
 ./build/Rotation \
---ply {ply_file_path} \
---img {img_file_path} \
---ply_cp {img_file_path} \
---img_cp {img_file_path} \
---mode 0
+--ply ply_file_path \
+--img img_file_path \
+--ply_cp plycp_path \
+--img_cp imgcp_path \
+--mode 1
 ```
 
 対応点形式  
@@ -85,7 +86,6 @@ out
 -0.175075 -4.988512 1.183640
 -1.719230 -5.165187 1.178979
 -1.653616 -5.008869 -0.234914
-# フレーム 下 東側
 -1.720427 -1.819300 -1.207758
 -1.723518 -1.366534 -1.209202
 -1.708083 -0.932050 -1.207408
@@ -96,20 +96,19 @@ out
 ### capture_point_inner_bbox
 物体検出によって取得したbbox, pixelのjsonファイル, 位置合わせ済みの点群と画像を読み込んでbbox内の点群を取得する
 
-in
+in  
 - 360°画像
 - plyファイル
 - detectしたjsonファイル
 
-out
+out  
 - 抽出したクラスごとの点群
 
 ```
 ./build/Rotation \
---ply {ply_file_path} \
---img {img_file_path} \
---ply_cp {img_file_path} \
---img_cp {img_file_path} \
+--ply ply_file_path \
+--img img_file_path \
+--json path/json_file \
 --mode 0
 ```
 
