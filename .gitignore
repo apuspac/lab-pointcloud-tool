@@ -59,6 +59,8 @@ _deps
 # ply json outは共有しない。
 *.json
 *.ply
+*.JPG
+*.png
 out/
 
 

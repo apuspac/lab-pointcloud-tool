@@ -104,10 +104,14 @@ public:
     void calc_center_of_gravity();
     void rotate(Eigen::Matrix3d);
     void transform(Eigen::Vector3d);
-    void radius_based_filter(size_t, double);
 
     void output_hist(std::string);
     void print();
     void print_polar();
+
+
+#ifdef OPEN3D_ENABLED
+    void radius_based_filter(size_t, double);
+#endif
 };
 #endif
