@@ -17,8 +17,8 @@ void PointOperation::mode_select()
     switch_func[2] = std::bind(&PointOperation::rotate, this);
     switch_func[3] = std::bind(&PointOperation::capture_point_inner_bbox, this);
     switch_func[4] = std::bind(&PointOperation::old_detection_correspoint, this);
-    switch_func[0] = std::bind(&PointOperation::test_location, this);
     switch_func[5] = std::bind(&PointOperation::shift_test_w_stripe_pattern, this);
+    switch_func[0] = std::bind(&PointOperation::test_location, this);
     switch_func[get_mode()]();
     // switch_func[*] = std::bind(&PointOperation::Rotation_only_simulation, this);
     // switch_func[*] = std::bind(&PointOperation::transform_rotate_simulation, this);
