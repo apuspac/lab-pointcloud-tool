@@ -1,6 +1,5 @@
 # coordinate_transform
 Sumitomo関連のプログラムをまとめたもの
-aaaaa
 
 
 ## 環境設定
