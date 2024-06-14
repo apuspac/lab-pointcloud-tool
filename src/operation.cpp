@@ -18,6 +18,7 @@ void PointOperation::mode_select()
     switch_func[3] = std::bind(&PointOperation::capture_point_inner_bbox, this);
     switch_func[4] = std::bind(&PointOperation::old_detection_correspoint, this);
     switch_func[0] = std::bind(&PointOperation::test_location, this);
+    switch_func[5] = std::bind(&PointOperation::shift_test_w_stripe_pattern, this);
     switch_func[get_mode()]();
     // switch_func[*] = std::bind(&PointOperation::Rotation_only_simulation, this);
     // switch_func[*] = std::bind(&PointOperation::transform_rotate_simulation, this);
@@ -650,19 +651,15 @@ void PointOperation::capture_pointset()
 }
 
 /**
- * @brief テスト用の関数
+ * @brief bboxの中にある点群を抽出する処理
  *
- * 新機能等を作ったら、あとで実装してあげる
  *
  *  * 実行例:
- * ./Rotation   --mode 9
- *              --img_cp img.dat,
- *              --ply_cp, ply.dat,
- *              --ply, plyfile.ply,
+ * ./Rotation   --ply, plyfile.ply,
  *              --img, img/pic_point1.png,
  *              --dir, data/test/,
  *              --json, data/detections_test.json,
- *              --mode, 9,
+ *              --mode, 3,
  */
 void PointOperation::capture_point_inner_bbox()
 {
@@ -674,7 +671,7 @@ void PointOperation::capture_point_inner_bbox()
     obj_io.load_ply_point_file(ply_point, ply_file_path.at(0));
 
     // ply_point.print();
-
+#ifdef _DEBUG  // 手動で回転させる
     CalcPointSet calc;
     Eigen::Matrix3d matrix_R_1 = calc.calc_theory_value_Rotation_Matrix(Eigen::Vector3d(0, 0, 1), 23.0);
     // matrix_R_1 << 0.948577875082123, -0.276966456237335, 0.153263162645223,
@@ -692,11 +689,8 @@ void PointOperation::capture_point_inner_bbox()
     ply_point.rotate(matrix_R_2);
     ply_point.rotate(matrix_R_3);
 
-    // HACK: ply_point 移動
     ply_point.transform(Eigen::Vector3d(0, 0, 0.05));
-    // // NOTE: 一旦ストップ
-    // std::string continue_step = 0;
-    // std::cin >> continue_step;
+#endif
 
     // load bbox
     DetectionData detect;
@@ -851,7 +845,6 @@ void PointOperation::capture_point_inner_bbox()
     }
 }
 
-// ちょっと切り出し中
 
 void PointOperation::projection_to_sphere()
 {
@@ -1244,6 +1237,7 @@ void PointOperation::remove_pointset_floor(PointSet &origin_point, PointSet &out
     }
 }
 
+
 void PointOperation::test_location()
 {
     // shift_test_w_stripe_patternを参考に実際の画像でやってみる
@@ -1258,10 +1252,78 @@ void PointOperation::test_location()
 
     create_output_dir();
 
-    cv::imwrite("out/" + date + "/" + "insta.png", image.get_mat());
-    obj_io.output_ply(ply_point, "out/" + date + "/" + "plypoint.ply");
+    // # make img -> theta/phi-img
+    // エッジ検出
+    auto insta_img_edge_detection = [this](EdgeImg &out_edge, InstaImg &in_img)
+    {
+        out_edge.set_zero_imgMat(in_img.get_height(), in_img.get_width(), CV_8UC1);
+        out_edge.detect_edge_with_sobel(in_img.get_mat());
+#ifdef DEBUG
+        cv::imwrite("out/" + date + "/" + "instaimg_sobel.png", out_edge.get_mat());
+#endif
+    };
+
+    EdgeImg insta_edge("insta_edge");
+    insta_img_edge_detection(insta_edge, image);
+    insta_edge.make_thetaphiIMG_from_panorama( std::pair<int, int>(image.get_width(), image.get_height()));
 
 
+    // # make point -> theta/phi-img
+    InstaImg pointimg;
+    pointimg.make_thetaphiIMG_from_pointcloud(ply_point, std::pair<int, int>(image.get_width(), image.get_height()), true);
+    std::cout << "make_img" << std::endl;
+#ifdef DEBUG
+    cv::imwrite("out/" + date + "/" + "edge.png", insta_edge.get_mat());
+    cv::imwrite("out/" + date + "/" + "point.png", pointimg.get_mat());
+#endif
+
+
+    // double mse_tmp = ImgCalc::compute_MSE(pointimg.get_mat(), make_img(i, "rote" + std::to_string(i)));
+    double mse_tmp = ImgCalc::compute_MSE(insta_edge.get_mat(), pointimg.get_mat());
+    std::cout << "mse: " << mse_tmp << std::endl;
+
+    /**
+     * 点群を回転させ、 画像を生成 cv::Matに格納し返す。
+     *
+     */
+    auto make_img = [this, &image, &ply_point, &obj_io](double angle, std::string imgname)
+    {
+        // pointcloud rotate
+        PointSet ply_point_rotate("rotate_point");
+        ply_point_rotate.add_point(ply_point);
+        ply_point_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(angle*M_PI / 180, Eigen::Vector3d::UnitZ())));
+        InstaImg pointimg_lidar;
+        pointimg_lidar.make_thetaphiIMG_from_pointcloud(ply_point_rotate, std::pair<int, int>(image.get_width(), image.get_height()));
+
+#ifdef _DEBUG
+        cv::imwrite("out/" + date + "/" + imgname + ".png", pointimg_lidar.get_mat());
+        obj_io.output_ply(ply_point_rotate, "out/" + date + "/_" + imgname + ".ply");
+#endif
+
+        return pointimg_lidar.get_mat();
+    };
+
+    std::cout << "MSE calc" << std::endl;
+    std::vector<double> mse_vec, mse_vec_ave;
+
+
+    // 360°回転させ、mseを計算
+    for (double i = 0; i <= 360; i++)
+    {
+        double calc_mse = ImgCalc::compute_MSE(pointimg.get_mat(), make_img(i, "rote" + std::to_string(i)));
+        mse_vec.push_back(calc_mse);
+#ifdef DEBUG
+        std::cout << "angle: " << i << "mse: " << calc_mse<< std::endl;
+#endif
+    }
+
+    obj_io.output_dat("out/" + date + "/" + date + "mse.dat", mse_vec);
+
+
+#ifdef MATPLOTLIB_ENABLED
+    plt::plot(mse_vec);
+    plt::show();
+#endif
 }
 
 
@@ -1283,8 +1345,8 @@ void PointOperation::shift_test_w_stripe_pattern()
     stitch_edge.resize(360 * 180);
 
     create_output_dir();
-    
-    int divide = 20;
+
+    int divide = 5;
     CalcPointSet::make_striped_pattern(stitch_edge, stitch_edge_point, watermelon_point, divide);
 
     watermelon_point.convert_to_rectangular();
@@ -1294,13 +1356,15 @@ void PointOperation::shift_test_w_stripe_pattern()
 
     // #### make 球-> 画像
     InstaImg pointimg;
-    pointimg.make_img_from_pointcloud(stitch_edge_point, std::pair<int, int>(360, 180));
+    pointimg.make_thetaphiIMG_from_pointcloud(stitch_edge_point, std::pair<int, int>(360, 180));
 
     cv::imwrite("out/" + date + "/" + "insta.png", pointimg.get_mat());
 
 
-    // こっから関数にする
-    // # 比較用の画像と 回転させた点群を作成して 画像を生成
+    /**
+     * 点群を回転させ、 画像を生成 cv::Matに格納し返す。
+     *
+     */
     auto make_img = [this, &stitch_edge_point, &obj_io](double angle, std::string imgname)
     {
         // pointcloud rotate
@@ -1308,7 +1372,7 @@ void PointOperation::shift_test_w_stripe_pattern()
         stitch_edge_point_rotate.add_point(stitch_edge_point);
         stitch_edge_point_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(angle*M_PI / 180, Eigen::Vector3d::UnitZ())));
         InstaImg pointimg_lidar;
-        pointimg_lidar.make_img_from_pointcloud(stitch_edge_point_rotate, std::pair<int, int>(360, 180));
+        pointimg_lidar.make_thetaphiIMG_from_pointcloud(stitch_edge_point_rotate, std::pair<int, int>(360, 180));
 
 #ifdef _DEBUG
         cv::imwrite("out/" + date + "/" + imgname + ".png", pointimg_lidar.get_mat());
@@ -1318,15 +1382,16 @@ void PointOperation::shift_test_w_stripe_pattern()
         return pointimg_lidar.get_mat();
     };
 
-    // 回転
     std::cout << "MSE calc" << std::endl;
     std::vector<double> mse_vec, mse_vec_ave;
 
 
+    // 360°回転させ、mseを計算
     for (double i = 0; i <= 360; i++)
     {
         double mse_tmp = ImgCalc::compute_MSE(pointimg.get_mat(), make_img(i, "rote" + std::to_string(i)));
         mse_vec.push_back(mse_tmp);
+        
     }
 
     obj_io.output_dat("out/" + date + "/" + date + "mse.dat", mse_vec);
@@ -1337,7 +1402,7 @@ void PointOperation::shift_test_w_stripe_pattern()
 #endif
 
 
-
+    // peakを見るために、一階差分の配列(size-1)を返す
     auto calculate_diff = []<class T>(std::vector<T> &mse_vec_lambda)
     {
         std::vector<T> mse_diff_lambda;
@@ -1348,6 +1413,7 @@ void PointOperation::shift_test_w_stripe_pattern()
         return mse_diff_lambda;
     };
 
+    // 一階差分との符号を確認して極値を返す。このとき、差がthreshold以上のものを持ってくる
     auto find_local_max = []<class T>(std::vector<T> &mse_diff_lambda, double threshold)
     {
         // size()で、falseで初期化。
@@ -1364,22 +1430,23 @@ void PointOperation::shift_test_w_stripe_pattern()
     };
 
 
+    // plot, dat graph化の処理
     std::vector<double> mse_diff = calculate_diff(mse_vec);
     std::vector<bool> mse_peak = find_local_max(mse_diff, 500);
 
     std::vector<int> plot_mse;
     std::vector<double> plot_dat;
-    std::vector<double> plot_true;
+    std::vector<int> plot_true;
    
     int interval = 360 / divide;
-    for(int i = 0; i < mse_vec.size(); i += interval)
+    for(int i = 0; i < static_cast<int>(mse_vec.size());  i += interval)
     {
         plot_true.push_back(i);
     }
 
 
 
-    for(int i = 0; i < mse_peak.size(); i++)
+    for(int i = 0; i < static_cast<int>(mse_peak.size()); i++)
     {
         std::cout << i << " " << mse_peak.at(i) << std::endl;
         if(mse_peak.at(i)){

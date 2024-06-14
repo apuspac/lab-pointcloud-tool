@@ -7,6 +7,7 @@
 
 #include "img_proc.hpp"
 #include "fmt/printf.h"
+#include <opencv2/opencv.hpp>
 #include <utility>
 
 /**
@@ -420,7 +421,9 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
 
     if (reference.size() != comparison.size())
     {
-        std::cout << "size not same" << std::endl;
+        std::cout << "size not same" << std::endl
+            << "reference size:" <<  reference.size() << std::endl
+            << "comparison size:" << comparison.size() << std::endl;
         std::exit(-1);
     }
     if (reference.channels() != comparison.channels())
@@ -440,6 +443,13 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
 
 double ImgCalc::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison)
 {
+    if (reference.size() != comparison.size())
+    {
+        std::cout << "size not same" << std::endl
+            << "reference size:" <<  reference.size() << std::endl
+            << "comparison size:" << comparison.size() << std::endl;
+        std::exit(-1);
+    }
     if (reference.size() != comparison.size())
     {
         std::cout << "size not same" << std::endl;
@@ -502,20 +512,53 @@ std::vector<int> ImgCalc::shift(std::vector<int> target, int size_phi, int size_
 }
 
 
+/**
+ * @brief panorama を theta phi imgに変換する
+ *
+ * @param Edge検出したimg
+ * @param img_size : 画像サイズ (height, width)
+ * @param gaussian_flag
+ */
+void InstaImg::make_thetaphiIMG_from_panorama(std::pair<int, int> img_size, bool gaussian_flag)
+{
+    // 画像の初期化
+    cv::Mat imgmat(img_size.first, img_size.second, CV_8UC1, cv::Scalar(0));
+
+    // 変換処理
+    for(int y = 0; y < img.rows; y++)
+    {
+        for(int x = 0; x < img.cols; x++)
+        {
+            uchar *ptr = img.data + img.step * y;
+            int new_u = y;
+            int new_v = img_size.first - 1 - x;
+
+
+#ifdef _DEBUG
+            std::cout << x << " " << y << " ";
+            std::cout << new_u << ":" << new_v << " " << std::endl;
+#endif
+
+            imgmat.at<uchar>(new_v, new_u) = ptr[x];
+        }
+    }
+    set_mat(imgmat);
+}
 
 /**
  * @brief pointcloud を 画像に変換するする
  *
  * @param target_point
  * @param img_size : 画像サイズ (height, width)
+ * @param gaussian_flag
  */
-void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, int> img_size)
+void InstaImg::make_thetaphiIMG_from_pointcloud(PointSet &target_point, std::pair<int, int> img_size, bool gaussian_flag)
 {
     // polarがあるかどうかの確認
-    if(target_point.is_empry_polar())
+    if(target_point.is_empty_polar())
     {
-        std::cout << "point_to_img: polar is empty" << std::endl;
-        std::exit(-1);
+        std::cout << "make_img_from_pointcloud: polar is empty, calc polar " << std::endl;
+        target_point.convert_to_polar();
     }
 
 
@@ -528,12 +571,12 @@ void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, i
         // 画像に変換する( theta, phi) -> (v, u)
         double phi = point(1);
         double theta = point(2);
-        int v = static_cast<int>(theta / (2.0 * M_PI) * 360.0);
-        int u = static_cast<int>(phi / M_PI * 180.0);
+        int v = static_cast<int>(theta / (2.0 * M_PI) * static_cast<double>(img_size.first));
+        int u = static_cast<int>(phi / M_PI * static_cast<double>(img_size.second));
 
         // thetaがマイナスの場合の処理
         if(v < 0){
-            v += 360;
+            v += img_size.first;
         }
 
         #ifdef _DEBUG
@@ -541,16 +584,23 @@ void InstaImg::make_img_from_pointcloud(PointSet &target_point, std::pair<int, i
         std::cout << u << ":" << v << " " << std::endl;
         #endif
 
-        imgmat.at<uchar>(v, u) = 250;
+        imgmat.at<uchar>(v, u) = 255;
+    }
 
-        //rad 2.96 は だいたい170°くらい
-        // if(theta > 2.96){
-        //     std::cout << point.transpose() << " ";
-        //     std::cout << u << ":" << v << " " << std::endl;
-        // }else{
-        //
-        // }
+    // ガウシアン平滑化の適用
+    if(gaussian_flag == true){
+        int kernel_size = 7;
 
+#ifdef _DEBUG
+        std::cout << gaussian_flag;
+        cv::Mat gau;
+        cv::GaussianBlur(imgmat, gau, cv::Size(kernel_size, kernel_size), 0, 0);
+
+        cv::imwrite("out/no_gauss.png", imgmat);
+        cv::imwrite("out/gauss.png", gau);
+
+#endif
+        cv::GaussianBlur(imgmat, imgmat, cv::Size(kernel_size, kernel_size), 0, 0);
     }
 
     set_mat(imgmat);

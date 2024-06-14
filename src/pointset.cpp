@@ -40,7 +40,7 @@ void PointSet::add_point(PointSet add_pointset)
     {
         point3 = add_pointset.get_point_all();
     }
-    if (add_pointset.is_empry_polar() == false)
+    if (add_pointset.is_empty_polar() == false)
     {
         point3_polar = add_pointset.get_point_all();
     }
@@ -71,7 +71,7 @@ void PointSet::rotate(Eigen::Matrix3d rotate_matrix)
             tmp = rotate_matrix * tmp;
         }
     }
-    if (is_empry_polar() == false)
+    if (is_empty_polar() == false)
     {
         convert_to_polar();
 
@@ -225,7 +225,7 @@ void PointSet::convert_to_polar()
 {
     // std::cout << "convert_to_polar" << std::endl;
 
-    if(is_empty()){
+    if(is_empty_polar()){
         point3_polar.resize(point3.size());
     }
     assert(point3_polar.size() == point3.size());

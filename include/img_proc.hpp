@@ -75,13 +75,14 @@ public:
     void diff_img(const cv::Mat &);
     std::vector<cv::Vec4i> HoughLine_vertical(int, double, double);
 
-    void make_img_from_pointcloud(PointSet &, std::pair<int, int>);
+    void make_thetaphiIMG_from_pointcloud(PointSet &, std::pair<int, int>, bool gaussian_flag=false);
+    void make_thetaphiIMG_from_panorama(std::pair<int, int>, bool gaussian_flag=false);
 
     void make_test_img_forEdge(int, int, int, int);
 };
 
 /**
- * @brief edge画像クラス
+ * @brief edgeを扱うための画像クラス
  * 基本的に前提はCV_8UC1の二値画像
  *
  */
@@ -112,11 +113,9 @@ struct projection_info
 class LidarImg : public InstaImg
 {
 private:
-    // 点がどこに投影されたかを格納する。こっちは座標値を格納 u, v, (x,y,z)
-    // std::vector<std::vector<std::vector<Eigen::Vector3d>>> store_info;
 
     // 投影された点がどの画素に投影されたか 画素座標(u + v * width)で格納
-    // 追記: これ全部の点を格納するのではなく，画素ごとに点を格納するように変更する
+    // 画素ごとに格納する点は一つ
     std::vector<int> store_info;
     std::vector<projection_info> store_pixel;
 
@@ -126,21 +125,12 @@ public:
     LidarImg(std::string _name) : InstaImg(_name) {}
     ~LidarImg() {}
 
-    // void resize_store_info(int _width, int _height)
-    // {
-    //     store_info.resize(_width, std::vector<std::vector<Eigen::Vector3d>>(_height, std::vector<Eigen::Vector3d>()));
-    // }
-    // void set_store_info(int, int, Eigen::Vector3d);
-    // const Eigen::Vector3d &get_store_info(int x, int y, int index) { return store_info[x][y][index]; }
-    // const std::vector<Eigen::Vector3d> &get_store_info(int x, int y) { return store_info[x][y]; }
-    // const std::vector<std::vector<std::vector<Eigen::Vector3d>>> &get_store_info() const { return store_info; }
 
     void resize_store_info(size_t point_num)
     {
         store_info.resize(point_num);
     }
 
-    // これ使うときは、resize_store_infoを使って、vectorのサイズを確保しておく。
     void set_store_info(int pixel, size_t index) { store_info.at(index) = pixel; }
     void set_store_pixel(int, Eigen::Vector3d);
     int get_store_info(int point_index) { return store_info.at(point_index); }

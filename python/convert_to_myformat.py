@@ -1,6 +1,9 @@
-"""Convert the JSON file from exported COCO anotation to my program format.
+"""
 
-python convert_to_myformat.py <input_directory_path_name> <save_path_name>
+COCO anotationからexportしたjsonファイルをこのプログラムで使用する形式に変換するプログラム
+
+Usage:
+python convert_to_myformat.py {input_directory_path} {save_path}
 python convert_to_mayformat.py json_data out
 
 """

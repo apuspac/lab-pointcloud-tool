@@ -31,23 +31,15 @@
 *.out
 *.app
 
-
-
-
-# CMakeFile
-./src/build/CMakeFiles/
-./src/build/CMakeCache.txt
-./src/build/cmake_install.cmake
-./src/build/Makefile
-build/
-
 # exeFile
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/cmake
 # Edit at https://www.toptal.com/developers/gitignore?templates=cmake
 
-### CMake ###
+
+# CMakeFile
+build/
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles
@@ -64,22 +56,13 @@ _deps
 # External projects
 *-prefix/
 
+# ply json outは共有しない。
 *.json
 *.ply
-
-# dataファイルなどの 元データは追跡
-!data/
-!data/*.json
-!python/json_data/*.json
-!python/out/*.json
-
-# それ以外のjsonファイルは追跡しない
-
-# End of https://www.toptal.com/developers/gitignore/api/cmake
-src/build/Rotation
-
-# 実行結果データは共有しない。
 out/
+
+
+test.sh
 
 # nvim
 .cache/

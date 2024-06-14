@@ -188,7 +188,6 @@ void ObjectIO::load_ply_point_file(PointSet &loaded_point_data, std::string file
 
     std::cout << "property_num_count:" << property_num << std::endl;
 
-    // これここから始めたら どうなるんだ？
     // end_headerまで読み込んだので、次から点データを読み込む
     // getlineで1行ずつ処理する
     while (std::getline(data_file, one_line_buffer))
@@ -262,8 +261,6 @@ void ObjectIO::load_ply_point_file(PointSet &loaded_point_data, std::string file
             }
         }
     }
-
-    exit(0);
 }
 
 /**
