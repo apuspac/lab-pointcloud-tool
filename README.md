@@ -6,14 +6,19 @@ Sumitomo関連のプログラムをまとめたもの
 - opencv install  
 libopencv-dev cmake
 
-- eigenインストール  
+- eigen install  
 [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page)のget itからDLし、 展開した中のEigenディレクトリを/usr/local/include/eigen3にコピーする。
 
-- open3d install (optional)
+- rapidjson install
+jsonの解析に使用
+Eigenと同じheader onlyなファイルなので、[rapidjson](https://github.com/Tencent/rapidjson)からcloneし、/usr/local/include/rapidjson/に rapidjson/include/rapidjson配下を移動する。
+
+
+- open3d install (optional)  
 [open3d](http://www.open3d.org/docs/release/getting_started.html)のinstallを参考にインストール  
 自分でbuildしないと入らない。
 
-- matplotlib-cpp install (optional)
+- matplotlib-cpp install (optional)  
 ヘッダーを/usr/local/includeに配置する  
 
 
@@ -26,7 +31,7 @@ cmake ..
 make
 ```
 
-open3d, matplotlibを使う場合 flagを有効に
+debug, open3d, matplotlibのflagを有効にする場合
 ```bash
 cmake .. -DCMAKE_BUILD_TYPE=Debug -DOPEN3D_ENABLED=ON -DMATPLOTLIB_ENABLED=ON
 ```
