@@ -42,10 +42,10 @@ target_include_directories(${PROJECT_NAME}
         $<$<BOOL:${MATPLOTLIB_ENABLED}>:${Python3_NumPy_INCLUDE_DIRS}>
 )
 
-# c++20
+# c++17
 target_compile_features(${PROJECT_NAME} 
     PRIVATE 
-        cxx_std_20
+        cxx_std_17
 )
 
 # compile option
