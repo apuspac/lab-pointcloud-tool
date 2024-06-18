@@ -845,7 +845,7 @@ void PointOperation::capture_point_inner_bbox()
     }
 }
 
-
+#ifdef OPEN3D_ENABLED
 void PointOperation::projection_to_sphere()
 {
 
@@ -904,6 +904,8 @@ void PointOperation::projection_to_sphere()
     obj_io.output_ply(img_projection_unisphere, "out/" + date + "/" + "img" + ".ply");
     obj_io.output_ply(projection_unisphere, "out/" +  date + "/" + "plypoint" + ".ply");
 }
+
+#endif
 
 double img_projection(PointSet &ply_point, LidarImg &lidar_img, InstaImg &image)
 {

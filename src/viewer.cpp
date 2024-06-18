@@ -1,5 +1,6 @@
-#include "viewer.hpp"
+#ifdef OPEN3D_ENABLED
 
+#include "viewer.hpp"
 /**
  * @brief presetに登録されたVector3d型のcolor情報を返す
  *
@@ -226,3 +227,6 @@ void Viewer3D::add_geometry_pointset(std::vector<Eigen::Vector3d> pointset, int 
 // void add_axes();
 // void add_line_origin(std::vector<Eigen::Vector3d>);
 // void add_geometry_pointset(std::vector<Eigen::Vector3d>);
+
+
+#endif

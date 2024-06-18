@@ -98,11 +98,14 @@ public:
     // mode切り替えしない関数
     void remove_pointset_floor(PointSet &, PointSet &, Eigen::Vector3d);
 
-    // FIXME: 後でちゃんと関数化しよう
-    void projection_to_sphere();
     // switch文回避のための map
-    // typedef void (PointOperation::*mode_func)();
     std::unordered_map<int, std::function<void(void)>> switch_func;
+
+
+
+#ifdef OPEN3D_ENABLED
+    void projection_to_sphere();
+#endif
 };
 
 #endif

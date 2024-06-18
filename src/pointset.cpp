@@ -261,6 +261,9 @@ void PointSet::convert_to_rectangular()
     std::cout << "convert_conpleted: " << point3.size() << " " << point3_polar.size() << std::endl;
 }
 
+
+#ifdef OPEN3D_ENABLED
+
 void PointSet::radius_based_filter(size_t point_num, double radius)
 {
     std::cout << "radius_based_filter: radius" << radius << " num: " << point_num << std::endl;
@@ -274,3 +277,5 @@ void PointSet::radius_based_filter(size_t point_num, double radius)
     std::cout << "point3.size()" << point3.size() << std::endl;
     std::cout << "pointcloud.points_.size()" << pointcloud.points_.size() << std::endl;
 }
+
+#endif

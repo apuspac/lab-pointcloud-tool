@@ -6,7 +6,7 @@
  */
 
 #include "img_proc.hpp"
-#include "fmt/printf.h"
+// #include "fmt/printf.h"
 #include <opencv2/opencv.hpp>
 #include <utility>
 
