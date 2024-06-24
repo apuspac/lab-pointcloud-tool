@@ -262,6 +262,23 @@ void PointSet::convert_to_rectangular()
 }
 
 
+/**
+ * @brief 点群を高さで切り取る
+ *
+ * @param cutting_height 高さ方向のflag
+ * @param over_flag true: 大きい点を残す false: heightより小さい点を残す、
+ */
+void PointSet::cutting_by_height(Eigen::Vecotr3d cutting_height, bool over_flag);
+{
+
+
+
+}
+
+
+
+
+
 #ifdef OPEN3D_ENABLED
 
 void PointSet::radius_based_filter(size_t point_num, double radius)
@@ -277,5 +294,21 @@ void PointSet::radius_based_filter(size_t point_num, double radius)
     std::cout << "point3.size()" << point3.size() << std::endl;
     std::cout << "pointcloud.points_.size()" << pointcloud.points_.size() << std::endl;
 }
+
+
+/**
+ * @brief open3dのpointcloud detect floor
+ *
+ * @return open3d::geometry::PointCloud
+ */
+void DetectPlanarPatches()
+{
+    open3d::geometry::PointCloud pointcloud;
+
+
+}
+
+
+
 
 #endif

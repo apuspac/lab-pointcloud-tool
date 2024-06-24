@@ -96,6 +96,7 @@ public:
     std::vector<std::array<int, 2>> get_edge_all() { return edge2; }
 
     // remove
+    void cutting_by_height(Eigen::Vecotr3d, bool);
 
     // calc
     void convert_to_polar();

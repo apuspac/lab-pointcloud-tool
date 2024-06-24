@@ -295,7 +295,7 @@ void InstaImg::convert_to_unitsphere(PointSet &projected_img)
      * @brief uv座標をr=1の極座標に変換に変換する
      *
      */
-    auto equirectangular_to_sphere = [=, this](double u, double v)
+    auto equirectangular_to_sphere = [=](double u, double v)
     {
         u /= width;
         v /= height;
@@ -443,6 +443,7 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
 
 double ImgCalc::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison)
 {
+    std::cout << "compute_mat";
     if (reference.size() != comparison.size())
     {
         std::cout << "size not same" << std::endl

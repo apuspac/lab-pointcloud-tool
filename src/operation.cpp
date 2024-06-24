@@ -1240,6 +1240,14 @@ void PointOperation::remove_pointset_floor(PointSet &origin_point, PointSet &out
 }
 
 
+
+
+
+/** 
+ * @brief 画像, 点群の画像を作成して、mseを計算
+ *
+ *
+ * */
 void PointOperation::test_location()
 {
     // shift_test_w_stripe_patternを参考に実際の画像でやってみる
@@ -1288,14 +1296,14 @@ void PointOperation::test_location()
      * 点群を回転させ、 画像を生成 cv::Matに格納し返す。
      *
      */
-    auto make_img = [this, &image, &ply_point, &obj_io](double angle, std::string imgname)
+    auto make_img = [this, &image, &ply_point, &obj_io](double angle, [[maybe_unused]]std::string imgname)
     {
         // pointcloud rotate
         PointSet ply_point_rotate("rotate_point");
         ply_point_rotate.add_point(ply_point);
         ply_point_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(angle*M_PI / 180, Eigen::Vector3d::UnitZ())));
         InstaImg pointimg_lidar;
-        pointimg_lidar.make_thetaphiIMG_from_pointcloud(ply_point_rotate, std::pair<int, int>(image.get_width(), image.get_height()));
+        pointimg_lidar.make_thetaphiIMG_from_pointcloud(ply_point_rotate, std::pair<int, int>(image.get_width(), image.get_height()), true);
 
 #ifdef _DEBUG
         cv::imwrite("out/" + date + "/" + imgname + ".png", pointimg_lidar.get_mat());
@@ -1312,7 +1320,7 @@ void PointOperation::test_location()
     // 360°回転させ、mseを計算
     for (double i = 0; i <= 360; i++)
     {
-        double calc_mse = ImgCalc::compute_MSE(pointimg.get_mat(), make_img(i, "rote" + std::to_string(i)));
+        double calc_mse = ImgCalc::compute_MSE(insta_edge.get_mat(), make_img(i, "rote" + std::to_string(i)));
         mse_vec.push_back(calc_mse);
 #ifdef DEBUG
         std::cout << "angle: " << i << "mse: " << calc_mse<< std::endl;
@@ -1322,11 +1330,68 @@ void PointOperation::test_location()
     obj_io.output_dat("out/" + date + "/" + date + "mse.dat", mse_vec);
 
 
+
+    std::vector<double>::iterator minIt = std::min_element(mse_vec.begin(), mse_vec.end());
+    // *minItで最小値
+    long minIndex = std::distance(mse_vec.begin(), minIt);
+
+    std::cout << "min:" << *minIt << "minIndex: " << minIndex << std::endl;
+
+
+    // pointcloud rotate
+    PointSet ply_point_calc_rotate("rotate_point");
+    ply_point_calc_rotate.add_point(ply_point);
+    ply_point_calc_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(*minIt*M_PI / 180, Eigen::Vector3d::UnitZ())));
+    InstaImg pointimg_lidar_mse;
+    pointimg_lidar_mse.make_thetaphiIMG_from_pointcloud(ply_point_calc_rotate, std::pair<int, int>(image.get_width(), image.get_height()), true);
+
+    cv::imwrite("out/" + date + "/" + "mse_lidar" + ".png", pointimg_lidar_mse.get_mat());
+    obj_io.output_ply(ply_point_calc_rotate, "out/" + date + "/_" + "mse_lidar"+ ".ply");
+
+
+
 #ifdef MATPLOTLIB_ENABLED
     plt::plot(mse_vec);
     plt::show();
 #endif
 }
+
+
+
+
+// peakを見るために、一階差分の配列(size-1)を返す
+template<class T>
+std::vector<T> calculate_diff(std::vector<T> &mse_vec_lambda)
+{
+    std::vector<T> mse_diff_lambda;
+    for(auto itr = mse_vec_lambda.begin(); itr != mse_vec_lambda.end(); ++itr)
+    {
+        mse_diff_lambda.push_back(*itr - *(itr - 1));
+    }
+    return mse_diff_lambda;
+}
+
+
+// 一階差分との符号を確認して極値を返す。このとき、差がthreshold以上のものを持ってくる
+template<class T>
+std::vector<bool> find_local_max(std::vector<T> &mse_diff_lambda, double threshold)
+{
+
+    // size()で、falseで初期化。
+    std::vector<bool> mse_peak_lambda(mse_diff_lambda.size(), false);
+
+    for (auto itr = mse_diff_lambda.begin(); itr != mse_diff_lambda.end(); ++itr)
+    {
+        if (*itr > 0 && *itr * (*(itr - 1)) < 0 && *itr > threshold)
+        {
+            mse_peak_lambda[itr- mse_diff_lambda.begin()] = true;
+        }
+    }
+    return mse_peak_lambda;
+
+}
+
+
 
 
 /**
@@ -1367,7 +1432,7 @@ void PointOperation::shift_test_w_stripe_pattern()
      * 点群を回転させ、 画像を生成 cv::Matに格納し返す。
      *
      */
-    auto make_img = [this, &stitch_edge_point, &obj_io](double angle, std::string imgname)
+    auto make_img = [this, &stitch_edge_point, &obj_io](double angle, [[maybe_unused]]std::string imgname)
     {
         // pointcloud rotate
         PointSet stitch_edge_point_rotate("stitch_edge_point");
@@ -1404,32 +1469,6 @@ void PointOperation::shift_test_w_stripe_pattern()
 #endif
 
 
-    // peakを見るために、一階差分の配列(size-1)を返す
-    auto calculate_diff = []<class T>(std::vector<T> &mse_vec_lambda)
-    {
-        std::vector<T> mse_diff_lambda;
-        for(auto itr = mse_vec_lambda.begin(); itr != mse_vec_lambda.end(); ++itr)
-        {
-            mse_diff_lambda.push_back(*itr - *(itr - 1));
-        }
-        return mse_diff_lambda;
-    };
-
-    // 一階差分との符号を確認して極値を返す。このとき、差がthreshold以上のものを持ってくる
-    auto find_local_max = []<class T>(std::vector<T> &mse_diff_lambda, double threshold)
-    {
-        // size()で、falseで初期化。
-        std::vector<bool> mse_peak_lambda(mse_diff_lambda.size(), false);
-
-        for (auto itr = mse_diff_lambda.begin(); itr != mse_diff_lambda.end(); ++itr)
-        {
-            if (*itr > 0 && *itr * (*(itr - 1)) < 0 && *itr > threshold)
-            {
-                mse_peak_lambda[itr- mse_diff_lambda.begin()] = true;
-            }
-        }
-        return mse_peak_lambda;
-    };
 
 
     // plot, dat graph化の処理
