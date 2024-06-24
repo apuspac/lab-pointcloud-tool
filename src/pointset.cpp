@@ -227,7 +227,11 @@ void PointSet::convert_to_polar()
 
     if(is_empty_polar()){
         point3_polar.resize(point3.size());
+    }else{
+        point3_polar.clear();
+        point3_polar.resize(point3.size());
     }
+
     assert(point3_polar.size() == point3.size());
 
     for (auto &point : point3)
@@ -268,10 +272,28 @@ void PointSet::convert_to_rectangular()
  * @param cutting_height 高さ方向のflag
  * @param over_flag true: 大きい点を残す false: heightより小さい点を残す、
  */
-void PointSet::cutting_by_height(Eigen::Vecotr3d cutting_height, bool over_flag);
+void PointSet::cutting_by_height(double cutting_height, bool over_flag)
 {
+    std::vector<Eigen::Vector3d> point3_polar_filtered;
 
+    for (auto &point : point3)
+    {
+        if(over_flag){
+            if (point(2) > cutting_height)
+            {
+                point3_polar_filtered.push_back(point);
+            }
+        }
+        else{
+            if (point(2) < cutting_height)
+            {
+                point3_polar_filtered.push_back(point);
+            }
+        }
+    }
 
+    point3 = point3_polar_filtered;
+    convert_to_polar();
 
 }
 

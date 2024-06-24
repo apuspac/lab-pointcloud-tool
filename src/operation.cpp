@@ -1280,7 +1280,17 @@ void PointOperation::test_location()
 
     // # make point -> theta/phi-img
     InstaImg pointimg;
-    pointimg.make_thetaphiIMG_from_pointcloud(ply_point, std::pair<int, int>(image.get_width(), image.get_height()), true);
+
+
+    
+    ply_point.cutting_by_height(1.85, false);
+    ply_point.cutting_by_height(-1.0,true);
+
+
+
+
+
+    pointimg.make_thetaphiIMG_from_pointcloud(ply_point, std::pair<int, int>(image.get_width(), image.get_height()), false);
     std::cout << "make_img" << std::endl;
 #ifdef DEBUG
     cv::imwrite("out/" + date + "/" + "edge.png", insta_edge.get_mat());
@@ -1288,9 +1298,15 @@ void PointOperation::test_location()
 #endif
 
 
+
     // double mse_tmp = ImgCalc::compute_MSE(pointimg.get_mat(), make_img(i, "rote" + std::to_string(i)));
     double mse_tmp = ImgCalc::compute_MSE(insta_edge.get_mat(), pointimg.get_mat());
     std::cout << "mse: " << mse_tmp << std::endl;
+
+
+
+
+    // rotate start
 
     /**
      * 点群を回転させ、 画像を生成 cv::Matに格納し返す。

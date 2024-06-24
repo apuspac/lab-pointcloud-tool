@@ -520,7 +520,7 @@ std::vector<int> ImgCalc::shift(std::vector<int> target, int size_phi, int size_
  * @param img_size : 画像サイズ (height, width)
  * @param gaussian_flag
  */
-void InstaImg::make_thetaphiIMG_from_panorama(std::pair<int, int> img_size, bool gaussian_flag)
+void InstaImg::make_thetaphiIMG_from_panorama(std::pair<int, int> img_size)
 {
     // 画像の初期化
     cv::Mat imgmat(img_size.first, img_size.second, CV_8UC1, cv::Scalar(0));
