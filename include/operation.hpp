@@ -9,7 +9,7 @@
 #include "pointset.hpp"
 #include "object_io.hpp"
 #include "calc_pointset.hpp"
-#include "capture_boxpoint.hpp"
+#include "capture_point.hpp"
 #include "img_proc.hpp"
 
 #include <iomanip>
@@ -82,13 +82,14 @@ public:
     // ファイル名を出力
     void print();
 
-    // ここに実行listを作ってmodeで切り替えしたい。
+    // switch文回避のための map
+    std::unordered_map<int, std::function<void(void)>> switch_func;
+
+    // mode切り替えて使う
     void transform_rotate();
     void transform_rotate_simulation();
     void rotate();
     void rotate_simulation();
-    void capture_boxpoint();
-    void capture_segmentation_point();
     void capture_pointset();
     void capture_point_inner_bbox();
     void old_detection_correspoint();
@@ -96,10 +97,10 @@ public:
     void test_location();
 
     // mode切り替えしない関数
+    void capture_bbox_point(PointSet &, DetectionData &, Viewer3D &);
+    void capture_mask_point(PointSet &, DetectionData &, Viewer3D &);
     void remove_pointset_floor(PointSet &, PointSet &, Eigen::Vector3d);
 
-    // switch文回避のための map
-    std::unordered_map<int, std::function<void(void)>> switch_func;
 
 
 

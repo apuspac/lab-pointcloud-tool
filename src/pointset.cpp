@@ -10,17 +10,18 @@
  */
 void PointSet::print()
 {
+#ifdef DEBUG
     std::cout << "Point: " << name << std::endl;
 
-    for (const auto &tmp : point3)
-    {
-        std::cout << std::setprecision(15) << tmp.transpose() << std::endl;
+    for (const auto &tmp : point3) {
+      std::cout << std::setprecision(15) << tmp.transpose() << std::endl;
     }
     std::cout << std::endl;
     for (const auto &tmp : edge2)
     {
         std::cout << tmp.at(0) << " " << tmp.at(1) << std::endl;
     }
+#endif
 }
 
 void PointSet::print_polar()

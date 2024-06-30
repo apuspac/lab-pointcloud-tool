@@ -1,4 +1,4 @@
-#include "capture_boxpoint.hpp"
+#include "capture_point.hpp"
 
 void BBox::print()
 {
@@ -156,7 +156,7 @@ bool check_point_in_polygon(Eigen::Vector3d target_point, Eigen::Vector3d tri_0,
  * @param xmax
  * @param ymax
  */
-void CaptureBoxPoint::set_bbox(double xmin, double ymin, double xmax, double ymax)
+void CaptureDetectPoint::set_bbox(double xmin, double ymin, double xmax, double ymax)
 {
     // "xmin":62.5458488464 "ymin":135.1288757324, "xmax":206.3257598877, "ymax":380.7976074219,
     // Eigen p1,p2,p3,p4;
@@ -175,7 +175,7 @@ void CaptureBoxPoint::set_bbox(double xmin, double ymin, double xmax, double yma
  * @param detect_bbox バウンディングボックスの点
  * @param bbox_point_forPrint バウンディングボックスと直線を描画する用
  */
-void CaptureBoxPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, BBox &detect_bbox, PointSet &bboxpoint_forPrint)
+void CaptureDetectPoint::capture_bbox(PointSet &plypoint, PointSet &capture_point, BBox &detect_bbox, PointSet &bboxpoint_forPrint)
 {
 
     // parts番号と あればname取得
@@ -405,14 +405,14 @@ auto check_xy_region = [](Eigen::Vector3d point)
  *
  * @param plypoint 抽出対象の点群
  * @param capture_point 抽出した点群を格納するPointSet
- * @param detect_mask 検出したマスクの点
+ * @param segmentation_point 検出したマスクの点を3次元に変換した点
  * @param segpoint_with_line 直線を描画する用に出力するPointSet
  */
-void CaptureBoxPoint::capture_segmentation_distance(PointSet &plypoint, PointSet &capture_point, PointSet &segmentation_point, PointSet &segpoint_with_line)
+void CaptureDetectPoint::capture_segmentation_distance(PointSet &plypoint, PointSet &capture_point, PointSet &segmentation_point, [[maybe_unused]]PointSet &segpoint_with_line)
 {
     std::cout << "capture_segmentation_point" << std::endl;
-
     segmentation_point.print();
+
 
     /**
      * @brief 点と直線の距離を計算
@@ -458,6 +458,9 @@ void CaptureBoxPoint::capture_segmentation_distance(PointSet &plypoint, PointSet
         segpoint_with_line.add_edge(to_zero);
     };
 
+
+    // open3dで直線を確認するための処理
+
     // 原点とのedgeを作る用に 原点を追加
     Eigen::Vector3d zero = {0, 0, 0};
     segpoint_with_line.add_point(zero);
@@ -475,14 +478,13 @@ void CaptureBoxPoint::capture_segmentation_distance(PointSet &plypoint, PointSet
             {
                 if (calc_distance_to_line(target_point, target_line) < allow_range)
                 {
-
                     capture_point.add_point(target_point);
                 }
             }
         }
     }
 
-    std::cout << "uwaa";
+
 }
 
 /**
@@ -505,7 +507,7 @@ void use_histgram(PointSet captured_point)
  * @param detect_mask セグメンテーションで検出したmaskのpixel
  * @param detect_mask_forprint 直線を描画する用に出力するPointSet
  */
-void CaptureBoxPoint::capture_segmentation_angle(PointSet &plypoint, PointSet &capture_point, Mask &detect_mask, PointSet &detect_mask_forprint)
+void CaptureDetectPoint::capture_segmentation_angle(PointSet &plypoint, PointSet &capture_point, Mask &detect_mask, PointSet &detect_mask_forprint)
 {
     std::cout << "capture_segmentation_point" << std::endl;
 
@@ -582,4 +584,12 @@ void CaptureBoxPoint::capture_segmentation_angle(PointSet &plypoint, PointSet &c
         // print用に追加
         add_edge(mask_point);
     }
+}
+
+
+void DetectionData::check_bbox_data_load()
+{
+    assert(get_bbox_data().size() > 0);
+    assert(get_bbox_data().at(0).get_oneIMGbbox_all().size() > 0);
+
 }

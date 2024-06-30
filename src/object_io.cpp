@@ -566,8 +566,8 @@ int ObjectIO::load_detection_json_file(std::string filepath, DetectionData &dete
 
     for (const auto &detect_img : merge_data.GetArray())
     {
-        BBoxData bboxdata;
-        MaskData maskdata;
+        BBox_OneIMG bboxdata;
+        Mask_OneIMG maskdata;
 
         // file_name
         bboxdata.set_img_name(detect_img["file_name"].GetString());
