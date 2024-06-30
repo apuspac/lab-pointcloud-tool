@@ -15,7 +15,7 @@ void PointOperation::mode_select()
     std::cout << "mode select" << std::endl;
     switch_func[1] = std::bind(&PointOperation::transform_rotate, this);
     switch_func[2] = std::bind(&PointOperation::rotate, this);
-    switch_func[3] = std::bind(&PointOperation::capture_point_inner_bbox, this);
+    switch_func[3] = std::bind(&PointOperation::capture_pointset, this);
     switch_func[4] = std::bind(&PointOperation::old_detection_correspoint, this);
     switch_func[5] = std::bind(&PointOperation::shift_test_w_stripe_pattern, this);
     switch_func[0] = std::bind(&PointOperation::test_location, this);
@@ -24,7 +24,7 @@ void PointOperation::mode_select()
     // switch_func[*] = std::bind(&PointOperation::transform_rotate_simulation, this);
     // switch_func[*] = std::bind(&PointOperation::capture_boxpoint, this);
     // switch_func[*] = std::bind(&PointOperation::capture_segmentation_point, this);
-    // switch_func[*] = std::bind(&PointOperation::capture_pointset, this);
+    // switch_func[*] = std::bind(&PointOperation::capture_point_inner_bbox, this);
 }
 
 void PointOperation::set_date()
@@ -210,112 +210,6 @@ void PointOperation::transform_rotate()
     obj_io.output_ply(corresp_img_point, "out/" + date + "/" + "corresp-" + corresp_img_point.get_name() + ".ply");
 }
 
-/**
- * @brief 回転と並進を計算する(シミュレーション用)
- *
- * plyfileを読み込み、対応点をpickup, 対応点を使用して回転と並進を計算する。
- * 基本行列Eを求め、分解して tRを計算
- *
- * 読み込むファイルがどちらもplyファイルなのに注意。
- * 回転と姿勢だけが違うplyファイルを読み込んで、 原点合わせをする。
- *
- * 実行例:
- * ./Rotation   --mode 1
- *              --ply_cp plyfile.dat
- *              --ply_cp img.dat
- *              --ply plyname.ply
- *              --img ../../img/kyoiku.JPG
- *              --dir ../../ply_data/transform_rotate_sim/
- *              >! ../../ply_data/transform_rotate_sim/out.dat
- *
- */
-void PointOperation::transform_rotate_simulation()
-{
-    std::cout << "transform_rotate_simulation::" << std::endl;
-    ObjectIO obj_io;
-
-    set_date();
-    obj_io.create_dir("out/" + date);
-
-    // load plypoint
-    PointSet ply_point("corresp_plypoint");
-    obj_io.load_ply_point_file( ply_point, corresp_ply_file_path.at(0) );
-    ply_point.print();
-
-    // load imgpoint(plyfile)
-    PointSet img_ply_point("corresp_imgpoint");
-    obj_io.load_ply_point_file(img_ply_point, corresp_ply_file_path.at(1) );
-    img_ply_point.print();
-
-    //  対応点をピックアップ
-    CalcPointSet calc;
-    PointSet pickup_img("pickup_img"), pickup_ply("pickup_ply");
-    calc.pickup_corresp_point(img_ply_point, ply_point, pickup_img, pickup_ply);
-    pickup_img.print();
-    pickup_ply.print();
-
-    // img-point を 方向ベクトルへconvert
-    PointSet pickup_img_convert = calc.conversion_ply_to_img_point(pickup_img);
-    pickup_img_convert.print();
-
-    // 基本行列計算
-    std::vector<Eigen::Matrix<double, 9, 1>> xi_vec = calc.create_xi_vector(pickup_img_convert, pickup_ply);
-
-    // 行列M計算
-    Eigen::Matrix<double, 9, 9> matrix_M = calc.calc_matrix_M(xi_vec);
-
-    // 行列Mの固有値分解から基本行列Eを計算
-    Eigen::Matrix3d matrix_E = calc.calc_essential_matrix(matrix_M);
-
-    // 基本行列Eから並進t^hatを計算
-    Eigen::Vector3d vector_t_diff_scale = calc.calc_translation_t(matrix_E);
-
-    pickup_img_convert.print();
-    pickup_ply.print();
-
-    // 並進tの符号チェック
-    calc.check_sign_translation_t(pickup_img_convert, pickup_ply, vector_t_diff_scale, matrix_E);
-
-    // 回転行列の推定
-    Eigen::Matrix3d matrix_R = calc.calc_rotation_matrix_from_essential_matrix(matrix_E, vector_t_diff_scale);
-
-    // scaleの推定
-    double scale = calc.calc_scale_of_translation_t(pickup_img_convert, pickup_ply, matrix_R, vector_t_diff_scale);
-
-    Eigen::Vector3d translation_vector = scale * vector_t_diff_scale;
-
-    // 理論値計算する場合
-    // Eigen::Matrix3d Rironchi;
-    // Eigen::Vector3d rotate_axis = {0, 1.0, 0};
-    // double rotate_angle = 30.0;
-    // Rironchi = calc.calc_theory_value_Rotation_Matrix(rotate_axis, rotate_angle);
-
-    std::cout << "----RESULT" << std::endl
-              << "Essential Matrix:" << std::endl
-              << matrix_E << std::endl
-              << std::endl
-              << "Rotation Matrix:" << std::endl
-              << matrix_R << std::endl
-              << std::endl
-              << "scale" << std::endl
-              << scale << std::endl
-              << std::endl
-              << "translation Vector: " << std::endl
-              << translation_vector << std::endl
-              << std::endl;
-
-    // 求めた回転行列から回転軸と角度を計算する
-    calc.calc_rotation_axis_from_matrix_R(matrix_R);
-
-    // 求めた回転並進を適用
-    ply_point.rotate(matrix_R);
-    ply_point.transform(translation_vector);
-
-    // 出力
-    obj_io.output_ply(ply_point, "out/" + date + ply_point.get_name() + ".ply");
-    obj_io.output_ply(pickup_img, "out/" + date + pickup_img.get_name() + ".ply");
-    obj_io.output_ply(pickup_ply, "out/" + date + pickup_ply.get_name() + ".ply");
-}
 
 /**
  * @brief 対応点から回転のみを計算する
@@ -372,129 +266,50 @@ void PointOperation::rotate()
 }
 
 /**
- * @brief 回転を計算する(シミュレーション用)
- * 
- * 生成した 回転のみが変わっているplyファイルを読み込み、
- * 対応点をpickup, 回転と並進を計算する。
- * 対応を得る際に pointの番号で指定しているため 完全なコピーのplyファイルじゃないとうまくいかない。
- *
- * plyfileを読み込み、対応点をpickup, 対応点を使用して回転と並進を計算する。
- * 基本行列Eを求め、分解して tRを計算
- *
- * 読み込むファイルがどちらもplyファイルなのに注意。
- *
- * 実行例:
- * ./Rotation   --mode 3
- *              --ply_cp plyfile.dat
- *              --ply_cp img.dat
- *              --ply plyname.ply
- *              --img ../../img/kyoiku.JPG
- *              --dir ../../ply_data/transform_rotate_sim/
- *              >! ../../ply_data/transform_rotate_sim/out.dat
- *
- */
-void PointOperation::rotate_simulation()
-{
-    std::cout << "Rotation only simulation::" << std::endl;
-    ObjectIO obj_io;
-
-    // load 対応点 ply
-    PointSet corresp_ply_point("corresp_plypoint");
-    obj_io.load_ply_point_file(corresp_ply_point, corresp_ply_file_path.at(0) );
-
-    // load 対応点 img_point.ply
-    PointSet corresp_imgply_point("corresp_imgpoint");
-    obj_io.load_ply_point_file(corresp_imgply_point, corresp_ply_file_path.at(1) );
-
-    //  対応点をピックアップ
-    CalcPointSet calc;
-    PointSet pickup_img("pickup_img"), pickup_ply("pickup_ply");
-    calc.pickup_corresp_point(corresp_imgply_point, corresp_ply_point, pickup_img, pickup_ply);
-    pickup_img.print();
-    pickup_ply.print();
-
-    // 画像対応点を 方向ベクトルへconvert
-    PointSet pickup_img_convert = calc.conversion_ply_to_img_point(pickup_img);
-    pickup_img_convert.print();
-
-    // 相関行列C
-    double weight = 1.0;
-    Eigen::Matrix3d correlation_C = calc.calc_correlation_C(pickup_ply, pickup_img_convert, weight);
-
-    // 回転行列計算
-    Eigen::Matrix3d matrix_R = calc.calc_rotation_matrix_from_correlation_c(correlation_C);
-
-    // 回転行列から回転軸・角度を計算
-    calc.calc_rotation_axis_from_matrix_R(matrix_R);
-
-    // 求めた回転並進を適用
-    corresp_ply_point.rotate(matrix_R);
-
-    // 出力
-    obj_io.output_ply(corresp_ply_point, corresp_ply_point.get_name() + ".ply");
-}
-
-/**
  * @brief バウンディングボックスデータと原点とでできる四角錐の中にある点群を抽出する。
+ * これは1つのBboxに対してのみ実行するテスト用。
  *
  *
  *  * 実行例:
- * ./Rotation   --mode 4
- *              --img_cp img.dat
- *              --ply ply_data_name.ply
- *              --img ../../img/kyoiku.JPG
- *              --dir ../../ply_data/capture_bbox/
+ * ./Rotation   --ply plyfile.ply,
+ *              --img img/pic_point1.png,
+ *              --json data/detections_test.json,
+ *              --mode *****,
  *              >! ../../ply_data/capture_bbox/out.dat
  *
  */
-void PointOperation::capture_boxpoint()
+void PointOperation::capture_bbox_point(PointSet &ply_point_bbox, DetectionData &detect_bbox, [[maybe_unused]] Viewer3D &check_ply_bbox)
 {
     std::cout << "capture boxpoint::" << std::endl;
     ObjectIO obj_io;
 
-    // load plydata
-    PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_point, ply_file_path.at(0));
 
-    // load bbox
-    DetectionData detect;
-    obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
+    CaptureDetectPoint capbox;
 
-    // // load bbox
-    // PointSet bbox_img_point("corresp_imgpoint");
-    // obj_io.load_img_point_file(corresp_img_file_name.at(0), img_file_path.at(0), bbox_img_point);
-    // bbox_img_point.print();
-
-    CaptureBoxPoint capbox;
-
-    // 抽出したポイントを格納するPointSetの宣言
-    // どちらも複数の点をまとめる。
+    // 抽出したpointを格納
     PointSet capture_ply("capture_bbox_point");
-    PointSet bbox_print("bbox");
+    // 可視化用
+    PointSet bbox_visualization("bbox");
 
     // 1つのBBOXで実験
     PointSet one_capture_ply;
     PointSet one_bbox_forprint;
-    BBox one_bbox = detect.get_bbox_data().at(0).get_bbox_all().at(0);
-    capbox.capture_bbox(ply_point, one_capture_ply, one_bbox, one_bbox_forprint);
+    BBox one_bbox = detect_bbox.get_bbox_data().at(0).get_oneIMGbbox_all().at(0);
+    capbox.capture_bbox(ply_point_bbox, one_capture_ply, one_bbox, one_bbox_forprint);
 
     // 1つのBBOX結果を格納
-    // one_capture_ply.print();
-    // one_bbox_forprint.print();
     capture_ply.add_point(one_capture_ply);
-    bbox_print.add_point(one_bbox_forprint);
 
-    std::cout << "check_ply_visualization" << std::endl;
+    obj_io.output_ply(capture_ply, "out/" + date + "/" + capture_ply.get_name() + ".ply");
 
     #ifdef OPEN3D_ENABLED
-    Viewer3D check_ply("check_ply");
-    check_ply.add_axes();
-    check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
-    check_ply.add_geometry_pointset(capture_ply.get_point_all(), 0);
-    check_ply.add_geometry_pointset(bbox_print.get_point_all(), 1);
-    check_ply.add_line_origin(bbox_print.get_point_all(), 2);
-
-    check_ply.show_using_drawgeometries();
+    // visualiztion
+    bbox_visualization.add_point(one_bbox_forprint);
+    check_ply_bbox.add_axes();
+    check_ply_bbox.add_geometry_pointset(ply_point_bbox.get_point_all(), 3);
+    check_ply_bbox.add_geometry_pointset(capture_ply.get_point_all(), 0);
+    check_ply_bbox.add_geometry_pointset(bbox_visualization.get_point_all(), 1);
+    check_ply_bbox.add_line_origin(bbox_visualization.get_point_all(), 2);
     #endif
 
 }
@@ -502,73 +317,53 @@ void PointOperation::capture_boxpoint()
 /**
  * @brief 検出結果の画素値から 点群を抽出する処理。
  * セグメンテーションの画素値の方向にある点群を抽出する。
+ * こちらも1つのMaskに対してのみ行うテスト用
  *
- * 実行例:
- * ./Rotation   --mode 5
- *              --img_cp img.dat
- *              --ply ply_data_name.ply
- *              --dir ../../ply_data/capture_bbox/
- *              >! ../../ply_data/capture_bbox/out.dat
- *
+ *  実行例:
+ * ./Rotation   --ply plyfile.ply,
+ *              --img img/pic_point1.png,
+ *              --json data/detections_test.json,
+ *              --mode *****,
+ *              >! ../../ply_data/capture_segmentation/out.dat
  */
-void PointOperation::capture_segmentation_point()
+void PointOperation::capture_mask_point(PointSet &ply_point_mask, DetectionData &detect_mask, [[maybe_unused]] Viewer3D &check_ply_mask)
 {
     std::cout << "capture segmentation point" << std::endl;
-
     ObjectIO obj_io;
 
-    // load plypoint
-    PointSet ply_point("plydata");
-    obj_io.load_ply_point_file(ply_point, ply_file_path.at(0));
+    CaptureDetectPoint capbox;
 
-    // load segmentation data
-    DetectionData detect;
-    obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
-
-    // load segmentation data
-    // PointSet segmentation_point("corresp_imgpoint");
-    // obj_io.load_img_point_file(corresp_img_file_name.at(0), default_dir_path, img_file_path.at(0), segmentation_point);
-    // segmentation_point.print();
-
-    CaptureBoxPoint capbox;
-
-    // 抽出したポイントを格納するPointSetの宣言
-    // どちらも複数点をまとめる
+    // 抽出したポイントを格納
     PointSet capture_ply("capture_segmentation_point");
-    PointSet mask_print("segmentation_mask_point");
+    PointSet mask_visualization("segmentation_mask_point");
 
     // 一枚の画像からのMaskDataを渡す
     PointSet one_mask("one_img_segmentation_mask_point");
     PointSet one_mask_forprint("oneimg_segmentation_mask_forprint");
-    Mask one_img_mask = detect.get_mask_data().at(0).get_mask_data_all().at(0);
+    Mask one_img_mask = detect_mask.get_mask_data().at(0).get_mask_data_all().at(0);
 
-    capbox.capture_segmentation_angle(ply_point, one_mask, one_img_mask, one_mask_forprint);
+    capbox.capture_segmentation_angle(ply_point_mask, one_mask, one_img_mask, one_mask_forprint);
 
     // 結果を格納
     capture_ply.add_point(one_mask);
-    mask_print.add_point(one_mask_forprint);
-
-
-#ifdef OPEN3D_ENABLED
-    //  Check Result
-    Viewer3D check_ply("check_ply_segmentation");
-    check_ply.add_axes();
-    check_ply.add_geometry_pointset(ply_point.get_point_all(), 3);
-    check_ply.add_geometry_pointset(capture_ply.get_point_all(), 0);
-    check_ply.add_geometry_pointset(mask_print.get_point_all(), 1);
-    check_ply.add_line_origin(mask_print.get_point_all(), 2);
-
-    check_ply.show_using_drawgeometries();
-    // one_mask.add_point(one_img_mask.get_mask_xyz().at(0));
-#endif
+    mask_visualization.add_point(one_mask_forprint);
 
     obj_io.output_ply(capture_ply, "out/" + date + "/" + capture_ply.get_name() + ".ply");
-    // obj_io.output_ply(segline_point, default_dir_path + segline_point.get_name() + ".ply");
+
+#ifdef OPEN3D_ENABLED
+    //  可視化用に追加
+    check_ply_mask.add_axes();
+    check_ply_mask.add_geometry_pointset(ply_point_mask.get_point_all(), 3);
+    check_ply_mask.add_geometry_pointset(capture_ply.get_point_all(), 0);
+    check_ply_mask.add_geometry_pointset(mask_visualization.get_point_all(), 1);
+    check_ply_mask.add_line_origin(mask_visualization.get_point_all(), 2);
+#endif
+
 }
 
 /**
  * @brief BBOXとセグメンテーションデータの画素値に対応した点群を抽出する処理。
- * capture_bboxとcapture_segmentation_pointを組み合わせたもの。
+ * capture_bboxとcapture_segmentation_pointを組み合わせたい。
  *
  */
 void PointOperation::capture_pointset()
@@ -584,71 +379,35 @@ void PointOperation::capture_pointset()
     // objectIOに jsonデータ格納のプログラムを作る
     DetectionData detect;
     obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
-
-    CaptureBoxPoint capbox;
-
-    // 抽出したポイントを格納 (とりあえず、別々に出力)
-    PointSet capture_ply("capture_bbox_point");
-    PointSet bbox_point("bbox");
-
-    detect.get_bbox_data().at(0).get_bbox_all().at(0).print();
-
-    // とりあえず 最初の1つだけ取り出す。
-    BBox one_img_bbox = detect.get_bbox_data().at(0).get_bbox_all().at(0);
-    capbox.capture_bbox(ply_point, capture_ply, one_img_bbox, bbox_point);
-
-    std::cout << ply_point.get_point_all().at(0) << std::endl;
+    
+    detect.check_bbox_data_load();
 
 #ifdef OPEN3D_ENABLED
     Viewer3D check_ply("plyfile");
-    check_ply.add_axes();
-    check_ply.add_geometry_pointset(ply_point.get_point_all(), 0);
-
-    check_ply.show_using_drawgeometries();
 #endif
 
-    // --------- capture segmentation point -------------
-    // 抽出したポイントを格納
-    PointSet capture_ply_seg("capture_segmentation_point");
-    // segmentation_lineを格納
-    PointSet segline_point("segmentation_point");
+    capture_bbox_point(ply_point, detect, check_ply);
+    capture_mask_point(ply_point, detect, check_ply);
 
-    // とりあえず 最初の1つだけ取り出す。
-    Mask one_img_mask = detect.get_mask_data().at(0).get_mask_data_all().at(0);
-    PointSet one_mask("segmask_point");
-    one_mask.add_point(one_img_mask.get_mask_xyz().at(0));
+    CaptureDetectPoint capbox;
 
-    capbox.capture_segmentation_distance(ply_point, capture_ply_seg, one_mask, segline_point);
+    // 抽出したポイントを格納するPointSet
+    PointSet captured_ply("capture_bbox_point");
+    PointSet captured_bbox_point("bbox");
+
+
+
 
 #ifdef OPEN3D_ENABLED
-    Viewer3D check_window("bbox");
-    // ply_point: 元のply
-    // capture_ply: 切り出したbboxの中の点群
-    // one_img_bbox: bboxそのもの
-    // bbox_point: bboxと原点とのline
-    check_window.add_axes();
-    check_window.add_geometry_pointset(ply_point.get_point_all(), 3);
-    check_window.add_geometry_pointset(capture_ply.get_point_all(), 0);
-    check_window.add_geometry_pointset(one_img_bbox.get_xyz(), 1);
-    check_window.add_line_origin(bbox_point.get_point_all(), 2);
-
-    check_window.show_using_drawgeometries();
-
-    Viewer3D check_mask("mask");
-
-    // plypoint:切り出し元のファイル
-    // capture_ply_seg: maskで切り出したpoint
-    // segline_point: maskpointと原点をつなぐline
-    check_mask.add_axes();
-    check_mask.add_geometry_pointset(ply_point.get_point_all(), 0);
-    check_mask.add_geometry_pointset(capture_ply_seg.get_point_all(), 0);
-    check_mask.add_geometry_pointset(segline_point.get_point_all(), 3);
-    check_mask.add_line_origin(segline_point.get_point_all(), 1);
-
-    check_mask.show_using_drawgeometries();
-
+    check_ply.add_axes();
+    check_ply.show_using_drawgeometries();
 #endif
 }
+
+
+
+
+
 
 /**
  * @brief bboxの中にある点群を抽出する処理
@@ -670,27 +429,6 @@ void PointOperation::capture_point_inner_bbox()
     PointSet ply_point("plydata");
     obj_io.load_ply_point_file(ply_point, ply_file_path.at(0));
 
-    // ply_point.print();
-#ifdef _DEBUG  // 手動で回転させる
-    CalcPointSet calc;
-    Eigen::Matrix3d matrix_R_1 = calc.calc_theory_value_Rotation_Matrix(Eigen::Vector3d(0, 0, 1), 23.0);
-    // matrix_R_1 << 0.948577875082123, -0.276966456237335, 0.153263162645223,
-    //     0.281128427105882, 0.959652958205339, -0.00574519631639421,
-    //     -0.145488220752254, 0.0485363979614587, 0.988168708113786;
-
-    // 5
-    Eigen::Matrix3d matrix_R_2 = calc.calc_theory_value_Rotation_Matrix(Eigen::Vector3d(0, 1, 0), 2);
-
-    Eigen::Matrix3d matrix_R_3 = calc.calc_theory_value_Rotation_Matrix(Eigen::Vector3d(1, 0, 0), -1.0);
-    // Eigen::Matrix3d matrix_R_3 = calc.calc_theory_value_Rotation_Matrix(Eigen::Vector3d(0, 0, 1), 10.0);
-    calc.calc_rotation_axis_from_matrix_R(matrix_R_1);
-
-    ply_point.rotate(matrix_R_1);
-    ply_point.rotate(matrix_R_2);
-    ply_point.rotate(matrix_R_3);
-
-    ply_point.transform(Eigen::Vector3d(0, 0, 0.05));
-#endif
 
     // load bbox
     DetectionData detect;
@@ -701,10 +439,12 @@ void PointOperation::capture_point_inner_bbox()
 
     // すべてのパーツごとの点群を格納
     std::vector<std::vector<PointSet>> all_captured_point;
+    // bboxの可視化
     std::vector<std::vector<PointSet>> all_bbox_visualization;
+    // 抽出したパーツの重心
     std::vector<std::vector<PointSet>> all_center_of_gravity;
 
-    // BBoxから 点群を抽出する
+    // ==== bboxの中にある点群を抽出する処理
     for (auto &in_img_bbox : detect.get_bbox_data())
     {
         // 複数の点に対応する。
@@ -715,9 +455,9 @@ void PointOperation::capture_point_inner_bbox()
         int for_histgram_output_count = 0;
 
         // 一つの画像の中の複数のBBoxを扱う
-        for (auto &one_bbox : in_img_bbox.get_bbox_all())
+        for (auto &one_bbox : in_img_bbox.get_oneIMGbbox_all())
         {
-            CaptureBoxPoint capbox;
+            CaptureDetectPoint capbox;
 
             // 抽出したポイントを格納するPointSetの宣言
             PointSet captured_point_inner_bbox("captured_point_inner_bbox");
@@ -1240,6 +980,14 @@ void PointOperation::remove_pointset_floor(PointSet &origin_point, PointSet &out
 }
 
 
+
+
+
+/** 
+ * @brief 画像, 点群の画像を作成して、mseを計算
+ *
+ *
+ * */
 void PointOperation::test_location()
 {
     // shift_test_w_stripe_patternを参考に実際の画像でやってみる
@@ -1272,7 +1020,17 @@ void PointOperation::test_location()
 
     // # make point -> theta/phi-img
     InstaImg pointimg;
-    pointimg.make_thetaphiIMG_from_pointcloud(ply_point, std::pair<int, int>(image.get_width(), image.get_height()), true);
+
+
+    
+    ply_point.cutting_by_height(1.5, false);
+    ply_point.cutting_by_height(-1.0,true);
+
+
+
+
+
+    pointimg.make_thetaphiIMG_from_pointcloud(ply_point, std::pair<int, int>(image.get_width(), image.get_height()), false);
     std::cout << "make_img" << std::endl;
 #ifdef DEBUG
     cv::imwrite("out/" + date + "/" + "edge.png", insta_edge.get_mat());
@@ -1280,22 +1038,28 @@ void PointOperation::test_location()
 #endif
 
 
+
     // double mse_tmp = ImgCalc::compute_MSE(pointimg.get_mat(), make_img(i, "rote" + std::to_string(i)));
     double mse_tmp = ImgCalc::compute_MSE(insta_edge.get_mat(), pointimg.get_mat());
     std::cout << "mse: " << mse_tmp << std::endl;
+
+
+
+
+    // rotate start
 
     /**
      * 点群を回転させ、 画像を生成 cv::Matに格納し返す。
      *
      */
-    auto make_img = [this, &image, &ply_point, &obj_io](double angle, std::string imgname)
+    auto make_img = [this, &image, &ply_point, &obj_io](double angle, [[maybe_unused]]std::string imgname)
     {
         // pointcloud rotate
         PointSet ply_point_rotate("rotate_point");
         ply_point_rotate.add_point(ply_point);
         ply_point_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(angle*M_PI / 180, Eigen::Vector3d::UnitZ())));
         InstaImg pointimg_lidar;
-        pointimg_lidar.make_thetaphiIMG_from_pointcloud(ply_point_rotate, std::pair<int, int>(image.get_width(), image.get_height()));
+        pointimg_lidar.make_thetaphiIMG_from_pointcloud(ply_point_rotate, std::pair<int, int>(image.get_width(), image.get_height()), true);
 
 #ifdef _DEBUG
         cv::imwrite("out/" + date + "/" + imgname + ".png", pointimg_lidar.get_mat());
@@ -1308,11 +1072,9 @@ void PointOperation::test_location()
     std::cout << "MSE calc" << std::endl;
     std::vector<double> mse_vec, mse_vec_ave;
 
-
-    // 360°回転させ、mseを計算
     for (double i = 0; i <= 360; i++)
     {
-        double calc_mse = ImgCalc::compute_MSE(pointimg.get_mat(), make_img(i, "rote" + std::to_string(i)));
+        double calc_mse = ImgCalc::compute_MSE(insta_edge.get_mat(), make_img(i, "rote" + std::to_string(i)));
         mse_vec.push_back(calc_mse);
 #ifdef DEBUG
         std::cout << "angle: " << i << "mse: " << calc_mse<< std::endl;
@@ -1322,11 +1084,68 @@ void PointOperation::test_location()
     obj_io.output_dat("out/" + date + "/" + date + "mse.dat", mse_vec);
 
 
+    std::vector<double>::iterator minIt = std::min_element(mse_vec.begin(), mse_vec.end());
+    // *minItで最小値
+    long minIndex = std::distance(mse_vec.begin(), minIt);
+
+    std::cout << "min:" << *minIt << "minIndex: " << minIndex << std::endl;
+
+
+    // pointcloud rotate
+    PointSet ply_point_calc_rotate("rotate_point");
+    ply_point_calc_rotate.add_point(ply_point);
+    ply_point_calc_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex)*M_PI / 180, Eigen::Vector3d::UnitZ())));
+    // ply_point_calc_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(24.0*M_PI / 180, Eigen::Vector3d::UnitZ())));
+    InstaImg pointimg_lidar_mse;
+    pointimg_lidar_mse.make_thetaphiIMG_from_pointcloud(ply_point_calc_rotate, std::pair<int, int>(image.get_width(), image.get_height()), true);
+
+    cv::imwrite("out/" + date + "/" + "mse_lidar" + ".png", pointimg_lidar_mse.get_mat());
+    obj_io.output_ply(ply_point_calc_rotate, "out/" + date + "/_" + "mse_lidar"+ ".ply");
+
+
+
 #ifdef MATPLOTLIB_ENABLED
     plt::plot(mse_vec);
     plt::show();
 #endif
 }
+
+
+
+
+// peakを見るために、一階差分の配列(size-1)を返す
+template<class T>
+std::vector<T> calculate_diff(std::vector<T> &mse_vec_lambda)
+{
+    std::vector<T> mse_diff_lambda;
+    for(auto itr = mse_vec_lambda.begin(); itr != mse_vec_lambda.end(); ++itr)
+    {
+        mse_diff_lambda.push_back(*itr - *(itr - 1));
+    }
+    return mse_diff_lambda;
+}
+
+
+// 一階差分との符号を確認して極値を返す。このとき、差がthreshold以上のものを持ってくる
+template<class T>
+std::vector<bool> find_local_max(std::vector<T> &mse_diff_lambda, double threshold)
+{
+
+    // size()で、falseで初期化。
+    std::vector<bool> mse_peak_lambda(mse_diff_lambda.size(), false);
+
+    for (auto itr = mse_diff_lambda.begin(); itr != mse_diff_lambda.end(); ++itr)
+    {
+        if (*itr > 0 && *itr * (*(itr - 1)) < 0 && *itr > threshold)
+        {
+            mse_peak_lambda[itr- mse_diff_lambda.begin()] = true;
+        }
+    }
+    return mse_peak_lambda;
+
+}
+
+
 
 
 /**
@@ -1367,7 +1186,7 @@ void PointOperation::shift_test_w_stripe_pattern()
      * 点群を回転させ、 画像を生成 cv::Matに格納し返す。
      *
      */
-    auto make_img = [this, &stitch_edge_point, &obj_io](double angle, std::string imgname)
+    auto make_img = [this, &stitch_edge_point, &obj_io](double angle, [[maybe_unused]]std::string imgname)
     {
         // pointcloud rotate
         PointSet stitch_edge_point_rotate("stitch_edge_point");
@@ -1404,32 +1223,6 @@ void PointOperation::shift_test_w_stripe_pattern()
 #endif
 
 
-    // peakを見るために、一階差分の配列(size-1)を返す
-    auto calculate_diff = []<class T>(std::vector<T> &mse_vec_lambda)
-    {
-        std::vector<T> mse_diff_lambda;
-        for(auto itr = mse_vec_lambda.begin(); itr != mse_vec_lambda.end(); ++itr)
-        {
-            mse_diff_lambda.push_back(*itr - *(itr - 1));
-        }
-        return mse_diff_lambda;
-    };
-
-    // 一階差分との符号を確認して極値を返す。このとき、差がthreshold以上のものを持ってくる
-    auto find_local_max = []<class T>(std::vector<T> &mse_diff_lambda, double threshold)
-    {
-        // size()で、falseで初期化。
-        std::vector<bool> mse_peak_lambda(mse_diff_lambda.size(), false);
-
-        for (auto itr = mse_diff_lambda.begin(); itr != mse_diff_lambda.end(); ++itr)
-        {
-            if (*itr > 0 && *itr * (*(itr - 1)) < 0 && *itr > threshold)
-            {
-                mse_peak_lambda[itr- mse_diff_lambda.begin()] = true;
-            }
-        }
-        return mse_peak_lambda;
-    };
 
 
     // plot, dat graph化の処理
@@ -1469,4 +1262,176 @@ void PointOperation::shift_test_w_stripe_pattern()
     plt::show();
 #endif
 
+}
+
+
+
+/**
+ * @brief 回転と並進を計算する(シミュレーション用)
+ *
+ * plyfileを読み込み、対応点をpickup, 対応点を使用して回転と並進を計算する。
+ * 基本行列Eを求め、分解して tRを計算
+ *
+ * 読み込むファイルがどちらもplyファイルなのに注意。
+ * 回転と姿勢だけが違うplyファイルを読み込んで、 原点合わせをする。
+ *
+ * 実行例:
+ * ./Rotation   --mode 1
+ *              --ply_cp plyfile.dat
+ *              --ply_cp img.dat
+ *              --ply plyname.ply
+ *              --img ../../img/kyoiku.JPG
+ *              --dir ../../ply_data/transform_rotate_sim/
+ *              >! ../../ply_data/transform_rotate_sim/out.dat
+ *
+ */
+void PointOperation::transform_rotate_simulation()
+{
+    std::cout << "transform_rotate_simulation::" << std::endl;
+    ObjectIO obj_io;
+
+    set_date();
+    obj_io.create_dir("out/" + date);
+
+    // load plypoint
+    PointSet ply_point("corresp_plypoint");
+    obj_io.load_ply_point_file( ply_point, corresp_ply_file_path.at(0) );
+    ply_point.print();
+
+    // load imgpoint(plyfile)
+    PointSet img_ply_point("corresp_imgpoint");
+    obj_io.load_ply_point_file(img_ply_point, corresp_ply_file_path.at(1) );
+    img_ply_point.print();
+
+    //  対応点をピックアップ
+    CalcPointSet calc;
+    PointSet pickup_img("pickup_img"), pickup_ply("pickup_ply");
+    calc.pickup_corresp_point(img_ply_point, ply_point, pickup_img, pickup_ply);
+    pickup_img.print();
+    pickup_ply.print();
+
+    // img-point を 方向ベクトルへconvert
+    PointSet pickup_img_convert = calc.conversion_ply_to_img_point(pickup_img);
+    pickup_img_convert.print();
+
+    // 基本行列計算
+    std::vector<Eigen::Matrix<double, 9, 1>> xi_vec = calc.create_xi_vector(pickup_img_convert, pickup_ply);
+
+    // 行列M計算
+    Eigen::Matrix<double, 9, 9> matrix_M = calc.calc_matrix_M(xi_vec);
+
+    // 行列Mの固有値分解から基本行列Eを計算
+    Eigen::Matrix3d matrix_E = calc.calc_essential_matrix(matrix_M);
+
+    // 基本行列Eから並進t^hatを計算
+    Eigen::Vector3d vector_t_diff_scale = calc.calc_translation_t(matrix_E);
+
+    pickup_img_convert.print();
+    pickup_ply.print();
+
+    // 並進tの符号チェック
+    calc.check_sign_translation_t(pickup_img_convert, pickup_ply, vector_t_diff_scale, matrix_E);
+
+    // 回転行列の推定
+    Eigen::Matrix3d matrix_R = calc.calc_rotation_matrix_from_essential_matrix(matrix_E, vector_t_diff_scale);
+
+    // scaleの推定
+    double scale = calc.calc_scale_of_translation_t(pickup_img_convert, pickup_ply, matrix_R, vector_t_diff_scale);
+
+    Eigen::Vector3d translation_vector = scale * vector_t_diff_scale;
+
+    // 理論値計算する場合
+    // Eigen::Matrix3d Rironchi;
+    // Eigen::Vector3d rotate_axis = {0, 1.0, 0};
+    // double rotate_angle = 30.0;
+    // Rironchi = calc.calc_theory_value_Rotation_Matrix(rotate_axis, rotate_angle);
+
+    std::cout << "----RESULT" << std::endl
+              << "Essential Matrix:" << std::endl
+              << matrix_E << std::endl
+              << std::endl
+              << "Rotation Matrix:" << std::endl
+              << matrix_R << std::endl
+              << std::endl
+              << "scale" << std::endl
+              << scale << std::endl
+              << std::endl
+              << "translation Vector: " << std::endl
+              << translation_vector << std::endl
+              << std::endl;
+
+    // 求めた回転行列から回転軸と角度を計算する
+    calc.calc_rotation_axis_from_matrix_R(matrix_R);
+
+    // 求めた回転並進を適用
+    ply_point.rotate(matrix_R);
+    ply_point.transform(translation_vector);
+
+    // 出力
+    obj_io.output_ply(ply_point, "out/" + date + ply_point.get_name() + ".ply");
+    obj_io.output_ply(pickup_img, "out/" + date + pickup_img.get_name() + ".ply");
+    obj_io.output_ply(pickup_ply, "out/" + date + pickup_ply.get_name() + ".ply");
+}
+
+/**
+ * @brief 回転を計算する(シミュレーション用)
+ * 
+ * 生成した 回転のみが変わっているplyファイルを読み込み、
+ * 対応点をpickup, 回転と並進を計算する。
+ * 対応を得る際に pointの番号で指定しているため 完全なコピーのplyファイルじゃないとうまくいかない。
+ *
+ * plyfileを読み込み、対応点をpickup, 対応点を使用して回転と並進を計算する。
+ * 基本行列Eを求め、分解して tRを計算
+ *
+ * 読み込むファイルがどちらもplyファイルなのに注意。
+ *
+ * 実行例:
+ * ./Rotation   --mode 3
+ *              --ply_cp plyfile.dat
+ *              --ply_cp img.dat
+ *              --ply plyname.ply
+ *              --img ../../img/kyoiku.JPG
+ *              --dir ../../ply_data/transform_rotate_sim/
+ *              >! ../../ply_data/transform_rotate_sim/out.dat
+ *
+ */
+void PointOperation::rotate_simulation()
+{
+    std::cout << "Rotation only simulation::" << std::endl;
+    ObjectIO obj_io;
+
+    // load 対応点 ply
+    PointSet corresp_ply_point("corresp_plypoint");
+    obj_io.load_ply_point_file(corresp_ply_point, corresp_ply_file_path.at(0) );
+
+    // load 対応点 img_point.ply
+    PointSet corresp_imgply_point("corresp_imgpoint");
+    obj_io.load_ply_point_file(corresp_imgply_point, corresp_ply_file_path.at(1) );
+
+    //  対応点をピックアップ
+    CalcPointSet calc;
+    PointSet pickup_img("pickup_img"), pickup_ply("pickup_ply");
+    calc.pickup_corresp_point(corresp_imgply_point, corresp_ply_point, pickup_img, pickup_ply);
+    pickup_img.print();
+    pickup_ply.print();
+
+    // 画像対応点を 方向ベクトルへconvert
+    PointSet pickup_img_convert = calc.conversion_ply_to_img_point(pickup_img);
+    pickup_img_convert.print();
+
+    // 相関行列C
+    double weight = 1.0;
+    Eigen::Matrix3d correlation_C = calc.calc_correlation_C(pickup_ply, pickup_img_convert, weight);
+
+    // 回転行列計算
+    Eigen::Matrix3d matrix_R = calc.calc_rotation_matrix_from_correlation_c(correlation_C);
+
+    // 回転行列から回転軸・角度を計算
+    calc.calc_rotation_axis_from_matrix_R(matrix_R);
+
+    // 求めた回転並進を適用
+    corresp_ply_point.rotate(matrix_R);
+
+    // 出力
+    obj_io.output_ply(corresp_ply_point, corresp_ply_point.get_name() + ".ply");
 }

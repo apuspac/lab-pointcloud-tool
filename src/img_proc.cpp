@@ -295,7 +295,7 @@ void InstaImg::convert_to_unitsphere(PointSet &projected_img)
      * @brief uv座標をr=1の極座標に変換に変換する
      *
      */
-    auto equirectangular_to_sphere = [=, this](double u, double v)
+    auto equirectangular_to_sphere = [=](double u, double v)
     {
         u /= width;
         v /= height;
@@ -443,6 +443,7 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
 
 double ImgCalc::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison)
 {
+    std::cout << "compute_mat";
     if (reference.size() != comparison.size())
     {
         std::cout << "size not same" << std::endl
@@ -519,7 +520,7 @@ std::vector<int> ImgCalc::shift(std::vector<int> target, int size_phi, int size_
  * @param img_size : 画像サイズ (height, width)
  * @param gaussian_flag
  */
-void InstaImg::make_thetaphiIMG_from_panorama(std::pair<int, int> img_size, bool gaussian_flag)
+void InstaImg::make_thetaphiIMG_from_panorama(std::pair<int, int> img_size)
 {
     // 画像の初期化
     cv::Mat imgmat(img_size.first, img_size.second, CV_8UC1, cv::Scalar(0));

@@ -60,11 +60,11 @@ _deps
 *.json
 *.ply
 *.JPG
+*.jpg
 *.png
 out/
 
-
-test.sh
+*.sh
 
 # nvim
 .cache/

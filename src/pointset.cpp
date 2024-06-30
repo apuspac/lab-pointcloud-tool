@@ -10,17 +10,18 @@
  */
 void PointSet::print()
 {
+#ifdef DEBUG
     std::cout << "Point: " << name << std::endl;
 
-    for (const auto &tmp : point3)
-    {
-        std::cout << std::setprecision(15) << tmp.transpose() << std::endl;
+    for (const auto &tmp : point3) {
+      std::cout << std::setprecision(15) << tmp.transpose() << std::endl;
     }
     std::cout << std::endl;
     for (const auto &tmp : edge2)
     {
         std::cout << tmp.at(0) << " " << tmp.at(1) << std::endl;
     }
+#endif
 }
 
 void PointSet::print_polar()
@@ -227,7 +228,11 @@ void PointSet::convert_to_polar()
 
     if(is_empty_polar()){
         point3_polar.resize(point3.size());
+    }else{
+        point3_polar.clear();
+        point3_polar.resize(point3.size());
     }
+
     assert(point3_polar.size() == point3.size());
 
     for (auto &point : point3)
@@ -262,6 +267,41 @@ void PointSet::convert_to_rectangular()
 }
 
 
+/**
+ * @brief 点群を高さで切り取る
+ *
+ * @param cutting_height 高さ方向のflag
+ * @param over_flag true: 大きい点を残す false: heightより小さい点を残す、
+ */
+void PointSet::cutting_by_height(double cutting_height, bool over_flag)
+{
+    std::vector<Eigen::Vector3d> point3_polar_filtered;
+
+    for (auto &point : point3)
+    {
+        if(over_flag){
+            if (point(2) > cutting_height)
+            {
+                point3_polar_filtered.push_back(point);
+            }
+        }
+        else{
+            if (point(2) < cutting_height)
+            {
+                point3_polar_filtered.push_back(point);
+            }
+        }
+    }
+
+    point3 = point3_polar_filtered;
+    convert_to_polar();
+
+}
+
+
+
+
+
 #ifdef OPEN3D_ENABLED
 
 void PointSet::radius_based_filter(size_t point_num, double radius)
@@ -277,5 +317,21 @@ void PointSet::radius_based_filter(size_t point_num, double radius)
     std::cout << "point3.size()" << point3.size() << std::endl;
     std::cout << "pointcloud.points_.size()" << pointcloud.points_.size() << std::endl;
 }
+
+
+/**
+ * @brief open3dのpointcloud detect floor
+ *
+ * @return open3d::geometry::PointCloud
+ */
+void DetectPlanarPatches()
+{
+    open3d::geometry::PointCloud pointcloud;
+
+
+}
+
+
+
 
 #endif

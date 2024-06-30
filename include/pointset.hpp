@@ -109,6 +109,7 @@ public:
     void print();
     void print_polar();
 
+    void cutting_by_height(double, bool);
 
 #ifdef OPEN3D_ENABLED
     void radius_based_filter(size_t, double);

@@ -28,7 +28,7 @@ add_executable(${PROJECT_NAME}
     src/operation.cpp
     src/object_io.cpp
     src/calc_pointset.cpp
-    src/capture_boxpoint.cpp
+    src/capture_point.cpp
     src/viewer.cpp
     src/img_proc.cpp
 )

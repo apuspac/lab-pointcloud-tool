@@ -52,7 +52,7 @@ public:
  * @brief 一枚の画像から検出できたBBOXすべてを扱う。
  *
  */
-class BBoxData
+class BBox_OneIMG
 {
 private:
     std::vector<BBox> bbox;
@@ -62,7 +62,7 @@ public:
     void add_bbox(BBox add_box) { bbox.push_back(add_box); }
 
     // だいたいbbox全体をloopで回すと思うので、 get_bboxで取得するようにしよう
-    std::vector<BBox> get_bbox_all() { return bbox; }
+    std::vector<BBox> get_oneIMGbbox_all() { return bbox; }
     const std::string get_img_name() { return img_name; }
     void set_bbox(BBox bbox_one_instance) { bbox.push_back(bbox_one_instance); }
     void set_img_name(std::string name) { img_name = name; }
@@ -98,7 +98,7 @@ public:
  *
  *
  */
-class MaskData
+class Mask_OneIMG
 {
 private:
     std::vector<Mask> mask_data;
@@ -115,27 +115,28 @@ public:
  * @brief Detection結果のJSONファイルの内容を格納するクラス。
  *
  * ちょっと冗長かもしれないが、複数枚の画像を使ったときに 役に立つ気がする。
+ * 今は一枚の画像に対してのみ扱うが、 ゆくゆくは複数枚の写真の結果を統合するなどが欲しい。
  *
  */
 class DetectionData
 {
 private:
-    //  今は一枚の画像に対してのみ扱うが、 ゆくゆくは複数枚の写真の結果を統合するなどが欲しい。
-    std::vector<BBoxData> bbox_data;
-    std::vector<MaskData> mask_data;
+    std::vector<BBox_OneIMG> bbox_data;
+    std::vector<Mask_OneIMG> mask_data;
 
 public:
-    std::vector<BBoxData> get_bbox_data() { return bbox_data; }
-    std::vector<MaskData> get_mask_data() { return mask_data; }
-    void set_bbox_data(BBoxData one_img_bbox) { bbox_data.push_back(one_img_bbox); }
-    void set_mask_data(MaskData one_img_mask) { mask_data.push_back(one_img_mask); }
+    std::vector<BBox_OneIMG> get_bbox_data() { return bbox_data; }
+    std::vector<Mask_OneIMG> get_mask_data() { return mask_data; }
+    void set_bbox_data(BBox_OneIMG one_img_bbox) { bbox_data.push_back(one_img_bbox); }
+    void set_mask_data(Mask_OneIMG one_img_mask) { mask_data.push_back(one_img_mask); }
+    void check_bbox_data_load();
 };
 
 /**
  * @brief 画像点を読み込んで該当する点群をキャプチャ、抽出して保存するクラス
  *
  */
-class CaptureBoxPoint
+class CaptureDetectPoint
 {
 private:
     std::vector<BBox> bbox_list;
