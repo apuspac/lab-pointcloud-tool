@@ -572,6 +572,7 @@ void InstaImg::make_thetaphiIMG_from_pointcloud(PointSet &target_point, std::pai
         // 画像に変換する( theta, phi) -> (v, u)
         double phi = point(1);
         double theta = point(2);
+
         int v = static_cast<int>(theta / (2.0 * M_PI) * static_cast<double>(img_size.first));
         int u = static_cast<int>(phi / M_PI * static_cast<double>(img_size.second));
 

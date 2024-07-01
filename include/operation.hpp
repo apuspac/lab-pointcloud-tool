@@ -90,8 +90,8 @@ public:
     void transform_rotate_simulation();
     void rotate();
     void rotate_simulation();
-    void capture_pointset();
-    void capture_point_inner_bbox();
+    void capture_pointset_one();
+    void capture_point_bbox_multi();
     void old_detection_correspoint();
     void shift_test_w_stripe_pattern();
     void test_location();

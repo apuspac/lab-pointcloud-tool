@@ -9,7 +9,7 @@ void CalcPointSet::test_print()
  * @brief 回転行列の理論値を計算する。回転軸と角度を指定
  *
  * @param rotation_axis 回転軸
- * @param degree 回転角度
+ * @param degree 回転角度 degree 
  * @return Eigen::Matrix3d 回転行列
  */
 Eigen::Matrix3d CalcPointSet::calc_theory_value_Rotation_Matrix(Eigen::Vector3d rotation_axis, double degree)

@@ -3,6 +3,7 @@
  * @brief 処理部分の実装
  */
 #include "operation.hpp"
+#include "matplotlibcpp.h"
 
 /**
  * @brief modeの値によって処理を変える関数
@@ -15,16 +16,16 @@ void PointOperation::mode_select()
     std::cout << "mode select" << std::endl;
     switch_func[1] = std::bind(&PointOperation::transform_rotate, this);
     switch_func[2] = std::bind(&PointOperation::rotate, this);
-    switch_func[3] = std::bind(&PointOperation::capture_pointset, this);
+    switch_func[3] = std::bind(&PointOperation::capture_pointset_one, this);
     switch_func[4] = std::bind(&PointOperation::old_detection_correspoint, this);
     switch_func[5] = std::bind(&PointOperation::shift_test_w_stripe_pattern, this);
+    switch_func[6] = std::bind(&PointOperation::capture_point_bbox_multi, this);
     switch_func[0] = std::bind(&PointOperation::test_location, this);
     switch_func[get_mode()]();
     // switch_func[*] = std::bind(&PointOperation::Rotation_only_simulation, this);
     // switch_func[*] = std::bind(&PointOperation::transform_rotate_simulation, this);
     // switch_func[*] = std::bind(&PointOperation::capture_boxpoint, this);
     // switch_func[*] = std::bind(&PointOperation::capture_segmentation_point, this);
-    // switch_func[*] = std::bind(&PointOperation::capture_point_inner_bbox, this);
 }
 
 void PointOperation::set_date()
@@ -305,7 +306,6 @@ void PointOperation::capture_bbox_point(PointSet &ply_point_bbox, DetectionData 
     #ifdef OPEN3D_ENABLED
     // visualiztion
     bbox_visualization.add_point(one_bbox_forprint);
-    check_ply_bbox.add_axes();
     check_ply_bbox.add_geometry_pointset(ply_point_bbox.get_point_all(), 3);
     check_ply_bbox.add_geometry_pointset(capture_ply.get_point_all(), 0);
     check_ply_bbox.add_geometry_pointset(bbox_visualization.get_point_all(), 1);
@@ -344,6 +344,7 @@ void PointOperation::capture_mask_point(PointSet &ply_point_mask, DetectionData 
 
     capbox.capture_segmentation_angle(ply_point_mask, one_mask, one_img_mask, one_mask_forprint);
 
+
     // 結果を格納
     capture_ply.add_point(one_mask);
     mask_visualization.add_point(one_mask_forprint);
@@ -352,8 +353,6 @@ void PointOperation::capture_mask_point(PointSet &ply_point_mask, DetectionData 
 
 #ifdef OPEN3D_ENABLED
     //  可視化用に追加
-    check_ply_mask.add_axes();
-    check_ply_mask.add_geometry_pointset(ply_point_mask.get_point_all(), 3);
     check_ply_mask.add_geometry_pointset(capture_ply.get_point_all(), 0);
     check_ply_mask.add_geometry_pointset(mask_visualization.get_point_all(), 1);
     check_ply_mask.add_line_origin(mask_visualization.get_point_all(), 2);
@@ -366,7 +365,7 @@ void PointOperation::capture_mask_point(PointSet &ply_point_mask, DetectionData 
  * capture_bboxとcapture_segmentation_pointを組み合わせたい。
  *
  */
-void PointOperation::capture_pointset()
+void PointOperation::capture_pointset_one()
 {
     std::cout << "capture boxpoint" << std::endl;
     ObjectIO obj_io;
@@ -388,14 +387,6 @@ void PointOperation::capture_pointset()
 
     capture_bbox_point(ply_point, detect, check_ply);
     capture_mask_point(ply_point, detect, check_ply);
-
-    CaptureDetectPoint capbox;
-
-    // 抽出したポイントを格納するPointSet
-    PointSet captured_ply("capture_bbox_point");
-    PointSet captured_bbox_point("bbox");
-
-
 
 
 #ifdef OPEN3D_ENABLED
@@ -420,7 +411,7 @@ void PointOperation::capture_pointset()
  *              --json, data/detections_test.json,
  *              --mode, 3,
  */
-void PointOperation::capture_point_inner_bbox()
+void PointOperation::capture_point_bbox_multi()
 {
     std::cout << "capture_point_inner_bbox" << std::endl;
     ObjectIO obj_io;
@@ -437,6 +428,22 @@ void PointOperation::capture_point_inner_bbox()
     set_date();
     obj_io.create_dir("out/" + date);
 
+    CalcPointSet calc;
+
+    // 回転角度をラジアンで指定
+    // double angle = M_PI / 4.0; // 45度回転
+    double angle = 291 + 90;
+    Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(angle)*M_PI / 180, Eigen::Vector3d::UnitZ()));
+    ply_point.rotate(rotation_matrix);
+    ply_point.transform(Eigen::Vector3d(0, 0, 0.10));
+
+
+
+
+
+
+
+    // ==== bboxの中にある点群を抽出する処理
     // すべてのパーツごとの点群を格納
     std::vector<std::vector<PointSet>> all_captured_point;
     // bboxの可視化
@@ -444,10 +451,9 @@ void PointOperation::capture_point_inner_bbox()
     // 抽出したパーツの重心
     std::vector<std::vector<PointSet>> all_center_of_gravity;
 
-    // ==== bboxの中にある点群を抽出する処理
     for (auto &in_img_bbox : detect.get_bbox_data())
     {
-        // 複数の点に対応する。
+
         std::vector<PointSet> captured_point_inner_bbox_multi;
         std::vector<PointSet> bbox_visualization_multi;
         std::vector<PointSet> center_of_gravity_multi;
@@ -459,31 +465,42 @@ void PointOperation::capture_point_inner_bbox()
         {
             CaptureDetectPoint capbox;
 
-            // 抽出したポイントを格納するPointSetの宣言
+            // 抽出したポイントを格納するPointSet
             PointSet captured_point_inner_bbox("captured_point_inner_bbox");
             PointSet bbox_visualization("bbox");
 
             capbox.capture_bbox(ply_point, captured_point_inner_bbox, one_bbox, bbox_visualization);
-            std::cout << "captured_point_inner_bbox2: " << captured_point_inner_bbox.get_point_num() << std::endl;
 
-            // captured_point_inner_bboxのヒストグラムを作成
-            captured_point_inner_bbox.create_histgram();
-            std::cout << "after create_histgram: " << captured_point_inner_bbox.get_point_num() << std::endl;
-            std::cout << "parts_name: " << captured_point_inner_bbox.get_class_name() << std::endl;
+            if(captured_point_inner_bbox.is_empty() == false)
+            {
+                // captured_point_inner_bboxのヒストグラムを作成
+                captured_point_inner_bbox.create_histgram();
 
-            // 重心計算
-            Eigen::Vector3d center_of_gravity = captured_point_inner_bbox.get_center_of_gravity();
-            PointSet print_center_of_gravity;
-            print_center_of_gravity.add_point(center_of_gravity);
+                // 重心計算
+                Eigen::Vector3d center_of_gravity = captured_point_inner_bbox.get_center_of_gravity();
+                PointSet print_center_of_gravity;
+                print_center_of_gravity.add_point(center_of_gravity);
 
-            // 抽出点群 bbox 重心を格納
-            captured_point_inner_bbox_multi.push_back(captured_point_inner_bbox);
-            bbox_visualization_multi.push_back(bbox_visualization);
-            center_of_gravity_multi.push_back(print_center_of_gravity);
+                // 抽出点群 bbox 重心を格納
+                captured_point_inner_bbox_multi.push_back(captured_point_inner_bbox);
+                bbox_visualization_multi.push_back(bbox_visualization);
+                center_of_gravity_multi.push_back(print_center_of_gravity);
 
-            // ヒストグラム確認したいとき用
-            captured_point_inner_bbox.output_hist(std::to_string(for_histgram_output_count++));
-            std::cout << std::endl;
+#ifdef DEBUG
+                std::cout << "parts_name: " << captured_point_inner_bbox.get_class_name() << std::endl;
+                std::cout << "captured_point " << captured_point_inner_bbox.get_point_num() << std::endl;
+#endif 
+
+                // ヒストグラム確認したいとき用
+#ifdef _DEBUG
+                captured_point_inner_bbox.output_hist(std::to_string(for_histgram_output_count++));
+                std::cout << std::endl;
+#endif
+            }else{
+                std::cout << "no captured point" << std::endl;
+
+            }
+
         }
 
         all_captured_point.push_back(captured_point_inner_bbox_multi);
@@ -494,6 +511,48 @@ void PointOperation::capture_point_inner_bbox()
                   << std::endl;
     }
 
+    //  output_ply パーツごとではなく、クラスでまとめて出力する
+    std::array<PointSet, 20> output_captured_point;
+    std::array<PointSet, 20> output_center_gravity;
+    // PointSet output_center_gravity("output_center_gravity");
+
+    // captured_point をまとめる処理
+    for (auto &captured_point_inner_bbox : all_captured_point)
+    {
+        // 一枚の画像のbbox
+        for (auto &captured_point : captured_point_inner_bbox)
+        {
+            output_center_gravity[captured_point.get_class_num()].add_point(captured_point.get_center_of_gravity());
+            for (auto &point : captured_point.get_point_all())
+            {
+                // class_numと同じ番号のpointsetに格納
+                output_captured_point[captured_point.get_class_num()].add_point(point);
+                output_captured_point[captured_point.get_class_num()].set_class_num(captured_point.get_class_num());
+                output_captured_point[captured_point.get_class_num()].set_class_name(captured_point.get_class_name());
+            }
+        }
+
+        // center_of_gravity 重心も分けたい場合はこれも必要かも
+        // for (auto &center_of_gravity_multi : all_center_of_gravity)
+        // {
+        //     for (auto &center_of_gravity : center_of_gravity_multi)
+        //     {
+        //         for (auto &point : center_of_gravity.get_point_all())
+        //         {
+        //             output_center_gravity.add_point(point);
+        //         }
+        //     }
+        // }
+    }
+
+    // plyファイル出力
+    for (auto &parts_point : output_captured_point)
+    {
+        if (parts_point.get_point_num() != 0)
+        {
+            obj_io.output_ply(parts_point, "out/" + date + "/" + parts_point.get_class_name() + "-" + std::to_string(parts_point.get_class_num()) + ".ply");
+        }
+    }
     // 描画処理
 
 #ifdef OPEN3D_ENABLED
@@ -543,46 +602,6 @@ void PointOperation::capture_point_inner_bbox()
     check_ply.show_using_drawgeometries();
 #endif
 
-    //  output_ply パーツごとではなく、クラスでまとめて出力する
-    std::array<PointSet, 20> output_captured_point;
-    std::array<PointSet, 20> output_center_gravity;
-    // PointSet output_center_gravity("output_center_gravity");
-
-    // captured_point をまとめる処理
-    for (auto &captured_point_inner_bbox : all_captured_point)
-    {
-        for (auto &captured_point : captured_point_inner_bbox)
-        {
-            output_center_gravity[captured_point.get_class_num()].add_point(captured_point.get_center_of_gravity());
-            for (auto &point : captured_point.get_point_all())
-            {
-                output_captured_point[captured_point.get_class_num()].add_point(point);
-                output_captured_point[captured_point.get_class_num()].set_class_num(captured_point.get_class_num());
-                output_captured_point[captured_point.get_class_num()].set_class_name(captured_point.get_class_name());
-            }
-        }
-
-        // center_of_gravity 重心も分けたい場合はこれも必要かも
-        // for (auto &center_of_gravity_multi : all_center_of_gravity)
-        // {
-        //     for (auto &center_of_gravity : center_of_gravity_multi)
-        //     {
-        //         for (auto &point : center_of_gravity.get_point_all())
-        //         {
-        //             output_center_gravity.add_point(point);
-        //         }
-        //     }
-        // }
-    }
-
-    // plyファイル出力
-    for (auto &parts_point : output_captured_point)
-    {
-        if (parts_point.get_point_num() != 0)
-        {
-            obj_io.output_ply(parts_point, "out/" + date + "/" + parts_point.get_class_name() + "-" + std::to_string(parts_point.get_class_num()) + ".ply");
-        }
-    }
 }
 
 #ifdef OPEN3D_ENABLED
@@ -1083,29 +1102,41 @@ void PointOperation::test_location()
 
     obj_io.output_dat("out/" + date + "/" + date + "mse.dat", mse_vec);
 
-
+    std::vector<double> mse_result;
     std::vector<double>::iterator minIt = std::min_element(mse_vec.begin(), mse_vec.end());
     // *minItで最小値
     long minIndex = std::distance(mse_vec.begin(), minIt);
 
     std::cout << "min:" << *minIt << "minIndex: " << minIndex << std::endl;
+    mse_result.push_back(*minIt);
+    mse_result.push_back(static_cast<double>(minIndex));
+    obj_io.output_dat("out/" + date + "/" + date + "mse.dat", mse_vec);
+    obj_io.output_dat("out/" + date + "/" + date + "mse_result.dat", mse_result);
+    
 
 
     // pointcloud rotate
     PointSet ply_point_calc_rotate("rotate_point");
     ply_point_calc_rotate.add_point(ply_point);
-    ply_point_calc_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex)*M_PI / 180, Eigen::Vector3d::UnitZ())));
+    // NOTE:90°プラスしているのは これするとつじつまが合うからですが、なんで90°ずれるのか原因が分かっていない。
+    ply_point_calc_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex + 90)*M_PI / 180, Eigen::Vector3d::UnitZ())));
     // ply_point_calc_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(24.0*M_PI / 180, Eigen::Vector3d::UnitZ())));
     InstaImg pointimg_lidar_mse;
     pointimg_lidar_mse.make_thetaphiIMG_from_pointcloud(ply_point_calc_rotate, std::pair<int, int>(image.get_width(), image.get_height()), true);
 
+
+
     cv::imwrite("out/" + date + "/" + "mse_lidar" + ".png", pointimg_lidar_mse.get_mat());
+
+
+    ply_point_calc_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex)*M_PI / 180, Eigen::Vector3d::UnitZ())));
+
+
     obj_io.output_ply(ply_point_calc_rotate, "out/" + date + "/_" + "mse_lidar"+ ".ply");
-
-
 
 #ifdef MATPLOTLIB_ENABLED
     plt::plot(mse_vec);
+    plt::save("out/" + date + "/" + date + "mse.png");
     plt::show();
 #endif
 }
