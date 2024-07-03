@@ -19,7 +19,7 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
     // p: plyファイル .ply
     // i: imgファイル .jpg,png
     // j: jsonファイル .json
-    // d: デフォルトdirpath
+    // d: output dir path
     // o: mode 選択
     // h: help
     // 複数入力をさせたいけど ちょっと面倒っぽいので、 2回指定するときは、2回とも入力する。
@@ -37,7 +37,7 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
             {"ply", required_argument, 0, 'p'},
             {"img", required_argument, 0, 'i'},
             {"json", required_argument, 0, 'j'},
-            // {"dir", required_argument, 0, 'd'},
+            {"dir", required_argument, 0, 'd'},
             {"mode", required_argument, 0, 'o'},
             {"help", no_argument, 0, 'h'},
 
@@ -71,9 +71,9 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
             operation.set_json_path(std::string(optarg));
             break;
 
-        // case 'd':
-        //     operation.set_default_dir_path(std::string(optarg));
-        //     break;
+        case 'd':
+            operation.set_output_dir_path(std::string(optarg));
+            break;
         case 'o':
             operation.set_mode(std::string(optarg));
             break;
@@ -82,8 +82,8 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
                       << "--img_cp,  -m : corresp img point data filename" << std::endl
                       << "--ply_cp,   -x : corresp ply point data filename" << std::endl
                       << "--ply,      -p : ply file name " << std::endl
-                      << "--img,      -m : img file path" << std::endl;
-                      // << "--dir,      -d : dir file path" << std::endl;
+                      << "--img,      -m : img file path" << std::endl
+                      << "--dir,      -d : output dir path" << std::endl;
             break;
         default:
             break;

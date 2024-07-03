@@ -116,6 +116,9 @@ void PointOperation::print()
             std::cout << tmp << std::endl;
         }
     }
+    if(!output_dir_path.empty()){
+        std::cout << "output_dir_path: " << output_dir_path << std::endl;
+    }
 }
 
 /**
@@ -409,7 +412,7 @@ void PointOperation::capture_pointset_one()
  *              --img, img/pic_point1.png,
  *              --dir, data/test/,
  *              --json, data/detections_test.json,
- *              --mode, 3,
+ *              --mode, 6,
  */
 void PointOperation::capture_point_bbox_multi()
 {
@@ -425,16 +428,24 @@ void PointOperation::capture_point_bbox_multi()
     DetectionData detect;
     obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
 
-    set_date();
-    obj_io.create_dir("out/" + date);
 
-    CalcPointSet calc;
+    std::string output_dir;
+    if(output_dir_path.empty())
+    {
+        create_output_dir();
+        output_dir = "out/" + date + "/";
+    }
+    else{
+        output_dir = output_dir_path;
+    }
+
 
     // 回転角度をラジアンで指定
     // double angle = M_PI / 4.0; // 45度回転
-    double angle = 291 + 90;
-    Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(angle)*M_PI / 180, Eigen::Vector3d::UnitZ()));
-    ply_point.rotate(rotation_matrix);
+    // double angle = 291 + 90;
+    // Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(angle)*M_PI / 180, Eigen::Vector3d::UnitZ()));
+    // ply_point.rotate(rotation_matrix);
+
     ply_point.transform(Eigen::Vector3d(0, 0, 0.10));
 
 
@@ -458,7 +469,7 @@ void PointOperation::capture_point_bbox_multi()
         std::vector<PointSet> bbox_visualization_multi;
         std::vector<PointSet> center_of_gravity_multi;
 
-        int for_histgram_output_count = 0;
+        [[maybe_unused]]int for_histgram_output_count = 0;
 
         // 一つの画像の中の複数のBBoxを扱う
         for (auto &one_bbox : in_img_bbox.get_oneIMGbbox_all())
@@ -550,7 +561,7 @@ void PointOperation::capture_point_bbox_multi()
     {
         if (parts_point.get_point_num() != 0)
         {
-            obj_io.output_ply(parts_point, "out/" + date + "/" + parts_point.get_class_name() + "-" + std::to_string(parts_point.get_class_num()) + ".ply");
+            obj_io.output_ply(parts_point, output_dir + parts_point.get_class_name() + "-" + std::to_string(parts_point.get_class_num()) + ".ply");
         }
     }
     // 描画処理
@@ -603,6 +614,13 @@ void PointOperation::capture_point_bbox_multi()
 #endif
 
 }
+
+
+
+
+
+
+
 
 #ifdef OPEN3D_ENABLED
 void PointOperation::projection_to_sphere()
@@ -1019,16 +1037,24 @@ void PointOperation::test_location()
     InstaImg image;
     image.load_img(img_file_path.at(0));
 
-    create_output_dir();
+    std::string output_dir;
+    if(output_dir_path.empty())
+    {
+        create_output_dir();
+        output_dir = "out/" + date + "/";
+    }
+    else{
+        output_dir = output_dir_path;
+    }
 
     // # make img -> theta/phi-img
     // エッジ検出
-    auto insta_img_edge_detection = [this](EdgeImg &out_edge, InstaImg &in_img)
+    auto insta_img_edge_detection = [this, &output_dir](EdgeImg &out_edge, InstaImg &in_img)
     {
         out_edge.set_zero_imgMat(in_img.get_height(), in_img.get_width(), CV_8UC1);
         out_edge.detect_edge_with_sobel(in_img.get_mat());
 #ifdef DEBUG
-        cv::imwrite("out/" + date + "/" + "instaimg_sobel.png", out_edge.get_mat());
+        cv::imwrite(output_dir + "instaimg_sobel.png", out_edge.get_mat());
 #endif
     };
 
@@ -1052,8 +1078,8 @@ void PointOperation::test_location()
     pointimg.make_thetaphiIMG_from_pointcloud(ply_point, std::pair<int, int>(image.get_width(), image.get_height()), false);
     std::cout << "make_img" << std::endl;
 #ifdef DEBUG
-    cv::imwrite("out/" + date + "/" + "edge.png", insta_edge.get_mat());
-    cv::imwrite("out/" + date + "/" + "point.png", pointimg.get_mat());
+        cv::imwrite(output_dir + "edge.png", insta_edge.get_mat());
+        cv::imwrite(output_dir + "point.png", pointimg.get_mat());
 #endif
 
 
@@ -1071,7 +1097,7 @@ void PointOperation::test_location()
      * 点群を回転させ、 画像を生成 cv::Matに格納し返す。
      *
      */
-    auto make_img = [this, &image, &ply_point, &obj_io](double angle, [[maybe_unused]]std::string imgname)
+    auto make_img = [this, &image, &ply_point, &obj_io, &output_dir](double angle, [[maybe_unused]]std::string imgname)
     {
         // pointcloud rotate
         PointSet ply_point_rotate("rotate_point");
@@ -1081,8 +1107,8 @@ void PointOperation::test_location()
         pointimg_lidar.make_thetaphiIMG_from_pointcloud(ply_point_rotate, std::pair<int, int>(image.get_width(), image.get_height()), true);
 
 #ifdef _DEBUG
-        cv::imwrite("out/" + date + "/" + imgname + ".png", pointimg_lidar.get_mat());
-        obj_io.output_ply(ply_point_rotate, "out/" + date + "/_" + imgname + ".ply");
+        cv::imwrite(output_dir + imgname + ".png", pointimg_lidar.get_mat());
+        obj_io.output_ply(ply_point_rotate, output_dir + imgname + ".ply");
 #endif
 
         return pointimg_lidar.get_mat();
@@ -1100,7 +1126,7 @@ void PointOperation::test_location()
 #endif
     }
 
-    obj_io.output_dat("out/" + date + "/" + date + "mse.dat", mse_vec);
+    obj_io.output_dat(output_dir +  "mse.dat", mse_vec);
 
     std::vector<double> mse_result;
     std::vector<double>::iterator minIt = std::min_element(mse_vec.begin(), mse_vec.end());
@@ -1110,9 +1136,8 @@ void PointOperation::test_location()
     std::cout << "min:" << *minIt << "minIndex: " << minIndex << std::endl;
     mse_result.push_back(*minIt);
     mse_result.push_back(static_cast<double>(minIndex));
-    obj_io.output_dat("out/" + date + "/" + date + "mse.dat", mse_vec);
-    obj_io.output_dat("out/" + date + "/" + date + "mse_result.dat", mse_result);
-    
+    obj_io.output_dat(output_dir_path + "mse.dat", mse_vec);
+    obj_io.output_dat(output_dir_path + "mse_result.dat", mse_result);
 
 
     // pointcloud rotate
@@ -1126,17 +1151,18 @@ void PointOperation::test_location()
 
 
 
-    cv::imwrite("out/" + date + "/" + "mse_lidar" + ".png", pointimg_lidar_mse.get_mat());
+    cv::imwrite(output_dir_path + "mse_lidar" + ".png", pointimg_lidar_mse.get_mat());
+
+    // ply_point_calc_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex)*M_PI / 180, Eigen::Vector3d::UnitZ())));
+
+    ply_point.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex+90)*M_PI / 180, Eigen::Vector3d::UnitZ())));
 
 
-    ply_point_calc_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex)*M_PI / 180, Eigen::Vector3d::UnitZ())));
-
-
-    obj_io.output_ply(ply_point_calc_rotate, "out/" + date + "/_" + "mse_lidar"+ ".ply");
+    obj_io.output_ply(ply_point, output_dir + "mse_lidar"+ ".ply");
 
 #ifdef MATPLOTLIB_ENABLED
     plt::plot(mse_vec);
-    plt::save("out/" + date + "/" + date + "mse.png");
+    plt::save(output_dir + date + "mse.png");
     plt::show();
 #endif
 }
