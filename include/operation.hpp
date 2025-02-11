@@ -51,8 +51,16 @@ private:
     std::string json_file_path;
 
 public:
-    PointOperation(std::string _mode = "0", std::string _output_dir_path = "") : mode(_mode), output_dir_path(_output_dir_path) {}
+    PointOperation(
+            std::string _mode = "0", 
+            std::string _output_dir_path = "", 
+            std::string _json_file_path = ""
+    ) : mode(_mode), output_dir_path(_output_dir_path), json_file_path(_json_file_path){}
+
     ~PointOperation() {}
+
+
+
 
     // ファイル名取得
     std::string get_corresp_img_file_name(int number) { return corresp_img_file_path.at(number); }
@@ -94,6 +102,8 @@ public:
     void capture_point_bbox_multi();
     void old_detection_correspoint();
     void shift_test_w_stripe_pattern();
+    void make_img_and_calc_mse();
+    void make_img_and_calc_mse_height();
     void test_location();
 
     // mode切り替えしない関数

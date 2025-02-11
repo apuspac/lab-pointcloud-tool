@@ -91,9 +91,17 @@ void PointSet::rotate(Eigen::Matrix3d rotate_matrix)
 void PointSet::transform(Eigen::Vector3d transform_vec)
 {
     // std::cout << name << " point_transformed:" << transform_vec.transpose() << std::endl;
-    for (Eigen::Vector3d &tmp : point3)
+    if (is_empty() == false)
     {
-        tmp = transform_vec + tmp;
+        for (Eigen::Vector3d &tmp : point3)
+        {
+            tmp = tmp + transform_vec;
+        }
+    }
+
+    if (is_empty_polar() == false)
+    {
+        convert_to_polar();
     }
 }
 

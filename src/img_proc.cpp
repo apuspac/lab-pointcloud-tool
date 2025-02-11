@@ -100,7 +100,7 @@ void InstaImg::set_pixel_255(int u, int v)
 }
 
 /**
- * @brief テスト画像 すいか
+ * @brief テスト画像 すいか状の 縦の帯がいくつかある画像を作る
  */
 void InstaImg::make_test_img_forEdge(int test_width, int test_height, int step, int band)
 {
@@ -426,7 +426,7 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
             << "comparison size:" << comparison.size() << std::endl;
         std::exit(-1);
     }
-    if (reference.channels() != comparison.channels())
+if (reference.channels() != comparison.channels())
     {
         std::cout << "channel not same" << std::endl
                   << "reference: " << reference.channels() << std::endl
@@ -443,17 +443,11 @@ double InstaImg::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison
 
 double ImgCalc::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison)
 {
-    std::cout << "compute_mat";
     if (reference.size() != comparison.size())
     {
         std::cout << "size not same" << std::endl
             << "reference size:" <<  reference.size() << std::endl
             << "comparison size:" << comparison.size() << std::endl;
-        std::exit(-1);
-    }
-    if (reference.size() != comparison.size())
-    {
-        std::cout << "size not same" << std::endl;
         std::exit(-1);
     }
     if (reference.channels() != comparison.channels())
@@ -465,7 +459,10 @@ double ImgCalc::compute_MSE(const cv::Mat &reference, const cv::Mat &comparison)
         std::exit(-1);
     }
 
+
     cv::Scalar_<double> dest = cv::quality::QualityMSE::compute(reference, comparison, cv::noArray());
+
+    std::cout << "MSE: " << dest[0] << std::endl;
 
     return dest[0];
 }
@@ -565,6 +562,7 @@ void InstaImg::make_thetaphiIMG_from_pointcloud(PointSet &target_point, std::pai
 
     // 画像の初期化
     cv::Mat imgmat(img_size.first, img_size.second, CV_8UC1, cv::Scalar(0));
+
 
     // 変換処理
     for(auto point : target_point.get_point_all_polar())
@@ -1578,7 +1576,7 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
                 double point_dis = store_pixell.distance;
 
 
-                // intへ切り捨てしてcast 
+                // intへ切り捨てしてcast
                 int hist_index =static_cast<int>(   point_dis / bin_width);
                 histgram_distance.at(hist_index)++;
                 candidate_corresp.push_back({pixel, store_pixell.point, hist_index});

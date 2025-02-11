@@ -5,13 +5,16 @@
 #include "operation.hpp"
 #include "matplotlibcpp.h"
 
+
+
+
+
 /**
  * @brief modeの値によって処理を変える関数
  *
  */
 void PointOperation::mode_select()
 {
-
     // https://yutamano.hatenablog.com/entry/2013/11/18/161234
     std::cout << "mode select" << std::endl;
     switch_func[1] = std::bind(&PointOperation::transform_rotate, this);
@@ -21,6 +24,8 @@ void PointOperation::mode_select()
     switch_func[5] = std::bind(&PointOperation::shift_test_w_stripe_pattern, this);
     switch_func[6] = std::bind(&PointOperation::capture_point_bbox_multi, this);
     switch_func[0] = std::bind(&PointOperation::test_location, this);
+    switch_func[7] = std::bind(&PointOperation::make_img_and_calc_mse, this);
+    switch_func[8] = std::bind(&PointOperation::make_img_and_calc_mse_height, this);
     switch_func[get_mode()]();
     // switch_func[*] = std::bind(&PointOperation::Rotation_only_simulation, this);
     // switch_func[*] = std::bind(&PointOperation::transform_rotate_simulation, this);
@@ -269,6 +274,9 @@ void PointOperation::rotate()
     obj_io.output_ply(ply_point, ply_point.get_name() + ".ply");
 }
 
+
+
+
 /**
  * @brief バウンディングボックスデータと原点とでできる四角錐の中にある点群を抽出する。
  * これは1つのBboxに対してのみ実行するテスト用。
@@ -381,7 +389,7 @@ void PointOperation::capture_pointset_one()
     // objectIOに jsonデータ格納のプログラムを作る
     DetectionData detect;
     obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
-    
+
     detect.check_bbox_data_load();
 
 #ifdef OPEN3D_ENABLED
@@ -398,7 +406,70 @@ void PointOperation::capture_pointset_one()
 #endif
 }
 
+/**
+ *  @brief segmentation maskの画素値から点群を抽出する処理のmulti
+ *
+ *
+ *
+*/
+void PointOperation::test_location()
+{
+    std::cout << "capture segmentation point_multi" << std::endl;
+    ObjectIO obj_io;
 
+    // load plydata
+    PointSet ply_point("plydata");
+    obj_io.load_ply_point_file(ply_point, ply_file_path.at(0));
+
+
+    // load bbox
+    DetectionData detect;
+    std::cout << "json_file_path: " << json_file_path << std::endl;
+    obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
+
+
+    std::string output_dir;
+    if(output_dir_path.empty())
+    {
+        create_output_dir();
+        output_dir = "out/" + date + "/";
+    }
+    else{
+        output_dir = output_dir_path;
+    }
+
+
+    // 回転角度をラジアンで指定
+    // double angle = M_PI / 4.0; // 45度回転
+    // double angle = 291 + 90;
+    // Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(angle)*M_PI / 180, Eigen::Vector3d::UnitZ()));
+    // ply_point.rotate(rotation_matrix);
+
+    ply_point.transform(Eigen::Vector3d(0, 0, 0.10));
+
+
+    CaptureDetectPoint capbox;
+
+    // 抽出したポイントを格納
+    PointSet capture_ply("capture_segmentation_point");
+    PointSet mask_visualization("segmentation_mask_point");
+
+    // 一枚の画像からのMaskDataを渡す
+    PointSet one_mask("one_img_segmentation_mask_point");
+    PointSet one_mask_forprint("oneimg_segmentation_mask_forprint");
+
+    // Mask one_img_mask = detect_mask.get_mask_data().at(0).get_mask_data_all().at(0);
+    // capbox.capture_segmentation_angle(ply_point_mask, one_mask, one_img_mask, one_mask_forprint);
+
+
+    // 結果を格納
+    capture_ply.add_point(one_mask);
+    mask_visualization.add_point(one_mask_forprint);
+
+    obj_io.output_ply(capture_ply, "out/" + date + "/" + capture_ply.get_name() + ".ply");
+
+
+}
 
 
 
@@ -416,7 +487,7 @@ void PointOperation::capture_pointset_one()
  */
 void PointOperation::capture_point_bbox_multi()
 {
-    std::cout << "capture_point_inner_bbox" << std::endl;
+    std::cout << "capture_point_bbox_multi" << std::endl;
     ObjectIO obj_io;
 
     // load plydata
@@ -426,6 +497,7 @@ void PointOperation::capture_point_bbox_multi()
 
     // load bbox
     DetectionData detect;
+    std::cout << "json_file_path: " << json_file_path << std::endl;
     obj_io.load_detection_json_file(json_file_path, detect, img_file_path.at(0));
 
 
@@ -500,7 +572,7 @@ void PointOperation::capture_point_bbox_multi()
 #ifdef DEBUG
                 std::cout << "parts_name: " << captured_point_inner_bbox.get_class_name() << std::endl;
                 std::cout << "captured_point " << captured_point_inner_bbox.get_point_num() << std::endl;
-#endif 
+#endif
 
                 // ヒストグラム確認したいとき用
 #ifdef _DEBUG
@@ -1020,16 +1092,15 @@ void PointOperation::remove_pointset_floor(PointSet &origin_point, PointSet &out
 
 
 
-/** 
+/**
  * @brief 画像, 点群の画像を作成して、mseを計算
  *
  *
  * */
-void PointOperation::test_location()
+void PointOperation::make_img_and_calc_mse()
 {
-    // shift_test_w_stripe_patternを参考に実際の画像でやってみる
 
-    std::cout << "test_location" << std::endl;
+    std::cout << "make_img_and_calc_mse" << std::endl;
     ObjectIO obj_io;
 
     PointSet ply_point("plydata");
@@ -1067,7 +1138,7 @@ void PointOperation::test_location()
     InstaImg pointimg;
 
 
-    
+
     ply_point.cutting_by_height(1.5, false);
     ply_point.cutting_by_height(-1.0,true);
 
@@ -1101,8 +1172,10 @@ void PointOperation::test_location()
     {
         // pointcloud rotate
         PointSet ply_point_rotate("rotate_point");
+
         ply_point_rotate.add_point(ply_point);
         ply_point_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(angle*M_PI / 180, Eigen::Vector3d::UnitZ())));
+
         InstaImg pointimg_lidar;
         pointimg_lidar.make_thetaphiIMG_from_pointcloud(ply_point_rotate, std::pair<int, int>(image.get_width(), image.get_height()), true);
 
@@ -1117,12 +1190,13 @@ void PointOperation::test_location()
     std::cout << "MSE calc" << std::endl;
     std::vector<double> mse_vec, mse_vec_ave;
 
-    for (double i = 0; i <= 360; i++)
+    // 0.5度ずつ回転させて、mseを計算
+    for (double i = 0; i <= 360; i+=0.5)
     {
         double calc_mse = ImgCalc::compute_MSE(insta_edge.get_mat(), make_img(i, "rote" + std::to_string(i)));
         mse_vec.push_back(calc_mse);
 #ifdef DEBUG
-        std::cout << "angle: " << i << "mse: " << calc_mse<< std::endl;
+        std::cout << "angle: " << i << " mse: " << calc_mse<< std::endl;
 #endif
     }
 
@@ -1144,6 +1218,7 @@ void PointOperation::test_location()
     PointSet ply_point_calc_rotate("rotate_point");
     ply_point_calc_rotate.add_point(ply_point);
     // NOTE:90°プラスしているのは これするとつじつまが合うからですが、なんで90°ずれるのか原因が分かっていない。
+    // -> 座標系がうんたらかんたら。
     ply_point_calc_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex + 90)*M_PI / 180, Eigen::Vector3d::UnitZ())));
     // ply_point_calc_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(24.0*M_PI / 180, Eigen::Vector3d::UnitZ())));
     InstaImg pointimg_lidar_mse;
@@ -1165,9 +1240,146 @@ void PointOperation::test_location()
     plt::save(output_dir + date + "mse.png");
     plt::show();
 #endif
+
+
 }
 
+void PointOperation::make_img_and_calc_mse_height()
+{
+    std::cout << "make_img_and_calc_mse_height" << std::endl;
+    ObjectIO obj_io;
 
+    PointSet ply_point("plydata");
+    obj_io.load_ply_point_file(ply_point, ply_file_path.at(0));
+    InstaImg image;
+    image.load_img(img_file_path.at(0));
+
+    std::string output_dir;
+    if(output_dir_path.empty())
+    {
+        create_output_dir();
+        output_dir = "out/" + date + "/";
+    }
+    else{
+        output_dir = output_dir_path;
+    }
+
+    // # make img -> theta/phi-img
+    // エッジ検出
+    auto insta_img_edge_detection = [this, &output_dir](EdgeImg &out_edge, InstaImg &in_img)
+    {
+        out_edge.set_zero_imgMat(in_img.get_height(), in_img.get_width(), CV_8UC1);
+        out_edge.detect_edge_with_sobel(in_img.get_mat());
+#ifdef DEBUG
+        cv::imwrite(output_dir + "instaimg_sobel.png", out_edge.get_mat());
+#endif
+    };
+
+    EdgeImg insta_edge("insta_edge");
+    insta_img_edge_detection(insta_edge, image);
+    insta_edge.make_thetaphiIMG_from_panorama( std::pair<int, int>(image.get_width(), image.get_height()));
+
+    InstaImg pointimg;
+
+    // # make point -> theta/phi-img
+    ply_point.cutting_by_height(1.5, false);
+    ply_point.cutting_by_height(-1.0,true);
+
+    //TODO,NOTE: minIndexは 実行した結果を使っている。
+    //index:48, mse:577.3853
+    long minIndex = 48;
+    ply_point.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex+90)*M_PI / 180, Eigen::Vector3d::UnitZ())));
+
+
+    pointimg.make_thetaphiIMG_from_pointcloud(ply_point, std::pair<int, int>(image.get_width(), image.get_height()), false);
+    
+    std::cout << "make_img" << std::endl;
+#ifdef DEBUG
+        cv::imwrite(output_dir + "edge.png", insta_edge.get_mat());
+        cv::imwrite(output_dir + "point.png", pointimg.get_mat());
+#endif
+
+
+    bool end_frag = false;
+    assert(end_frag == false);
+
+    // --- height
+    auto make_img_height = [this, &image, &ply_point, &obj_io, &output_dir](double height, [[maybe_unused]]std::string imgname)
+    {
+        // pointcloud rotate
+        PointSet ply_point_height("rotate_point");
+
+        ply_point_height.add_point(ply_point);
+        ply_point_height.transform(Eigen::Vector3d(0, 0, height));
+
+        std::cout << ply_point_height.get_point(0) << std::endl;
+
+        InstaImg pointimg_lidar;
+
+        pointimg_lidar.make_thetaphiIMG_from_pointcloud(ply_point_height, std::pair<int, int>(image.get_width(), image.get_height()), true);
+
+#ifdef DEBUG
+        cv::imwrite(output_dir + imgname + "_height.png", pointimg_lidar.get_mat());
+        // obj_io.output_ply(ply_point_height, output_dir + imgname + "_height.ply");
+#endif
+        return pointimg_lidar.get_mat();
+
+    };
+
+
+    std::cout << ">>>>> MSE height calc" << std::endl;
+    std::vector<double> mse_vec_height, mse_vec_ave_height;
+
+
+
+    // 0.5cmずつ移動
+    for (double i = -0.15; i <= 0.15; i+=0.005)
+    {
+        double calc_mse_height = ImgCalc::compute_MSE(insta_edge.get_mat(), make_img_height(i, "height" + std::to_string(i)));
+        mse_vec_height.push_back(calc_mse_height);
+#ifdef DEBUG
+        std::cout << "height: " << i << " mse: " << calc_mse_height<< std::endl;
+#endif
+    }
+
+
+    obj_io.output_dat(output_dir +  "mse_height.dat", mse_vec_height);
+
+    std::vector<double> mse_result_height;
+    std::vector<double>::iterator minIt_height = std::min_element(mse_vec_height.begin(), mse_vec_height.end());
+    // *minItで最小値
+    long minIndex_height = std::distance(mse_vec_height.begin(), minIt_height);
+
+    std::cout << "min:" << *minIt_height << "minIndex: " << minIndex_height << std::endl;
+    mse_result_height.push_back(*minIt_height);
+    mse_result_height.push_back(static_cast<double>(minIndex_height));
+    obj_io.output_dat(output_dir_path + "mse_height.dat", mse_vec_height);
+    obj_io.output_dat(output_dir_path + "mse_result_height.dat", mse_result_height);
+
+
+    // pointcloud translate
+    PointSet ply_point_calc_height("translate_point");
+    ply_point_calc_height.add_point(ply_point);
+    ply_point_calc_height.transform(Eigen::Vector3d(0, 0, static_cast<double>(minIndex_height) * 0.5 + -15.0));
+    ply_point_calc_height.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex+90)*M_PI / 180, Eigen::Vector3d::UnitZ())));
+
+
+    InstaImg pointimg_lidar_mse_height;
+    pointimg_lidar_mse_height.make_thetaphiIMG_from_pointcloud(ply_point_calc_height, std::pair<int, int>(image.get_width(), image.get_height()), true);
+
+    cv::imwrite(output_dir_path + "mse_lidar_height" + ".png", pointimg_lidar_mse_height.get_mat());
+
+    // ply_point.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex+90)*M_PI / 180, Eigen::Vector3d::UnitZ())));
+
+
+    obj_io.output_ply(ply_point_calc_height, output_dir + "mse_lidar_height"+ ".ply");
+
+#ifdef MATPLOTLIB_ENABLED
+    plt::plot(mse_vec_height);
+    plt::save(output_dir + date + "mse_height.png");
+    plt::show();
+#endif
+}
 
 
 // peakを見るために、一階差分の配列(size-1)を返す
@@ -1269,7 +1481,7 @@ void PointOperation::shift_test_w_stripe_pattern()
     {
         double mse_tmp = ImgCalc::compute_MSE(pointimg.get_mat(), make_img(i, "rote" + std::to_string(i)));
         mse_vec.push_back(mse_tmp);
-        
+
     }
 
     obj_io.output_dat("out/" + date + "/" + date + "mse.dat", mse_vec);
@@ -1289,7 +1501,7 @@ void PointOperation::shift_test_w_stripe_pattern()
     std::vector<int> plot_mse;
     std::vector<double> plot_dat;
     std::vector<int> plot_true;
-   
+
     int interval = 360 / divide;
     for(int i = 0; i < static_cast<int>(mse_vec.size());  i += interval)
     {
@@ -1432,7 +1644,7 @@ void PointOperation::transform_rotate_simulation()
 
 /**
  * @brief 回転を計算する(シミュレーション用)
- * 
+ *
  * 生成した 回転のみが変わっているplyファイルを読み込み、
  * 対応点をpickup, 回転と並進を計算する。
  * 対応を得る際に pointの番号で指定しているため 完全なコピーのplyファイルじゃないとうまくいかない。

@@ -29,9 +29,13 @@ protected:
 
 public:
     InstaImg() : img(cv::Mat()), height(0), width(0), name("none") {}
-    InstaImg(int _width, int _height) : height(_height), width(_width), name("none") {}
-    InstaImg(std::string _name) : name(_name) {}
-    virtual ~InstaImg() { img.release(); }
+    InstaImg(int _width, int _height) : img(cv::Mat()), height(_height), width(_width), name("none") {}
+    InstaImg(std::string _name) : img(cv::Mat()), name(_name) {}
+    virtual ~InstaImg() {
+        if (!img.empty()) {
+            img.release();
+        }
+    }
 
     // 入出力
     void load_img(std::string);

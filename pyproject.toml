@@ -1,3 +1,6 @@
+project = { dependencies = [
+    "numpy>=2.2.2",
+] }
 [tool.poetry]
 name = "coordinate-transform"
 version = "0.1.0"
