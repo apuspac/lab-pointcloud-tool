@@ -105,6 +105,21 @@ void PointSet::transform(Eigen::Vector3d transform_vec)
     }
 }
 
+
+Eigen::Vector3d PointSet::get_center_of_gravity()
+{
+
+    std::cout << "get_center_of_gravity" << center_of_gravity << std::endl;
+    if (center_of_gravity == Eigen::Vector3d(0, 0, 0))
+    {
+        calc_center_of_gravity();
+    }
+
+    return center_of_gravity;
+}
+
+
+
 /**
  * @brief pointsetの重心を返す
  *
@@ -133,7 +148,7 @@ void PointSet::create_histgram()
     }
 
     // std::array<int, 500> histgram_intervals = {};
-    double interval = 0.05;
+    double interval = 0.025;
 
     auto is_within_roomrange = [](double x)
     { return (x < 1000.0 && x > 0.0); };
@@ -156,10 +171,10 @@ void PointSet::create_histgram()
     // std::cout << i * interval << ", " << histgram_intervals.at(i) << std::endl;
     // }
 
-    std::array<int, 500> histgram_one_diff = {};
+    std::array<int, 1000> histgram_one_diff = {};
 
     // 一階差分を取ってみる
-    for (std::array<int, 500>::iterator itr = histgram_intervals.begin() + 1; itr != histgram_intervals.end(); itr++)
+    for (std::array<int, 1000>::iterator itr = histgram_intervals.begin() + 1; itr != histgram_intervals.end(); itr++)
     {
         // std::cout << *itr - *(itr - 1) << std::endl;
 
@@ -178,7 +193,7 @@ void PointSet::create_histgram()
 
     bool flag = false;
 
-    for (std::array<int, 500>::iterator itr = histgram_one_diff.begin() + 1; itr != histgram_one_diff.end(); itr++)
+    for (std::array<int, 1000>::iterator itr = histgram_one_diff.begin() + 1; itr != histgram_one_diff.end(); itr++)
     {
         // std::cout << *(itr - 1) * (*itr) << " " << (*(itr - 1)) << std::endl;
         if (is_extremum(*(itr - 1), *itr))
@@ -195,14 +210,15 @@ void PointSet::create_histgram()
         }
     }
 
-    // 最初のピークを基準に 0.1m範囲の点のみを抽出
+    // 最初のピークを基準に 0.1m範囲(両側なので、0.05)の点のみを抽出
+    double filter_range = 0.05;
     std::vector<Eigen::Vector3d> point3_filtered;
     for (const auto &point : point3)
     {
 
         double tmp_dis_center = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0));
 
-        if (tmp_dis_center > (first_peak - 0.3) && tmp_dis_center < (first_peak + 0.3))
+        if (tmp_dis_center > (first_peak - filter_range) && tmp_dis_center < (first_peak + filter_range))
         {
             // std::cout << tmp_dis_center << std::endl;
             point3_filtered.push_back(point);

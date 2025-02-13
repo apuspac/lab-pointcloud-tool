@@ -4,6 +4,7 @@
  */
 #include "operation.hpp"
 #include "matplotlibcpp.h"
+#include <eigen3/src/Core/Matrix.h>
 
 
 
@@ -510,14 +511,6 @@ void PointOperation::capture_point_bbox_multi()
     else{
         output_dir = output_dir_path;
     }
-
-
-    // 回転角度をラジアンで指定
-    // double angle = M_PI / 4.0; // 45度回転
-    // double angle = 291 + 90;
-    // Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(angle)*M_PI / 180, Eigen::Vector3d::UnitZ()));
-    // ply_point.rotate(rotation_matrix);
-
     ply_point.transform(Eigen::Vector3d(0, 0, 0.10));
 
 
@@ -559,12 +552,14 @@ void PointOperation::capture_point_bbox_multi()
                 // captured_point_inner_bboxのヒストグラムを作成
                 captured_point_inner_bbox.create_histgram();
 
+
                 // 重心計算
                 Eigen::Vector3d center_of_gravity = captured_point_inner_bbox.get_center_of_gravity();
                 PointSet print_center_of_gravity;
                 print_center_of_gravity.add_point(center_of_gravity);
+                print_center_of_gravity.set_class_name(captured_point_inner_bbox.get_class_name());
 
-                // 抽出点群 bbox 重心を格納
+                // 抽出点群 bbox 重心をそれぞれ格納
                 captured_point_inner_bbox_multi.push_back(captured_point_inner_bbox);
                 bbox_visualization_multi.push_back(bbox_visualization);
                 center_of_gravity_multi.push_back(print_center_of_gravity);
@@ -572,6 +567,8 @@ void PointOperation::capture_point_bbox_multi()
 #ifdef DEBUG
                 std::cout << "parts_name: " << captured_point_inner_bbox.get_class_name() << std::endl;
                 std::cout << "captured_point " << captured_point_inner_bbox.get_point_num() << std::endl;
+                std::cout << "center_of_gravity: " << center_of_gravity << std::endl;
+                std::cout << std::endl;
 #endif
 
                 // ヒストグラム確認したいとき用
@@ -581,7 +578,6 @@ void PointOperation::capture_point_bbox_multi()
 #endif
             }else{
                 std::cout << "no captured point" << std::endl;
-
             }
 
         }
@@ -596,8 +592,11 @@ void PointOperation::capture_point_bbox_multi()
 
     //  output_ply パーツごとではなく、クラスでまとめて出力する
     std::array<PointSet, 20> output_captured_point;
-    std::array<PointSet, 20> output_center_gravity;
-    // PointSet output_center_gravity("output_center_gravity");
+    // std::array<PointSet, 20> output_center_gravity;
+    PointSet output_center_gravity("output_center_gravity");
+
+
+    std::vector<std::string> gravity_dat;
 
     // captured_point をまとめる処理
     for (auto &captured_point_inner_bbox : all_captured_point)
@@ -605,7 +604,7 @@ void PointOperation::capture_point_bbox_multi()
         // 一枚の画像のbbox
         for (auto &captured_point : captured_point_inner_bbox)
         {
-            output_center_gravity[captured_point.get_class_num()].add_point(captured_point.get_center_of_gravity());
+            // output_center_gravity[captured_point.get_class_num()].add_point(captured_point.get_center_of_gravity());
             for (auto &point : captured_point.get_point_all())
             {
                 // class_numと同じ番号のpointsetに格納
@@ -615,17 +614,29 @@ void PointOperation::capture_point_bbox_multi()
             }
         }
 
-        // center_of_gravity 重心も分けたい場合はこれも必要かも
-        // for (auto &center_of_gravity_multi : all_center_of_gravity)
-        // {
-        //     for (auto &center_of_gravity : center_of_gravity_multi)
-        //     {
-        //         for (auto &point : center_of_gravity.get_point_all())
-        //         {
-        //             output_center_gravity.add_point(point);
-        //         }
-        //     }
-        // }
+        // // center_of_gravity 重心も分けたい場合はこれも必要かも
+        for (auto &center_of_gravity_multi : all_center_of_gravity)
+        {
+            for (auto &center_of_gravity : center_of_gravity_multi)
+            {
+                for (auto &point : center_of_gravity.get_point_all())
+                {
+                    output_center_gravity.add_point(point);
+                }
+
+
+                Eigen::Vector3d center_gravity_p = center_of_gravity.get_point_all().at(0);
+                center_gravity_p += Eigen::Vector3d(0, 0, -0.10);
+
+                std::ostringstream dat_data;
+                dat_data 
+                    << center_of_gravity.get_class_name() + " :"
+                    << center_gravity_p.transpose();
+
+                gravity_dat.push_back(dat_data.str());
+
+            }
+        }
     }
 
     // plyファイル出力
@@ -633,12 +644,28 @@ void PointOperation::capture_point_bbox_multi()
     {
         if (parts_point.get_point_num() != 0)
         {
+            // NOTE: gomi
+            parts_point.transform(Eigen::Vector3d(0, 0, -0.10));
             obj_io.output_ply(parts_point, output_dir + parts_point.get_class_name() + "-" + std::to_string(parts_point.get_class_num()) + ".ply");
         }
     }
+    
+    // NOTE gomi
+    output_center_gravity.transform(Eigen::Vector3d(0, 0, -0.10));
+    obj_io.output_ply(output_center_gravity, output_dir + "center_of_gravity.ply");
+    obj_io.output_dat(output_dir +  "center_of_gravity.dat", gravity_dat);
+
+
+
+
+
+
+
+
+
     // 描画処理
 
-#ifdef OPEN3D_ENABLED
+#ifdef _OPEN3D_ENABLED
     std::cout << "check_ply_visualization" << std::endl;
     Viewer3D check_ply("check_ply");
     check_ply.add_axes();
@@ -1230,7 +1257,7 @@ void PointOperation::make_img_and_calc_mse()
 
     // ply_point_calc_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex)*M_PI / 180, Eigen::Vector3d::UnitZ())));
 
-    ply_point.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex+90)*M_PI / 180, Eigen::Vector3d::UnitZ())));
+    ply_point.rotate(Eigen::Matrix3d(Eigen::AngleAxisd((static_cast<double>(minIndex) / 2.0 + 90.0)*M_PI / 180.0, Eigen::Vector3d::UnitZ())));
 
 
     obj_io.output_ply(ply_point, output_dir + "mse_lidar"+ ".ply");
@@ -1288,7 +1315,7 @@ void PointOperation::make_img_and_calc_mse_height()
     //TODO,NOTE: minIndexは 実行した結果を使っている。
     //index:48, mse:577.3853
     long minIndex = 48;
-    ply_point.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex+90)*M_PI / 180, Eigen::Vector3d::UnitZ())));
+    ply_point.rotate(Eigen::Matrix3d(Eigen::AngleAxisd((static_cast<double>(minIndex) / 2.0 + 90.0)*M_PI / 180.0, Eigen::Vector3d::UnitZ())));
 
 
     pointimg.make_thetaphiIMG_from_pointcloud(ply_point, std::pair<int, int>(image.get_width(), image.get_height()), false);
@@ -1318,7 +1345,7 @@ void PointOperation::make_img_and_calc_mse_height()
 
         pointimg_lidar.make_thetaphiIMG_from_pointcloud(ply_point_height, std::pair<int, int>(image.get_width(), image.get_height()), true);
 
-#ifdef DEBUG
+#ifdef _DEBUG
         cv::imwrite(output_dir + imgname + "_height.png", pointimg_lidar.get_mat());
         // obj_io.output_ply(ply_point_height, output_dir + imgname + "_height.ply");
 #endif
@@ -1360,16 +1387,12 @@ void PointOperation::make_img_and_calc_mse_height()
     // pointcloud translate
     PointSet ply_point_calc_height("translate_point");
     ply_point_calc_height.add_point(ply_point);
-    ply_point_calc_height.transform(Eigen::Vector3d(0, 0, static_cast<double>(minIndex_height) * 0.5 + -15.0));
-    ply_point_calc_height.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex+90)*M_PI / 180, Eigen::Vector3d::UnitZ())));
+    ply_point_calc_height.transform(Eigen::Vector3d(0, 0, static_cast<double>(minIndex_height) * 0.005 + -0.15));
 
 
     InstaImg pointimg_lidar_mse_height;
     pointimg_lidar_mse_height.make_thetaphiIMG_from_pointcloud(ply_point_calc_height, std::pair<int, int>(image.get_width(), image.get_height()), true);
-
     cv::imwrite(output_dir_path + "mse_lidar_height" + ".png", pointimg_lidar_mse_height.get_mat());
-
-    // ply_point.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex+90)*M_PI / 180, Eigen::Vector3d::UnitZ())));
 
 
     obj_io.output_ply(ply_point_calc_height, output_dir + "mse_lidar_height"+ ".ply");

@@ -43,6 +43,7 @@ public:
     void output_dat(std::string, std::vector<std::pair<int, int>>);
     void output_dat(std::string, std::vector<double>);
     void output_dat(std::string, std::vector<int>);
+    void output_dat(std::string, std::vector<std::string>);
 
 };
 

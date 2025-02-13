@@ -667,6 +667,24 @@ void ObjectIO::create_dir(std::string dir_path)
     assert(result);
 }
 
+
+// 結局これ以外のoutput_datは、一つの用途に特化してるので、
+// 関数名を変えて、何をoutputしようとしてるかを明示するようにしたほうが良かったな。
+void ObjectIO::output_dat(std::string filename, std::vector<std::string> s_data)
+{
+    std::ofstream outputFile(filename);
+
+    if(!outputFile.is_open()){
+        std::cout << "failed to open file" << std::endl;
+    }
+
+    for( const auto &p : s_data){
+        outputFile << p << std::endl;
+    }
+
+    std::cout << "output string file complete: " << filename << std::endl;
+}
+
 void ObjectIO::output_dat(std::string filename, std::vector<Eigen::Vector3d> p_data)
 {
     std::ofstream outputFile(filename);

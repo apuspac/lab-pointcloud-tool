@@ -24,6 +24,9 @@
 namespace plt = matplotlibcpp;
 #endif
 
+
+#include <sstream>
+
 // 相互依存
 // HACK: これ書いておく必要ある？
 class ObjectIO;
