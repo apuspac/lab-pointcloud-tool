@@ -18,20 +18,20 @@ void PointOperation::mode_select()
 {
     // https://yutamano.hatenablog.com/entry/2013/11/18/161234
     std::cout << "mode select" << std::endl;
+    switch_func[0] = std::bind(&PointOperation::test_location, this);
     switch_func[1] = std::bind(&PointOperation::transform_rotate, this);
     switch_func[2] = std::bind(&PointOperation::rotate, this);
     switch_func[3] = std::bind(&PointOperation::capture_pointset_one, this);
     switch_func[4] = std::bind(&PointOperation::old_detection_correspoint, this);
     switch_func[5] = std::bind(&PointOperation::shift_test_w_stripe_pattern, this);
     switch_func[6] = std::bind(&PointOperation::capture_point_bbox_multi, this);
-    switch_func[0] = std::bind(&PointOperation::test_location, this);
     switch_func[7] = std::bind(&PointOperation::make_img_and_calc_mse, this);
     switch_func[8] = std::bind(&PointOperation::make_img_and_calc_mse_height, this);
+    // switch_func[9] = std::bind(&PointOperation::capture_point_mask_multi, this);
     switch_func[get_mode()]();
     // switch_func[*] = std::bind(&PointOperation::Rotation_only_simulation, this);
     // switch_func[*] = std::bind(&PointOperation::transform_rotate_simulation, this);
     // switch_func[*] = std::bind(&PointOperation::capture_boxpoint, this);
-    // switch_func[*] = std::bind(&PointOperation::capture_segmentation_point, this);
 }
 
 void PointOperation::set_date()
@@ -439,35 +439,36 @@ void PointOperation::test_location()
         output_dir = output_dir_path;
     }
 
-
-    // 回転角度をラジアンで指定
-    // double angle = M_PI / 4.0; // 45度回転
-    // double angle = 291 + 90;
-    // Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(angle)*M_PI / 180, Eigen::Vector3d::UnitZ()));
-    // ply_point.rotate(rotation_matrix);
-
     ply_point.transform(Eigen::Vector3d(0, 0, 0.10));
 
 
     CaptureDetectPoint capbox;
 
-    // 抽出したポイントを格納
-    PointSet capture_ply("capture_segmentation_point");
+    // 抽出したポイントを格納 : 全体用
+    PointSet captured_point_inner_mask("capture_segmentation_point");
     PointSet mask_visualization("segmentation_mask_point");
 
+
+    // 複数対応は ここから画像ごとに処理を回す
     // 一枚の画像からのMaskDataを渡す
     PointSet one_mask("one_img_segmentation_mask_point");
     PointSet one_mask_forprint("oneimg_segmentation_mask_forprint");
 
-    // Mask one_img_mask = detect_mask.get_mask_data().at(0).get_mask_data_all().at(0);
-    // capbox.capture_segmentation_angle(ply_point_mask, one_mask, one_img_mask, one_mask_forprint);
+    Mask one_img_mask = detect.get_mask_data().at(0).get_mask_data_all().at(0);
+    capbox.capture_segmentation_angle(ply_point, one_mask, one_img_mask, one_mask_forprint);
 
+    one_mask.create_histgram();
 
     // 結果を格納
-    capture_ply.add_point(one_mask);
+    captured_point_inner_mask.add_point(one_mask);
     mask_visualization.add_point(one_mask_forprint);
 
-    obj_io.output_ply(capture_ply, "out/" + date + "/" + capture_ply.get_name() + ".ply");
+//     obj_io.output_ply(captured_point_inner_mask
+// , "out/" + date + "/" + captured_point_inner_mask.get_name() + ".ply");
+// 
+
+    captured_point_inner_mask.transform(Eigen::Vector3d(0, 0, -0.10));
+    obj_io.output_ply(captured_point_inner_mask, output_dir + "mask_point.ply");
 
 
 }

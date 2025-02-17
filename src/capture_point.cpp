@@ -564,8 +564,58 @@ void CaptureDetectPoint::capture_segmentation_angle(PointSet &plypoint, PointSet
     double allow_angle_radian = allow_angle * (M_PI / 180.0);
     std::cout << "allow_angle_radian:" << allow_angle_radian << std::endl;
 
+
+
+
+    // 輪郭から塗りつぶしマスク画像を生成
+    // 7680 3840
+    int height = 3840;
+    int width = 7680;
+    cv::Mat mask = cv::Mat::zeros(height, width, CV_8UC1);
+    std::vector<std::vector<cv::Point>> contours;
+
+    // Maskクラスのmask_uvをcontourに変換
+    std::vector<cv::Point> contour;
+    for (const auto& uv : detect_mask.get_mask()) {
+        contour.push_back(cv::Point(uv.at(0), uv.at(1)));
+    }
+    contours.push_back(contour);
+
+
+    cv::fillPoly(mask, contours, cv::Scalar(255));
+
+    // 計算量おさえるためのstep
+    int step = 10;
+
+
+    for (int y = 0; y < mask.rows; y+=step) {
+        for (int x = 0; x < mask.cols; x+=step) {
+            if (mask.at<uchar>(y, x) > 0) {
+                // マスク内の画素を球面座標に変換
+                Eigen::Vector3d mask_point = equirec_to_sphere(x, y, mask.cols, mask.rows);
+
+                std::cout << mask_point.transpose() << std::endl;
+                // 点の属す領域を判定
+                int region_line = check_xy_region(mask_point);
+
+                for (auto target_point : plypoint.get_point_all()) {
+                    if (check_xy_region(target_point) == region_line) {
+                        if (calc_angle_to_vector(target_point, mask_point) < allow_angle_radian) {
+                            capture_point.add_point(target_point);
+                        }
+                    }
+                }
+
+                // print用に追加
+                add_edge(mask_point);
+            }
+        }
+    }
+
+
+
     // 一個一個の点に対し、抽出対象範囲の角度にある点かどうか判定する。
-    for (auto mask_point : detect_mask.get_mask_xyz())
+/*     for (auto mask_point : detect_mask.get_mask_xyz())
     {
         // 点の属す領域を判定して 計算を減らしてみる
         int region_line = check_xy_region(mask_point);
@@ -583,7 +633,7 @@ void CaptureDetectPoint::capture_segmentation_angle(PointSet &plypoint, PointSet
         }
         // print用に追加
         add_edge(mask_point);
-    }
+    } */
 }
 
 
