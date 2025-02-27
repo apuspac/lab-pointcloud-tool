@@ -5,7 +5,6 @@
 #ifndef POINTSET_HPP_INCLUDE_GUARD
 #define POINTSET_HPP_INCLUDE_GUARD
 
-#include <iostream>
 #include <vector>
 #include <float.h>
 #include <math.h>
@@ -44,10 +43,10 @@ private:
     std::string class_name;
 
     // histgram
-    std::array<int, 500> histgram_intervals;
+    std::array<int, 1000> histgram_intervals;
 
 public:
-    PointSet(std::string point_name = "none") : name(point_name) { histgram_intervals = {}; }
+    PointSet(std::string point_name = "none") : name(point_name) { histgram_intervals = {}; center_of_gravity = Eigen::Vector3d(0, 0, 0); }
     ~PointSet() {}
 
     // set
@@ -84,7 +83,8 @@ public:
     Eigen::Vector3d get_point(uint64_t i) { return point3.at(i); }
     Eigen::Vector3d get_point_polar(uint64_t i) { return point3_polar.at(i); }
     std::array<int, 2> get_edge(uint64_t i) { return edge2.at(i); }
-    Eigen::Vector3d get_center_of_gravity() { return center_of_gravity; }
+    // Eigen::Vector3d get_center_of_gravity() { return center_of_gravity; }
+    Eigen::Vector3d get_center_of_gravity();
 
     // 全体getter
     std::vector<Eigen::Vector3d> get_point_all() { return point3; }

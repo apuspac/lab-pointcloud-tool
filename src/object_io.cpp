@@ -19,7 +19,7 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
     // p: plyファイル .ply
     // i: imgファイル .jpg,png
     // j: jsonファイル .json
-    // d: デフォルトdirpath
+    // d: output dir path
     // o: mode 選択
     // h: help
     // 複数入力をさせたいけど ちょっと面倒っぽいので、 2回指定するときは、2回とも入力する。
@@ -37,7 +37,7 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
             {"ply", required_argument, 0, 'p'},
             {"img", required_argument, 0, 'i'},
             {"json", required_argument, 0, 'j'},
-            // {"dir", required_argument, 0, 'd'},
+            {"dir", required_argument, 0, 'd'},
             {"mode", required_argument, 0, 'o'},
             {"help", no_argument, 0, 'h'},
 
@@ -71,9 +71,9 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
             operation.set_json_path(std::string(optarg));
             break;
 
-        // case 'd':
-        //     operation.set_default_dir_path(std::string(optarg));
-        //     break;
+        case 'd':
+            operation.set_output_dir_path(std::string(optarg));
+            break;
         case 'o':
             operation.set_mode(std::string(optarg));
             break;
@@ -82,8 +82,8 @@ void ObjectIO::option_process(int argc, char **argv, PointOperation &operation)
                       << "--img_cp,  -m : corresp img point data filename" << std::endl
                       << "--ply_cp,   -x : corresp ply point data filename" << std::endl
                       << "--ply,      -p : ply file name " << std::endl
-                      << "--img,      -m : img file path" << std::endl;
-                      // << "--dir,      -d : dir file path" << std::endl;
+                      << "--img,      -m : img file path" << std::endl
+                      << "--dir,      -d : output dir path" << std::endl;
             break;
         default:
             break;
@@ -340,7 +340,6 @@ void ObjectIO::load_img_point_file(std::string img_path, PointSet &loaded_point_
     std::array<double, 2> img_size = get_img_width_height(img_path);
 
     // 点群の読み込みとほぼ同じことをしているので、 ほんとは一緒にしたいが、PointSetを画像点も扱えるようにしないといけない。
-    // つまりめんどい
 
     // getlineで1行ずつ処理する
     while (std::getline(data_file, one_line_buffer))
@@ -403,53 +402,6 @@ void ObjectIO::load_img_point_file(std::string img_path, PointSet &loaded_point_
     }
 }
 
-// void ObjectIO::output_ply(PointSet &point_data)
-// {
-//     // std::ios::app : 追記
-//     // std::ios::out : 書き込み
-//     std::ofstream output_ply(default_dir, std::ios::out);
-
-//     if (point_data.is_empty_edge() == false)
-//     {
-//         // edgeがある場合
-//         output_ply << "ply" << std::endl
-//                    << "format ascii 1.0" << std::endl
-//                    << "element vertex " << point_data.get_point_num() << std::endl
-//                    << "property float x" << std::endl
-//                    << "property float y" << std::endl
-//                    << "property float z" << std::endl
-//                    << "element edge " << point_data.get_edge_num() << std::endl
-//                    << "property int vertex1" << std::endl
-//                    << "property int vertex2" << std::endl
-//                    << "end_header" << std::endl;
-
-//         for (const Eigen::Vector3d &tmp : point_data.get_point_all())
-//         {
-//             output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
-//         }
-
-//         for (const auto &tmp : point_data.get_edge_all())
-//         {
-//             output_ply << tmp.at(0) << " " << tmp.at(1) << std::endl;
-//         }
-//     }
-//     if (point_data.is_empty())
-//     {
-//         // edgeがない場合
-//         output_ply << "ply" << std::endl
-//                    << "format ascii 1.0" << std::endl
-//                    << "element vertex " << point_data.get_point_num() << std::endl
-//                    << "property float x" << std::endl
-//                    << "property float y" << std::endl
-//                    << "property float z" << std::endl
-//                    << "end_header" << std::endl;
-
-//         for (const Eigen::Vector3d &tmp : point_data.get_point_all())
-//         {
-//             output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
-//         }
-//     }
-// }
 /**
  * @brief PointSetをplyファイルに書き込み、出力する
  *
@@ -665,6 +617,24 @@ void ObjectIO::create_dir(std::string dir_path)
     bool result = std::filesystem::create_directories(dir_path);
 
     assert(result);
+}
+
+
+// 結局これ以外のoutput_datは、一つの用途に特化してるので、
+// 関数名を変えて、何をoutputしようとしてるかを明示するようにしたほうが良かったな。
+void ObjectIO::output_dat(std::string filename, std::vector<std::string> s_data)
+{
+    std::ofstream outputFile(filename);
+
+    if(!outputFile.is_open()){
+        std::cout << "failed to open file" << std::endl;
+    }
+
+    for( const auto &p : s_data){
+        outputFile << p << std::endl;
+    }
+
+    std::cout << "output string file complete: " << filename << std::endl;
 }
 
 void ObjectIO::output_dat(std::string filename, std::vector<Eigen::Vector3d> p_data)

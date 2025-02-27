@@ -75,12 +75,7 @@ void Mask::equirectangular_to_sphere(double img_width, double img_height)
  */
 bool check_point_in_polygon(Eigen::Vector3d target_point, Eigen::Vector3d tri_0, Eigen::Vector3d tri_1, Eigen::Vector3d tri_2)
 {
-    // Eigen::Vector3d target_point = {2, 2, 2};
-
     std::vector<Eigen::Vector3d> triangle;
-    // Eigen::Vector3d tri_0 = {1, 0, 0};
-    // Eigen::Vector3d tri_1 = {0, 1, 0};
-    // Eigen::Vector3d tri_2 = {0, 0, 1};
     triangle.push_back(tri_0);
     triangle.push_back(tri_1);
     triangle.push_back(tri_2);
@@ -149,7 +144,7 @@ bool check_point_in_polygon(Eigen::Vector3d target_point, Eigen::Vector3d tri_0,
 }
 
 /**
- * @brief バウンディングボックスを追加。 TODO: Setbboxはbboxクラスに実装すべき
+ * @brief バウンディングボックスを追加。
  *
  * @param xmin
  * @param ymin
@@ -158,8 +153,6 @@ bool check_point_in_polygon(Eigen::Vector3d target_point, Eigen::Vector3d tri_0,
  */
 void CaptureDetectPoint::set_bbox(double xmin, double ymin, double xmax, double ymax)
 {
-    // "xmin":62.5458488464 "ymin":135.1288757324, "xmax":206.3257598877, "ymax":380.7976074219,
-    // Eigen p1,p2,p3,p4;
     BBox square_pyramid(xmin, ymin, xmax, ymax);
     std::cout << xmin << ymin << xmax << ymax << std::endl;
 
@@ -206,15 +199,7 @@ void CaptureDetectPoint::capture_bbox(PointSet &plypoint, PointSet &capture_poin
     // 点を代入したときの距離が 0より上かどうかを判定する
     auto is_point_upper_side_of_plane = [](Eigen::Vector3d point, Eigen::Vector3d normal, double d)
     {
-        // これは点と平面の距離
-        // double flac_up = normal(0) * point(0) + normal(1) * point(1) + normal(2) * point(2) + d;
-        // double flac_down = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0) std::pow(point(2), 2.0));
-        // double tmp = std::abs(flac_up) / flac_down;
-
         double tmp = normal(0) * point(0) + normal(1) * point(1) + normal(2) * point(2) + d;
-
-        // std::cout
-        // << "point_upper_check:" << tmp << std::endl;
 
         if (tmp > 0)
         {
@@ -227,7 +212,6 @@ void CaptureDetectPoint::capture_bbox(PointSet &plypoint, PointSet &capture_poin
         return false;
     };
 
-    // std::cout << "------capture_boxpoint" << std::endl;
 
     // 画素値から球投影の座標変換したものを格納
     std::vector<Eigen::Vector3d> box = detect_bbox.get_xyz();
@@ -247,14 +231,10 @@ void CaptureDetectPoint::capture_bbox(PointSet &plypoint, PointSet &capture_poin
     std::array<double, 4> distance;
 
     // 四角錐定義
-    // TODO: ここの取り方は逆らしいので、 外積の方向を変えてあげる。 で、is_point_upper_side_of_planeの判定を変える。
     triangle_vec.at(0) = {origin, box.at(2), box.at(0)};
     triangle_vec.at(1) = {origin, box.at(0), box.at(1)};
     triangle_vec.at(2) = {origin, box.at(3), box.at(2)};
     triangle_vec.at(3) = {origin, box.at(1), box.at(3)};
-
-    // 四角錐の平面の面法線を計算
-    // ax+by+cz+d = 0 の dを求める
 
     for (int i = 0; i < 4; i++)
     {
@@ -268,13 +248,9 @@ void CaptureDetectPoint::capture_bbox(PointSet &plypoint, PointSet &capture_poin
         if (is_point_upper_side_of_plane(target_point, normal_vec.at(0), distance.at(0)) && is_point_upper_side_of_plane(target_point, normal_vec.at(1), distance.at(1)) && is_point_upper_side_of_plane(target_point, normal_vec.at(2), distance.at(2)) && is_point_upper_side_of_plane(target_point, normal_vec.at(3), distance.at(3)))
         {
             capture_point.add_point(target_point);
-            // std::cout << "num" << capture_point.get_point_num();
         }
     }
 
-    // std::cout
-    //     << "plane_normal: " << normal_vec.at(0).transpose() << std::endl
-    //     << "d: " << distance.at(0) << std::endl;
     /**
      * @brief 原点との引数の点とのedge 直線をsegpoint_with_lineに追加する
      * 原点が0番目に保存されていることが前提なので、 最初に追加しておく。
@@ -311,60 +287,6 @@ void CaptureDetectPoint::capture_bbox(PointSet &plypoint, PointSet &capture_poin
         add_edge(box.at(i));
     }
 }
-// TODO:edgeの処理をなんとか作る。
-
-// /**
-//  * @brief 原点との引数の点とのedge 直線をsegpoint_with_lineに追加する
-//  * 原点が0番目に保存されていることが前提なので、 最初に追加しておく。
-//  *
-//  */
-// auto add_edge = [&bbox_point_with_line](Eigen::Vector3d edge_point)
-// {
-//     Eigen::Vector3d tmp_normalize = edge_point.normalized();
-
-//     // 極座標に変換
-//     double theta = std::acos(
-//         tmp_normalize(2) /
-//         std::sqrt(std::pow(tmp_normalize(0), 2.0) + std::pow(tmp_normalize(1), 2.0) + std::pow(tmp_normalize(2), 2.0)));
-
-//     double phi = std::atan2(tmp_normalize(1), tmp_normalize(0));
-
-//     // 距離rを伸ばしてpointを新たに格納
-//     double r = 20.0;
-//     Eigen::Vector3d tmp_vec = {r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)};
-//     bbox_point_with_line.add_point(tmp_vec);
-
-//     // 原点とのedgeを格納
-//     long unsigned int i = 1;
-//     std::array<int, 2> to_zero{0, static_cast<int>(bbox_point_with_line.get_point_num() - i)};
-//     bbox_point_with_line.add_edge(to_zero);
-// };
-
-// // 原点とのedgeを作る用に 原点を追加
-// Eigen::Vector3d zero = {0, 0, 0};
-// bbox_point_with_line.add_point(zero);
-
-// double allow_angle = 0.2;
-// double allow_angle_radian = allow_angle * (M_PI / 180.0);
-// std::cout << "allow_angle_radian:" << allow_angle_radian << std::endl;
-
-// for (auto target_line : segmentation_point.get_point_all())
-// {
-//     // target_line = segmentation_point.get_point(1);
-//     add_edge(target_line);
-//     int region_line = check_xy_region(target_line);
-
-//     for (auto target_point : plypoint.get_point_all())
-//     {
-//         if (check_xy_region(target_point) == region_line)
-//         {
-//             if (calc_angle_to_line(target_point, target_line) < allow_angle_radian)
-//             {
-//                 capture_point.add_point(target_point);
-//             }
-//         }
-//     }
-// }
 
 /**
  * @brief 点が属す領域を返す。
@@ -423,10 +345,12 @@ void CaptureDetectPoint::capture_segmentation_distance(PointSet &plypoint, Point
         Eigen::Matrix3d matrix_I = Eigen::Matrix3d::Identity();
         auto normal_line = (matrix_I - (line * line.transpose())) * point;
 
-        // std::cout << plypoint.transpose() << std::endl
-        //           << line.transpose() << std::endl
-        //           << normal_line.squaredNorm() << std::endl
-        //           << std::endl;
+#ifdef _DEBUG
+        std::cout << plypoint.transpose() << std::endl
+                  << line.transpose() << std::endl
+                  << normal_line.squaredNorm() << std::endl
+                  << std::endl;
+#endif
 
         return normal_line.squaredNorm();
     };
@@ -518,11 +442,6 @@ void CaptureDetectPoint::capture_segmentation_angle(PointSet &plypoint, PointSet
     auto calc_angle_to_vector = [](Eigen::Vector3d point, Eigen::Vector3d mask)
     {
         double theta = std::acos(mask.dot(point) / point.norm());
-        // double theta = std::cos(mask.dot(point) / (mask.squaredNorm() * point.squaredNorm()));
-
-        // std::cout << "theta:" << theta << std::endl;
-
-        // std::cout << line.dot(point) << " : " << point.squaredNorm() << " : " << line.dot(point) / (line.squaredNorm() * point.squaredNorm()) << " : " << theta << std::endl;
         return theta;
     };
 
@@ -564,25 +483,52 @@ void CaptureDetectPoint::capture_segmentation_angle(PointSet &plypoint, PointSet
     double allow_angle_radian = allow_angle * (M_PI / 180.0);
     std::cout << "allow_angle_radian:" << allow_angle_radian << std::endl;
 
-    // 一個一個の点に対し、抽出対象範囲の角度にある点かどうか判定する。
-    for (auto mask_point : detect_mask.get_mask_xyz())
-    {
-        // 点の属す領域を判定して 計算を減らしてみる
-        int region_line = check_xy_region(mask_point);
 
-        for (auto target_point : plypoint.get_point_all())
-        {
-            if (check_xy_region(target_point) == region_line)
-            {
-                if (calc_angle_to_vector(target_point, mask_point) < allow_angle_radian)
-                {
-                    capture_point.add_point(target_point);
-                    std::cout << target_point.x() << " " << target_point.y() << " " << target_point.z() << std::endl;
+
+
+    // 輪郭から塗りつぶしマスク画像を生成
+    // 7680 3840
+    int height = 3840;
+    int width = 7680;
+    cv::Mat mask = cv::Mat::zeros(height, width, CV_8UC1);
+    std::vector<std::vector<cv::Point>> contours;
+
+    // Maskクラスのmask_uvをcontourに変換
+    std::vector<cv::Point> contour;
+    for (const auto& uv : detect_mask.get_mask()) {
+        contour.push_back(cv::Point(uv.at(0), uv.at(1)));
+    }
+    contours.push_back(contour);
+
+
+    cv::fillPoly(mask, contours, cv::Scalar(255));
+
+    // 計算量おさえるためのstep
+    int step = 10;
+
+
+    for (int y = 0; y < mask.rows; y+=step) {
+        for (int x = 0; x < mask.cols; x+=step) {
+            if (mask.at<uchar>(y, x) > 0) {
+                // マスク内の画素を球面座標に変換
+                Eigen::Vector3d mask_point = equirec_to_sphere(x, y, mask.cols, mask.rows);
+
+                std::cout << mask_point.transpose() << std::endl;
+                // 点の属す領域を判定
+                int region_line = check_xy_region(mask_point);
+
+                for (auto target_point : plypoint.get_point_all()) {
+                    if (check_xy_region(target_point) == region_line) {
+                        if (calc_angle_to_vector(target_point, mask_point) < allow_angle_radian) {
+                            capture_point.add_point(target_point);
+                        }
+                    }
                 }
+
+                // print用に追加
+                add_edge(mask_point);
             }
         }
-        // print用に追加
-        add_edge(mask_point);
     }
 }
 

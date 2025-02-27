@@ -25,11 +25,8 @@ int main(int argc, char *argv[])
 
 #ifdef MATPLOTLIB_ENABLED
     std::cout << "USE_MATPLOTLIB" << std::endl;
-    // plt::plot({1, 3, 2, 4});
-    // plt::show();
 #endif
 
-    // 有効桁数
     std::cout << std::setprecision(15);
 
     PointOperation opt;

@@ -24,6 +24,9 @@
 namespace plt = matplotlibcpp;
 #endif
 
+
+#include <sstream>
+
 // 相互依存
 // HACK: これ書いておく必要ある？
 class ObjectIO;
@@ -44,22 +47,30 @@ private:
     std::vector<std::string> corresp_ply_file_path;
     std::vector<std::string> ply_file_path;
     std::vector<std::string> img_file_path;
-    // デフォルトdir(1つのフォルダに上のplyファイルをまとめる)
-    // std::string default_dir_path;
+    // outputdir
+    std::string output_dir_path;
     std::string date;
     // jsonファイル名
     std::string json_file_path;
 
 public:
-    PointOperation(std::string _mode = "0") : mode(_mode) {}
+    PointOperation(
+            std::string _mode = "0", 
+            std::string _output_dir_path = "", 
+            std::string _json_file_path = ""
+    ) : mode(_mode), output_dir_path(_output_dir_path), json_file_path(_json_file_path){}
+
     ~PointOperation() {}
+
+
+
 
     // ファイル名取得
     std::string get_corresp_img_file_name(int number) { return corresp_img_file_path.at(number); }
     std::string get_corresp_ply_file_name(int number) { return corresp_ply_file_path.at(number); }
     std::string get_ply_file_path(int number) { return ply_file_path.at(number); }
     std::string get_img_file_path(int number) { return img_file_path.at(number); }
-    // std::string get_default_dir_path() { return default_dir_path; }
+    std::string get_output_dir_path() { return output_dir_path; }
     std::string get_json_path() { return json_file_path; }
 
     // モード取得
@@ -72,7 +83,7 @@ public:
     void set_corresp_ply_file_name(std::string name) { corresp_ply_file_path.push_back(name); }
     void set_plyfile_name(std::string name) { ply_file_path.push_back(name); }
     void set_img_file_path(std::string name) { img_file_path.push_back(name); }
-    // void set_default_dir_path(std::string name) { default_dir_path = name; }
+    void set_output_dir_path(std::string name) { output_dir_path = name; }
     void set_json_path(std::string name) { json_file_path = name; }
     void set_mode(std::string mode_) { mode = mode_; }
     void set_date(std::string date_) { date = date_; }
@@ -82,10 +93,14 @@ public:
     // ファイル名を出力
     void print();
 
+    void capture_bbox_point(PointSet &, DetectionData &, Viewer3D &);
+    void capture_mask_point(PointSet &, DetectionData &, Viewer3D &);
+    void remove_pointset_floor(PointSet &, PointSet &, Eigen::Vector3d);
+
     // switch文回避のための map
     std::unordered_map<int, std::function<void(void)>> switch_func;
 
-    // mode切り替えて使う
+    // mode指定する。
     void transform_rotate();
     void transform_rotate_simulation();
     void rotate();
@@ -94,15 +109,10 @@ public:
     void capture_point_bbox_multi();
     void old_detection_correspoint();
     void shift_test_w_stripe_pattern();
+    void make_img_and_calc_mse();
+    void make_img_and_calc_mse_height();
+    void capture_segmentation_point();
     void test_location();
-
-    // mode切り替えしない関数
-    void capture_bbox_point(PointSet &, DetectionData &, Viewer3D &);
-    void capture_mask_point(PointSet &, DetectionData &, Viewer3D &);
-    void remove_pointset_floor(PointSet &, PointSet &, Eigen::Vector3d);
-
-
-
 
 #ifdef OPEN3D_ENABLED
     void projection_to_sphere();

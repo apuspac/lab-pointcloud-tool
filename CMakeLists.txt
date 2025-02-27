@@ -1,7 +1,7 @@
 # CMakeのバージョン指定
 cmake_minimum_required(VERSION 3.5.1)
 
-# # CXXと指定すると C++のみのプロジェクトになり Cは考えない。
+## CXXと指定すると C++のみのプロジェクトになり Cは考えない。
 project(Rotation CXX)
 
 find_package(OpenCV REQUIRED)
@@ -63,7 +63,6 @@ target_compile_definitions(${PROJECT_NAME}
         $<$<BOOL:${MATPLOTLIB_ENABLED}>:MATPLOTLIB_ENABLED>
 )
 
-
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         ${OpenCV_LIBS}
@@ -74,4 +73,3 @@ target_link_libraries(${PROJECT_NAME}
         $<$<BOOL:${MATPLOTLIB_ENABLED}>:Python3::Python>
         $<$<BOOL:${MATPLOTLIB_ENABLED}>:Python3::NumPy>
 )
-# target_link_libraries(DisplayImage Eigen3::Eigen)
