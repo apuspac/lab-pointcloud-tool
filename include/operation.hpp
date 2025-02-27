@@ -93,10 +93,14 @@ public:
     // ファイル名を出力
     void print();
 
+    void capture_bbox_point(PointSet &, DetectionData &, Viewer3D &);
+    void capture_mask_point(PointSet &, DetectionData &, Viewer3D &);
+    void remove_pointset_floor(PointSet &, PointSet &, Eigen::Vector3d);
+
     // switch文回避のための map
     std::unordered_map<int, std::function<void(void)>> switch_func;
 
-    // mode切り替えて使う
+    // mode指定する。
     void transform_rotate();
     void transform_rotate_simulation();
     void rotate();
@@ -107,15 +111,8 @@ public:
     void shift_test_w_stripe_pattern();
     void make_img_and_calc_mse();
     void make_img_and_calc_mse_height();
+    void capture_segmentation_point();
     void test_location();
-
-    // mode切り替えしない関数
-    void capture_bbox_point(PointSet &, DetectionData &, Viewer3D &);
-    void capture_mask_point(PointSet &, DetectionData &, Viewer3D &);
-    void remove_pointset_floor(PointSet &, PointSet &, Eigen::Vector3d);
-
-
-
 
 #ifdef OPEN3D_ENABLED
     void projection_to_sphere();

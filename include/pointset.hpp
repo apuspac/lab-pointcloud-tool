@@ -5,7 +5,6 @@
 #ifndef POINTSET_HPP_INCLUDE_GUARD
 #define POINTSET_HPP_INCLUDE_GUARD
 
-#include <iostream>
 #include <vector>
 #include <float.h>
 #include <math.h>

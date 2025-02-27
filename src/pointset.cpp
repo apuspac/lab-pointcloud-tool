@@ -127,8 +127,6 @@ Eigen::Vector3d PointSet::get_center_of_gravity()
  */
 void PointSet::calc_center_of_gravity()
 {
-    // std::cout << "get_center_of_gravity" << std::endl;
-
     Eigen::Vector3d sum = std::reduce(point3.begin(), point3.end(), Eigen::Vector3d(0, 0, 0), [](Eigen::Vector3d a, Eigen::Vector3d b)
                                       { return a + b; });
     center_of_gravity = (sum / static_cast<double>(point3.size()));
@@ -147,7 +145,6 @@ void PointSet::create_histgram()
         distance_from_center.push_back(tmp_dis_center);
     }
 
-    // std::array<int, 500> histgram_intervals = {};
     double interval = 0.025;
 
     auto is_within_roomrange = [](double x)
@@ -156,28 +153,19 @@ void PointSet::create_histgram()
     // 各点の距離をintervalで割って、histgram_intervalsに格納
     for (const auto &distance : distance_from_center)
     {
-        // std::cout << (distance / interval) << "    ";
         if (is_within_roomrange(distance / interval))
         {
             histgram_intervals.at(static_cast<int>(distance / interval)) += 1;
-            // std::cout << "in  " << std::endl;
         }
     }
 
     std::cout << "histgram_distance_from_center" << std::endl;
-
-    // for (unsigned int i = 0; i < histgram_intervals.size(); i++)
-    // {
-    // std::cout << i * interval << ", " << histgram_intervals.at(i) << std::endl;
-    // }
 
     std::array<int, 1000> histgram_one_diff = {};
 
     // 一階差分を取ってみる
     for (std::array<int, 1000>::iterator itr = histgram_intervals.begin() + 1; itr != histgram_intervals.end(); itr++)
     {
-        // std::cout << *itr - *(itr - 1) << std::endl;
-
         // イテレータの添字は現在のitrとはじめのitrのdistanceで取れる
         histgram_one_diff.at(std::distance(histgram_intervals.begin(), itr)) = *itr - *(itr - 1);
     }
@@ -195,11 +183,8 @@ void PointSet::create_histgram()
 
     for (std::array<int, 1000>::iterator itr = histgram_one_diff.begin() + 1; itr != histgram_one_diff.end(); itr++)
     {
-        // std::cout << *(itr - 1) * (*itr) << " " << (*(itr - 1)) << std::endl;
         if (is_extremum(*(itr - 1), *itr))
         {
-            // std::cout << "sign changed" << std::endl;
-            // std::cout << std::distance(histgram_one_diff.begin(), itr) * interval << std::endl;
             if (flag == false)
             {
                 auto peak_range = static_cast<double>(std::distance(histgram_one_diff.begin(), itr)) * interval;
@@ -220,7 +205,6 @@ void PointSet::create_histgram()
 
         if (tmp_dis_center > (first_peak - filter_range) && tmp_dis_center < (first_peak + filter_range))
         {
-            // std::cout << tmp_dis_center << std::endl;
             point3_filtered.push_back(point);
         }
     }
@@ -248,8 +232,6 @@ void PointSet::output_hist(std::string count)
  */
 void PointSet::convert_to_polar()
 {
-    // std::cout << "convert_to_polar" << std::endl;
-
     if(is_empty_polar()){
         point3_polar.resize(point3.size());
     }else{

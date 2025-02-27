@@ -240,8 +240,6 @@ void EdgeImg::detect_edge_with_sobel(const cv::Mat &origin_img)
 {
     cv::Mat output, sobel_x, sobel_y, sobel_tmp, tmp;
 
-    // Cannyを使うとなぜだめなのかはメモ参照
-
     // チャンネル数が1出ない場合は、グレースケールに変換
     if (origin_img.type() != CV_8UC1)
     {
@@ -249,38 +247,17 @@ void EdgeImg::detect_edge_with_sobel(const cv::Mat &origin_img)
     }
     else
     {
-        // cv::cvtColor(origin_img, sobel_tmp, cv::COLOR_BGR2GRAY);
         origin_img.copyTo(sobel_tmp);
     }
 
     cv::GaussianBlur(sobel_tmp, sobel_tmp, cv::Size(3, 3), 0, 0, cv::BORDER_DEFAULT);
-
-    // NOTE: これ別々にやる必要があるかは 後で調べる
     cv::Sobel(sobel_tmp, sobel_x, CV_64F, 1, 0, 3);
-    // cv::Sobel(sobel_tmp, sobel_y, CV_64F, 0, 1, 3);
-
-    // sobel 関数は　karnel3のとき cv::Scharr関数を使ってるらしい
-    // cv::Scharr(sobel_tmp, sobel_x, CV_8SC1, 1, 0);
-    // cv::Scharr(sobel_tmp, sobel_y, CV_8SC1, 1, 0);
-
-    // cv::addWeighted(sobel_x, 1.0, sobel_y, 1.0, 0.0, tmp);
     sobel_x.copyTo(tmp);
-    // show("sobel", 0.25);
 
     // 絶対値処理をしない場合は、負の値が出てくるので、showは右側のエッジが出てこない。
     cv::convertScaleAbs(tmp, tmp);
 
     tmp.copyTo(img);
-    // show("sobel", 0.25);
-
-    // tmp.copyTo(img);
-    // img = tmp;
-
-    // std::cout << "sobel" << img.size() << std::endl;
-    // std::cout << "soble" << img.channels() << std::endl;
-    // show("sobel:" + name, 0.25);
-
-    // cv::imwrite("sobel:" + name + ".png", tmp);
 }
 
 /**
@@ -303,7 +280,6 @@ void InstaImg::convert_to_unitsphere(PointSet &projected_img)
         double phi = u * 2 * M_PI;
         double theta = v * M_PI;
 
-        // NOTE: ここ thetaにabsかけてもいいんですか？
         Eigen::Vector3d p = {abs(sin(theta)) * sin(phi), abs(sin(theta)) * cos(phi), cos(theta)};
 
         return p;
@@ -318,8 +294,6 @@ void InstaImg::convert_to_unitsphere(PointSet &projected_img)
             uchar *ptr = img.data + img.step * v;
             if (ptr[u] != 0)
             {
-                // NOTE: ここv, uの順番 逆じゃない？
-                // projected_img.add_point(equirectangular_to_sphere(v, u));
                 projected_img.add_point(equirectangular_to_sphere(u, v));
             }
         }
@@ -363,10 +337,7 @@ void InstaImg::img_alpha_blending(const cv::Mat &blend_a, const cv::Mat &blend_b
     cv::addWeighted(out_a, weight, out_b, weight, 0, output);
 
     // show
-    // show("alpha blending:" + name, 0.25, output);
     output.copyTo(img);
-    // img = output;
-    // cv::imwrite("output_image.png", output);
 }
 
 /**
@@ -436,7 +407,6 @@ if (reference.channels() != comparison.channels())
     }
 
     cv::Scalar_<double> dest = cv::quality::QualityMSE::compute(reference, comparison, cv::noArray());
-    // cv::Scalar_<double> dest_ssim = cv::quality::QualitySSIM::compute(reference, comparison, cv::noArray());
 
     return dest[0];
 }
@@ -500,8 +470,6 @@ std::vector<int> ImgCalc::shift(std::vector<int> target, int size_phi, int size_
 
             int new_u = (u + y + size_phi) % size_phi;
             int new_v = (v + x + size_theta) % size_theta;
-            // std::cout << u << " " << v << " TO ";
-            // std::cout << new_u << " " << new_v << std::endl;
             out_mat.at(new_u * size_theta + new_v) = ptr;
         }
     }
@@ -721,73 +689,6 @@ void LidarImg::ply_to_360paranoma_img(PointSet &ply_point, int flag)
     }
 
     std::cout << "set_store_info" << store_info.size() << std::endl;
-    // 極座標から画像へ投影
-    // for (auto &point : ply_point.get_point_all_polar())
-    // {
-    //     double u_dash = point(2) / (2.0 * M_PI);
-    //     double v_dash = point(1) / M_PI;
-    //     // で、おそらく画像は視点座標系で左手系になるので、
-    //     // 右手系と合わせるために、 反転して、90度回転させる
-    //     int u = static_cast<int>(-(u_dash * width) + (width / 4));
-    //     int v = static_cast<int>(v_dash * height);
-
-    //     int index = &point - &ply_point.get_point_all_polar()[0];
-
-    //     if (u > width)
-    //     {
-    //         u -= static_cast<int>(width);
-    //     }
-
-    //     if (flag == true)
-    //     {
-    //         int new_u = (u + img.rows) % img.rows;
-    //         int new_v = (v + img.cols) % img.cols;
-    //         assert(new_u <= width);
-    //         assert(new_v <= height);
-    //         assert(index > ply_point.get_point_all().size());
-    //         std::cout << "index: " << index << std::endl;
-    //         // set_store_info(new_u, new_v, ply_point.get_point(index));
-    //     }
-    //     set_pixel_255(u, v);
-    // }
-
-    // auto polar_iter = ply_point.get_point_all_polar().begin();
-    // std::cout << *polar_iter << std::endl;
-
-    // auto polar_end = ply_point.get_point_all_polar().end();
-    // auto point_iter = ply_point.get_point_all().begin();
-
-    // while (polar_iter != polar_end)
-    // {
-    //     auto &point = *polar_iter;
-    //     std::cout << point << std::endl;
-    //     // auto &nonpolar = *point_iter;
-
-    //     double u_dash = point(2) / (2.0 * M_PI);
-    //     double v_dash = point(1) / M_PI;
-    //     // で、おそらく画像は視点座標系で左手系になるので、
-    //     // 右手系と合わせるために、 反転して、90度回転させる
-    //     int u = static_cast<int>(-(u_dash * width) + (width / 4));
-    //     int v = static_cast<int>(v_dash * height);
-    //     if (u > width)
-    //     {
-    //         u -= static_cast<int>(width);
-    //     }
-    //     if (flag == true)
-    //     {
-    //         int new_u = (u + img.rows) % img.rows;
-    //         int new_v = (v + img.cols) % img.cols;
-    //         assert(new_u <= width);
-    //         assert(new_v <= height);
-    //         set_store_info(new_u, new_v, point);
-    //     }
-
-    //     set_pixel_255(u, v);
-    // ++polar_iter;
-    //     ++point_iter;
-    // }
-
-    // exit(0);
 }
 
 /**
@@ -819,22 +720,6 @@ cv::Mat InstaImg::shift(int x, int y)
     }
 
     return out_mat;
-
-    // for (int v = 0; v < img.rows; v++)
-    // {
-    //     for (int u = 0; u < img.cols; u++)
-    //     {
-    //         uchar *ptr = img.data + img.step * v;
-    //         if (ptr[u] != 0)
-    //         {
-    //             int new_u = (u + x + img.cols) % img.cols; // はみ出した場合は反対側に移動
-    //             int new_v = (v + y + img.rows) % img.rows;
-
-    //             out_mat.at<uchar>(new_v, new_u) = ptr[u];
-    //         }
-    //     }
-    // }
-    // return out_mat;
 }
 
 void InstaImg::check_pixel_value()
@@ -894,9 +779,6 @@ void InstaImg::diff_pixel(const cv::Mat &_img)
 
             if (ptr[0] > 200)
             {
-                // std::cout << "pixel: " << static_cast<double>(ptr[0]) << " _pixel: " << static_cast<double>(_ptr[0]) << std::endl;
-
-                // diff_img.at<u_char>(i, j) = 255;
                 Pixel_info tmp;
                 tmp.i = i;
                 tmp.j = j;
@@ -904,17 +786,10 @@ void InstaImg::diff_pixel(const cv::Mat &_img)
                 list_255.push_back(tmp);
             }
 
-            // もしグレースケール画像なら channel は 1
-            // diff_img.at<double>(i, j) = img.at<double>(i, j) - _img.at<double>(i, j);
         }
     }
 
     // 高い順にソート
-    // 比較関数を定義
-    // bool comparePixelValue(const PixelInfo& a, const PixelInfo& b) {
-    //     return a.pixelValue < b.pixelValue;
-    // }
-    // 比較関数はラムダ式で書いているが、定義することも可能
     std::sort(list_255.begin(), list_255.end(), [](Pixel_info a, Pixel_info b)
               { return a.pixel_value > b.pixel_value; });
 
@@ -947,18 +822,6 @@ void InstaImg::diff_img(const cv::Mat &_img)
     cv::imwrite("diff.png", diff_img);
 }
 
-// void LidarImg::set_store_info(int x, int y, Eigen::Vector3d point_data)
-// {
-//     if (x < 0 || x >= static_cast<int>(store_info.size()) || y < 0 || y >= static_cast<int>(store_info[0].size()))
-//     {
-//         std::cout << "x or y is over store_info size: " << x << " " << y << std::endl;
-//         std::exit(-1);
-//     }
-//     else
-//     {
-//         store_info[x][y].push_back(point_data);
-//     }
-// }
 
 void LidarImg::get_corresponding_point(std::vector<Eigen::Vector3d> &corresp_point, std::vector<std::pair<int, int>> &corresp_pixel, EdgeImg &edge_img_lidar, EdgeImg &edge_img_insta, PointSet &plypoint, int shift_count)
 {
@@ -994,16 +857,6 @@ void LidarImg::get_corresponding_point(std::vector<Eigen::Vector3d> &corresp_poi
     }
 
     check.show("エッジ画像同士の同じ点の出力", 0.25);
-
-    // for (auto &point : store_info)
-    // {
-    //     std::cout << point << std::endl;
-    // }
-
-    // for (auto &point : corresp_pixel_candidatewidth )
-    // {
-    //     std::cout << point << std::endl;
-    // }
 
     std::cout << "中間結果" << std::endl
               << store_info.size() << std::endl
@@ -1050,13 +903,11 @@ void LidarImg::get_corresponding_point(std::vector<Eigen::Vector3d> &corresp_poi
                 std::cout << "u or v is over img size: " << u << " " << v << std::endl;
             }
 
-            // std::cout << "found" << u << " " << v << std::endl;
             corresp_pixel.push_back(std::make_pair(u, v));
             corresp_point.push_back(*std::min_element(corresp_point_candidate.begin(), corresp_point_candidate.end(), compare_distance));
         }
         else
         {
-            // std::cout << "no corresponding point" << std::endl;
             continue;
         }
     }
@@ -1089,7 +940,6 @@ void LidarImg::get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &c
 
     // lineごとに対応点を管理する
     std::vector<std::vector<int>> corresp_pixel_candidate;
-    // std::vector<int> corresp_pixel_candidate;
 
     // 同じ点の座標を求める。
     std::cout << "calc candidate pixel" << std::endl;
@@ -1108,7 +958,6 @@ void LidarImg::get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &c
                 int new_u = (u - shift_count + img.cols) % img.cols;
                 int new_v = (v + img.rows) % img.rows;
                 candidate_img.set_pixel_255(new_u, new_v);
-                // corresp_pixel_candidate.push_back(new_v * width + new_u);
             }
         }
     }
@@ -1198,24 +1047,8 @@ void LidarImg::get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &c
         line_overlap_check.push_back(x1);
     }
 
-    // 対応点の座標を求める
-    // std::cout << "calc corresp_pixel_candidate" << std::endl;
-    // for (int v = 0; v < img.rows; v++)
-    // {
-    //     for (int u = 0; u < img.cols; u++)
-    //     {
-    //         uchar *ptr = candidate_img2.get_mat().data + candidate_img2.get_mat().step * v;
-
-    //         if (ptr[u] > 0)
-    //         {
-    //             corresp_pixel_candidate.push_back(v * width + u);
-    //         }
-    //     }
-    // }
-
     cv::imwrite("out/" + date + "/" + date + "houghline_vertical_check.png", check_candidate.get_mat());
     cv::imwrite("out/" + date + "/" + date + "houghline_vertical_img.png", candidate_img.get_mat());
-    // cv::imwrite("houghline_vertical_img2.png", candidate_img2.get_mat());
 
     std::cout << "中間結果" << std::endl
               << store_info.size() << std::endl
@@ -1261,8 +1094,6 @@ void LidarImg::get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &c
     // lineごとに該当する点をstore_infoから探す
     for (auto &line_pixel : corresp_pixel_candidate)
     {
-        // ヒストグラムの階級数
-        // int bin_width = 1 + static_cast<int>(std::log2(line_pixel.size()));
         double bin_width = 0.05;
 
         std::cout << "search_line" << search_line_index << std::endl;
@@ -1276,15 +1107,12 @@ void LidarImg::get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &c
 
         // histgram_distanceを0で初期化
         std::fill(histgram_distance.begin(), histgram_distance.end(), 0);
-        // candidate_correspを0で初期化
-        // std::fill(candidate_corresp.begin(), candidate_corresp.end(), candidate_pair{0, 0});
 
         // corresp_pixel リストの中から、該当するものをstore_infoから探す
         for (auto &pixel : line_pixel)
         {
 
             std::vector<Eigen::Vector3d> corresp_point_candidate;
-            // std::cout << "searching: " << pixel << std::endl;
 
             size_t index = 0;
             // store_info(1の点はpixelのどこに投影されたかを記録してるので)
@@ -1301,8 +1129,6 @@ void LidarImg::get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &c
             // candidate_pixelに対応する点が見つかったら
             if (corresp_point_candidate.size() > 0)
             {
-                // corresp_pixel.push_back(pixel_to_uv(pixel));
-                // corresp_point.push_back(*std::min_element(corresp_point_candidate.begin(), corresp_point_candidate.end(), compare_distance));
                 // 格納する点の距離をbin_widthで割って histgramに格納
                 Eigen::Vector3d point = *std::min_element(corresp_point_candidate.begin(), corresp_point_candidate.end(), compare_distance);
                 double point_dis = std::sqrt(std::pow(point(0), 2.0) + std::pow(point(1), 2.0));
@@ -1315,15 +1141,10 @@ void LidarImg::get_corresponding_point_Hough_old(std::vector<Eigen::Vector3d> &c
             }
             else
             {
-                // std::cout << "no corresponding point" << std::endl;
                 continue;
             }
         }
 
-        // ヒストグラムの中から大きいものではなく 前面でほしいものを探す
-        // auto iter = std::find_if(histgram_distance.begin(), histgram_distance.end(), [](int value)
-        //                          { return value != 0; });
-        // auto c_index = std::distance(histgram_distance.begin(), iter);
 
         // ヒストグラムの中から最大の物を探す
         auto iter = std::max_element(histgram_distance.begin(), histgram_distance.end());
@@ -1370,8 +1191,6 @@ void LidarImg::set_store_pixel(int pixel, Eigen::Vector3d new_point)
     double new_distance = std::sqrt(std::pow(new_point(0), 2.0) + std::pow(new_point(1), 2.0));
     double distance = store_pixel.at(pixel).distance;
 
-    // ここの0.0 は 設定されていないと同じなのだから、 そのように変更すべき
-    // 設定されてないと、何が帰ってくるんだ？
     if (new_distance < distance || is_equal_zero(distance))
     {
         store_pixel.at(pixel).point = new_point;
@@ -1556,8 +1375,6 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
 
         // histgram_distanceを0で初期化
         std::fill(histgram_distance.begin(), histgram_distance.end(), 0);
-        // candidate_correspを0で初期化
-        // std::fill(candidate_corresp.begin(), candidate_corresp.end(), candidate_pair{0, 0});
 
         // lineごとの対応のあるpixelを探索
         for (auto &pixel : line_pixel)
@@ -1587,11 +1404,6 @@ void LidarImg::get_corresponding_point_Hough(std::vector<Eigen::Vector3d> &corre
                 continue;
             }
         }
-
-        // ヒストグラムの中から大きいものではなく 前面でほしいものを探す
-        // auto iter = std::find_if(histgram_distance.begin(), histgram_distance.end(), [](int value)
-        //                          { return value != 0; });
-        // auto c_index = std::distance(histgram_distance.begin(), iter);
 
         // ヒストグラムの中から最大の物を探す
         auto iter = std::max_element(histgram_distance.begin(), histgram_distance.end());

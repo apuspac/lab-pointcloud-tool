@@ -340,7 +340,6 @@ void ObjectIO::load_img_point_file(std::string img_path, PointSet &loaded_point_
     std::array<double, 2> img_size = get_img_width_height(img_path);
 
     // 点群の読み込みとほぼ同じことをしているので、 ほんとは一緒にしたいが、PointSetを画像点も扱えるようにしないといけない。
-    // つまりめんどい
 
     // getlineで1行ずつ処理する
     while (std::getline(data_file, one_line_buffer))
@@ -403,53 +402,6 @@ void ObjectIO::load_img_point_file(std::string img_path, PointSet &loaded_point_
     }
 }
 
-// void ObjectIO::output_ply(PointSet &point_data)
-// {
-//     // std::ios::app : 追記
-//     // std::ios::out : 書き込み
-//     std::ofstream output_ply(default_dir, std::ios::out);
-
-//     if (point_data.is_empty_edge() == false)
-//     {
-//         // edgeがある場合
-//         output_ply << "ply" << std::endl
-//                    << "format ascii 1.0" << std::endl
-//                    << "element vertex " << point_data.get_point_num() << std::endl
-//                    << "property float x" << std::endl
-//                    << "property float y" << std::endl
-//                    << "property float z" << std::endl
-//                    << "element edge " << point_data.get_edge_num() << std::endl
-//                    << "property int vertex1" << std::endl
-//                    << "property int vertex2" << std::endl
-//                    << "end_header" << std::endl;
-
-//         for (const Eigen::Vector3d &tmp : point_data.get_point_all())
-//         {
-//             output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
-//         }
-
-//         for (const auto &tmp : point_data.get_edge_all())
-//         {
-//             output_ply << tmp.at(0) << " " << tmp.at(1) << std::endl;
-//         }
-//     }
-//     if (point_data.is_empty())
-//     {
-//         // edgeがない場合
-//         output_ply << "ply" << std::endl
-//                    << "format ascii 1.0" << std::endl
-//                    << "element vertex " << point_data.get_point_num() << std::endl
-//                    << "property float x" << std::endl
-//                    << "property float y" << std::endl
-//                    << "property float z" << std::endl
-//                    << "end_header" << std::endl;
-
-//         for (const Eigen::Vector3d &tmp : point_data.get_point_all())
-//         {
-//             output_ply << tmp(0) << " " << tmp(1) << " " << tmp(2) << std::endl;
-//         }
-//     }
-// }
 /**
  * @brief PointSetをplyファイルに書き込み、出力する
  *

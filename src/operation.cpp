@@ -27,7 +27,7 @@ void PointOperation::mode_select()
     switch_func[6] = std::bind(&PointOperation::capture_point_bbox_multi, this);
     switch_func[7] = std::bind(&PointOperation::make_img_and_calc_mse, this);
     switch_func[8] = std::bind(&PointOperation::make_img_and_calc_mse_height, this);
-    // switch_func[9] = std::bind(&PointOperation::capture_point_mask_multi, this);
+    switch_func[9] = std::bind(&PointOperation::capture_segmentation_point, this);
     switch_func[get_mode()]();
     // switch_func[*] = std::bind(&PointOperation::Rotation_only_simulation, this);
     // switch_func[*] = std::bind(&PointOperation::transform_rotate_simulation, this);
@@ -407,21 +407,28 @@ void PointOperation::capture_pointset_one()
 #endif
 }
 
+
+
+void PointOperation::test_location()
+{
+    std::cout << "test_location" << std::endl;
+
+
+
+}
+
 /**
  *  @brief segmentation maskの画素値から点群を抽出する処理のmulti
  *
- *
- *
 */
-void PointOperation::test_location()
+void PointOperation::capture_segmentation_point()
 {
-    std::cout << "capture segmentation point_multi" << std::endl;
+    std::cout << "capture segmentation point" << std::endl;
     ObjectIO obj_io;
 
     // load plydata
     PointSet ply_point("plydata");
     obj_io.load_ply_point_file(ply_point, ply_file_path.at(0));
-
 
     // load bbox
     DetectionData detect;
@@ -463,17 +470,9 @@ void PointOperation::test_location()
     captured_point_inner_mask.add_point(one_mask);
     mask_visualization.add_point(one_mask_forprint);
 
-//     obj_io.output_ply(captured_point_inner_mask
-// , "out/" + date + "/" + captured_point_inner_mask.get_name() + ".ply");
-// 
-
     captured_point_inner_mask.transform(Eigen::Vector3d(0, 0, -0.10));
     obj_io.output_ply(captured_point_inner_mask, output_dir + "mask_point.ply");
-
-
 }
-
-
 
 
 /**
@@ -513,12 +512,6 @@ void PointOperation::capture_point_bbox_multi()
         output_dir = output_dir_path;
     }
     ply_point.transform(Eigen::Vector3d(0, 0, 0.10));
-
-
-
-
-
-
 
     // ==== bboxの中にある点群を抽出する処理
     // すべてのパーツごとの点群を格納
@@ -572,7 +565,7 @@ void PointOperation::capture_point_bbox_multi()
                 std::cout << std::endl;
 #endif
 
-                // ヒストグラム確認したいとき用
+                // ヒストグラム確認したいとき用 _DEBUGをはずす
 #ifdef _DEBUG
                 captured_point_inner_bbox.output_hist(std::to_string(for_histgram_output_count++));
                 std::cout << std::endl;
@@ -650,19 +643,6 @@ void PointOperation::capture_point_bbox_multi()
             obj_io.output_ply(parts_point, output_dir + parts_point.get_class_name() + "-" + std::to_string(parts_point.get_class_num()) + ".ply");
         }
     }
-    
-    // NOTE gomi
-    output_center_gravity.transform(Eigen::Vector3d(0, 0, -0.10));
-    obj_io.output_ply(output_center_gravity, output_dir + "center_of_gravity.ply");
-    obj_io.output_dat(output_dir +  "center_of_gravity.dat", gravity_dat);
-
-
-
-
-
-
-
-
 
     // 描画処理
 
@@ -716,12 +696,6 @@ void PointOperation::capture_point_bbox_multi()
 }
 
 
-
-
-
-
-
-
 #ifdef OPEN3D_ENABLED
 void PointOperation::projection_to_sphere()
 {
@@ -761,7 +735,6 @@ void PointOperation::projection_to_sphere()
     std::cout << image.get_name() << std::endl;
 
     // ガウシアンのブラーかけてノイズ除去してからCanney法
-    // またopenCVに頼って... ガハハ
     EdgeImg insta_edge;
     insta_edge.detect_edge_with_canny(image.get_mat());
 
@@ -850,15 +823,12 @@ void PointOperation::old_detection_correspoint()
     image.load_img(img_file_path.at(0));
 
     // 床の点を除去
-    // HACK: 本当はここも平面当てはめ PCAなどでできそうではある。
     Eigen::Vector3d floor_height = {0, 0, -1.10};
 
     // 点数減らしてのテストのため、 一時的に全部の点を使うように
-    // Eigen::Vector3d floor_height = {0, 0, -21.0};
     PointSet removed_floor_ply_point, rmfloor_point;
     remove_pointset_floor(ply_point, removed_floor_ply_point, floor_height);
     remove_pointset_floor(ply_point, rmfloor_point, floor_height);
-    // obj_io.output_ply(rmfloor_point, std::string("plypoint") + ".ply");
 
     // create out_dir
     set_date();
@@ -999,7 +969,7 @@ void PointOperation::old_detection_correspoint()
         cv::imwrite("out/" + date + "/" + "shift_horizontal.png", shift_horizontal.get_mat());
 
         // ====== change the height of lidar point
-        // 点を動かしてから投影して、edge検出して　mse計算
+        // 点を動かしてから投影して、edge検出してmse計算
         std::cout << "==============vertical_check" << std::endl;
         double split = 0.025;
         double width_search = 1.0;
@@ -1191,7 +1161,6 @@ void PointOperation::make_img_and_calc_mse()
 
 
     // rotate start
-
     /**
      * 点群を回転させ、 画像を生成 cv::Matに格納し返す。
      *
@@ -1245,18 +1214,14 @@ void PointOperation::make_img_and_calc_mse()
     // pointcloud rotate
     PointSet ply_point_calc_rotate("rotate_point");
     ply_point_calc_rotate.add_point(ply_point);
-    // NOTE:90°プラスしているのは これするとつじつまが合うからですが、なんで90°ずれるのか原因が分かっていない。
-    // -> 座標系がうんたらかんたら。
+    // NOTE: 座標系をあわせるために、90°回転
     ply_point_calc_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex + 90)*M_PI / 180, Eigen::Vector3d::UnitZ())));
     // ply_point_calc_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(24.0*M_PI / 180, Eigen::Vector3d::UnitZ())));
     InstaImg pointimg_lidar_mse;
     pointimg_lidar_mse.make_thetaphiIMG_from_pointcloud(ply_point_calc_rotate, std::pair<int, int>(image.get_width(), image.get_height()), true);
 
 
-
     cv::imwrite(output_dir_path + "mse_lidar" + ".png", pointimg_lidar_mse.get_mat());
-
-    // ply_point_calc_rotate.rotate(Eigen::Matrix3d(Eigen::AngleAxisd(static_cast<double>(minIndex)*M_PI / 180, Eigen::Vector3d::UnitZ())));
 
     ply_point.rotate(Eigen::Matrix3d(Eigen::AngleAxisd((static_cast<double>(minIndex) / 2.0 + 90.0)*M_PI / 180.0, Eigen::Vector3d::UnitZ())));
 
@@ -1313,7 +1278,7 @@ void PointOperation::make_img_and_calc_mse_height()
     ply_point.cutting_by_height(1.5, false);
     ply_point.cutting_by_height(-1.0,true);
 
-    //TODO,NOTE: minIndexは 実行した結果を使っている。
+    // >>>>>>>  TODO,NOTE: minIndexは make_img_and_calc_mseをあらかじめ実行した結果を使っている
     //index:48, mse:577.3853
     long minIndex = 48;
     ply_point.rotate(Eigen::Matrix3d(Eigen::AngleAxisd((static_cast<double>(minIndex) / 2.0 + 90.0)*M_PI / 180.0, Eigen::Vector3d::UnitZ())));
@@ -1442,7 +1407,7 @@ std::vector<bool> find_local_max(std::vector<T> &mse_diff_lambda, double thresho
 
 
 /**
- * 画像シフトのテストを作って 試します。
+ * 画像シフトのテストを作って 試す。
  *
  */
 void PointOperation::shift_test_w_stripe_pattern()

@@ -412,17 +412,20 @@ double CalcPointSet::calc_scale_of_translation_t(
             scale_s += scale_hat;
             scale_point_num++;
         }
-        // /** check 用
-        // std::cout << "point:" << i++ << " " << scale_hat << std::endl;
-        // std::cout << "img: " << std::endl
-        //           << img << std::endl
-        //           << "ply:" << std::endl
-        //           << ply << std::endl;
-        // std::cout << "fraction top: " << (matrix_R * ply).cross(img).dot(img.cross(vector_t)) << std::endl;
-        // std::cout << "fraction bottom:" << img.cross(vector_t).squaredNorm() << std::endl;
-        // std::cout << "scale_s_progress: " << scale_s << std::endl
-        //           << std::endl;
-        // */
+
+#ifdef _DEBUG
+        std::cout << "point:" << i++ << " " << scale_hat << std::endl;
+        std::cout << "img: " << std::endl
+                  << img << std::endl
+                  << "ply:" << std::endl
+                  << ply << std::endl;
+        std::cout << "fraction top: " << (matrix_R * ply).cross(img).dot(img.cross(vector_t)) << std::endl;
+        std::cout << "fraction bottom:" << img.cross(vector_t).squaredNorm() << std::endl;
+        std::cout << "scale_s_progress: " << scale_s << std::endl
+                  << std::endl;
+        */
+
+#endif
     }
 
     scale_s /= double(scale_point_num);

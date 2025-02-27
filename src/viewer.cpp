@@ -13,6 +13,7 @@ Eigen::Vector3d Viewer3D::color_preset(int code)
 
     // switch文の回避
     // こっちの書き方のほうが プログラムできる感あって好き
+    // 実際にはそんなことない。
     // https://gist.github.com/paosidufygthrj/035ee1900ec3022b081c
     std::map<int, std::function<void()>> color_func = {
         {0, [&color]
@@ -222,11 +223,5 @@ void Viewer3D::add_geometry_pointset(std::vector<Eigen::Vector3d> pointset, int 
 
     add_geometry_obj(pointcloud);
 }
-
-// void add_sphere();
-// void add_axes();
-// void add_line_origin(std::vector<Eigen::Vector3d>);
-// void add_geometry_pointset(std::vector<Eigen::Vector3d>);
-
 
 #endif
