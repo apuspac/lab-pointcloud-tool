@@ -65,6 +65,7 @@ _deps
 out/
 
 *.sh
+!run.sh
 
 # nvim
 .cache/
